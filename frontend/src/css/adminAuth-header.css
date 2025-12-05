@@ -1,0 +1,205 @@
+/* Admin Authentication styling for header */
+.admin-auth-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Admin welcome section */
+.admin-welcome {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    background-color: transparent;
+    padding: 5px 0;
+    position: relative;
+}
+
+.admin-welcome:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+/* Add tooltip to indicate it's clickable */
+.admin-welcome::after {
+    content: "Go to Admin Dashboard";
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    top: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.admin-welcome:hover::after {
+    opacity: 1;
+}
+
+.admin-welcome .admin-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--light-grey-green);
+    background-color: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.admin-welcome .admin-avatar i {
+    color: var(--light-grey-green);
+    font-size: 16px;
+}
+
+.admin-welcome .admin-username {
+    color: var(--light-grey-green);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.admin-logout-button {
+    background-color: transparent;
+    color: var(--light-grey-green);
+    border: 1px solid var(--light-grey-green);
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+}
+
+.admin-logout-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.admin-logout-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.admin-logout-button i {
+    font-size: 12px;
+}
+
+/* FORCE HIDE regular user/admin icons when admin is logged in */
+body.admin-logged-in .header-icons .icon-items,
+body.admin-logged-in .icon-items,
+.admin-logged-in .header-icons .icon-items,
+.header-icons .icon-items.admin-hidden {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Ensure admin container is always visible when admin is logged in */
+body.admin-logged-in .admin-auth-container {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Hide mobile navigation items for user/admin when admin logged in */
+body.admin-logged-in .navigation-menu .nav-user-admin {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Remove any unwanted navigation links */
+.navigation-menu .admin-dashboard-link,
+.navigation-menu li:not(.navigation-item):not([class*="navigation"]) {
+    display: none !important;
+}
+
+/* Additional fallback rules */
+.icon-items.admin-hidden {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Prevent any pseudo-elements from showing */
+body.admin-logged-in .header-icons .icon-items::before,
+body.admin-logged-in .header-icons .icon-items::after {
+    display: none !important;
+}
+
+/* Ensure proper header layout when admin is logged in */
+body.admin-logged-in header .container .header-contents {
+    grid-template-columns: 10% 1fr auto;
+}
+
+body.admin-logged-in .header-icons {
+    justify-content: flex-end !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .admin-auth-container {
+        display: flex !important; /* Show on mobile now with proper styling */
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-end;
+    }
+    
+    .admin-welcome {
+        font-size: 13px;
+    }
+    
+    .admin-welcome .admin-avatar {
+        width: 28px;
+        height: 28px;
+        margin-right: 8px;
+    }
+    
+    .admin-welcome .admin-avatar i {
+        font-size: 14px;
+    }
+    
+    .admin-welcome .admin-username {
+        font-size: 13px;
+    }
+    
+    .admin-logout-button {
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+    
+    .admin-logout-button i {
+        font-size: 11px;
+    }
+    
+    /* Hide tooltip on mobile */
+    .admin-welcome::after {
+        display: none;
+    }
+    
+    /* Force hide icons on mobile too */
+    body.admin-logged-in .header-icons .icon-items {
+        display: none !important;
+        visibility: hidden !important;
+    }
+}
+
+/* Extra specificity for stubborn icons */
+header .container .header-contents .header-icons .icon-items.admin-hidden,
+header .header-icons .icon-items.admin-hidden {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}

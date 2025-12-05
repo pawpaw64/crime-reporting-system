@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - SecureVoice</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="icon" type="image/x-icon" href="public/images/favicon.ico">
+    <link rel="stylesheet" href="src/css/base.css">
+    <link rel="stylesheet" href="src/css/header.css">
+    <link rel="stylesheet" href="src/css/footer.css">
+    <link rel="stylesheet" href="src/css/pages/homepage.css">
+    <link rel="stylesheet" href="src/css/responsive/homepage-responsive.css">
+</head>
+<body>
+
+<!-- Start: Header -->
+<header class="main-header">
+    <div class="container">
+        <div class="header-content">
+            <div class="logo">
+                <a href="/">
+                    <div class="logo-text">SecureVoice</div>
+                    <div class="logo-subtitle">Crime Reporting System</div>
+                </a>
+            </div>
+            
+            <nav class="main-nav">
+                <button id="menu-close-btn" class="fas fa-times"></button>
+                <ul class="nav-menu">
+                    <li class="nav-item active">
+                        <a href="#" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#how-it-works" class="nav-link">How To</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#cases-section" class="nav-link">Services</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#contact-section" class="nav-link">Contact</a>
+                    </li>
+                </ul>
+                <button id="menu-open-btn" class="fas fa-bars"></button>
+            </nav>
+            
+            <div class="auth-buttons">
+                <a href="src\pages\login.html" class="btn btn-login">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
+                </a>
+                <a href="/signup" class="btn btn-register">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Register</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+<!-- End: Header -->
+
+<!-- Start: Hero Section with Image Slider -->
+<section class="hero-section">
+    <div class="slider">
+        <div class="slides">
+            <div class="slide active">
+                <img src="images/dhaka.jpg" alt="Dhaka Division">
+                <div class="slide-content">
+                    <h2>Report Crime Anonymously</h2>
+                    <p>Your voice matters. Report incidents safely and securely.</p>
+                    <a href="/report" class="btn btn-report">
+                        <i class="fas fa-bullhorn"></i>
+                        Report a Crime Now
+                    </a>
+                </div>
+            </div>
+            <div class="slide">
+                <img src="images/rajshahi.jpg" alt="Rajshahi Division">
+                <div class="slide-content">
+                    <h2>Secure & Confidential</h2>
+                    <p>Your identity is protected with end-to-end encryption.</p>
+                    <a href="/report" class="btn btn-report">
+                        <i class="fas fa-bullhorn"></i>
+                        Report a Crime Now
+                    </a>
+                </div>
+            </div>
+            <div class="slide">
+                <img src="images/barishal.jpg" alt="Barishal Division">
+                <div class="slide-content">
+                    <h2>Track Your Report</h2>
+                    <p>Monitor your complaint status in real-time.</p>
+                    <a href="/report" class="btn btn-report">
+                        <i class="fas fa-bullhorn"></i>
+                        Report a Crime Now
+                    </a>
+                </div>
+            </div>
+            <div class="slide">
+                <img src="images/khulna.jpg" alt="Khulna Division">
+                <div class="slide-content">
+                    <h2>24/7 Support</h2>
+                    <p>We're here to help you anytime, anywhere in Bangladesh.</p>
+                    <a href="/report" class="btn btn-report">
+                        <i class="fas fa-bullhorn"></i>
+                        Report a Crime Now
+                    </a>
+                </div>
+            </div>
+            <div class="slide">
+                <img src="images/sylhet.jpg" alt="Sylhet Division">
+                <div class="slide-content">
+                    <h2>Make Communities Safer</h2>
+                    <p>Together we can build a safer Bangladesh.</p>
+                    <a href="/report" class="btn btn-report">
+                        <i class="fas fa-bullhorn"></i>
+                        Report a Crime Now
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slider Controls -->
+        <button class="slider-control prev">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="slider-control next">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        
+        <!-- Slider Indicators -->
+        <div class="slider-indicators">
+            <button class="indicator active"></button>
+            <button class="indicator"></button>
+            <button class="indicator"></button>
+            <button class="indicator"></button>
+            <button class="indicator"></button>
+        </div>
+    </div>
+</section>
+<!-- End: Hero Section -->
+
+<!-- Start: How It Works Section -->
+<section id="how-it-works" class="section-how-to">
+    <div class="container">
+        <h2 class="section-title">How To Report</h2>
+        <p class="section-subtitle">Three simple steps to report a crime and make your community safer</p>
+        
+        <div class="steps-container">
+            <div class="step-card">
+                <div class="step-number">01</div>
+                <div class="step-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h3>Create Account</h3>
+                <p>Sign up with your basic details or report anonymously. Your privacy is our priority.</p>
+                <a href="/signup" class="step-link">Register Now <i class="fas fa-arrow-right"></i></a>
+            </div>
+            
+            <div class="step-card">
+                <div class="step-number">02</div>
+                <div class="step-icon">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <h3>File Report</h3>
+                <p>Provide incident details, upload evidence, and specify location using our secure form.</p>
+                <a href="/report" class="step-link">File Report <i class="fas fa-arrow-right"></i></a>
+            </div>
+            
+            <div class="step-card">
+                <div class="step-number">03</div>
+                <div class="step-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Track Progress</h3>
+                <p>Monitor your complaint status and receive updates as authorities investigate.</p>
+                <a href="/track" class="step-link">Track Status <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End: How It Works Section -->
+
+<!-- Start: Cases Section -->
+<section id="cases-section" class="section-services">
+    <div class="container">
+        <h2 class="section-title">Our Services</h2>
+        <p class="section-subtitle">Comprehensive crime reporting solutions for all types of incidents</p>
+        
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h3>Personal Safety</h3>
+                <p>Report harassment, assault, domestic violence, stalking, and threats to personal safety.</p>
+                <a href="/report?type=personal" class="service-btn">Report Incident</a>
+            </div>
+            
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <h3>Property Crimes</h3>
+                <p>Report theft, burglary, vandalism, property damage, and trespassing incidents.</p>
+                <a href="/report?type=property" class="service-btn">Report Incident</a>
+            </div>
+            
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <h3>Financial Fraud</h3>
+                <p>Report online scams, identity theft, credit card fraud, and financial crimes.</p>
+                <a href="/report?type=fraud" class="service-btn">Report Incident</a>
+            </div>
+            
+            <div class="service-card">
+                <div class="service-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <h3>Cyber Crimes</h3>
+                <p>Report online harassment, cyberbullying, hacking, data breaches, and digital threats.</p>
+                <a href="/report?type=cyber" class="service-btn">Report Incident</a>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End: Cases Section -->
+
+<!-- Start: Security Features -->
+<section class="section-security">
+    <div class="container">
+        <div class="security-content">
+            <div class="security-text">
+                <h2>Your Security Is Our Priority</h2>
+                <p>We implement multiple layers of protection to ensure your safety and privacy throughout the reporting process.</p>
+                
+                <div class="security-features-list">
+                    <div class="feature-item">
+                        <i class="fas fa-lock"></i>
+                        <div>
+                            <h4>End-to-End Encryption</h4>
+                            <p>Military-grade encryption for all data transmission</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-user-secret"></i>
+                        <div>
+                            <h4>Anonymous Reporting</h4>
+                            <p>Option to report without revealing your identity</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <div>
+                            <h4>Secure Storage</h4>
+                            <p>Protected servers with regular security audits</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <h4>24/7 Monitoring</h4>
+                            <p>Round-the-clock system and security monitoring</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="security-image">
+                <img src="images/security-illustration.svg" alt="Security Illustration">
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End: Security Features -->
+
+<!-- Start: CTA Section -->
+<section class="section-cta">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Ready to Make a Difference?</h2>
+            <p>Your report could help prevent crimes and make your community safer. Report securely today.</p>
+            <div class="cta-buttons">
+                <a href="/report" class="btn btn-primary btn-large">
+                    <i class="fas fa-bullhorn"></i>
+                    Report a Crime Now
+                </a>
+                <a href="/signup" class="btn btn-secondary btn-large">
+                    <i class="fas fa-user-plus"></i>
+                    Create Free Account
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End: CTA Section -->
+
+<!-- Start: Contact Section -->
+<section id="contact-section" class="section-contact">
+    <div class="container">
+        <h2 class="section-title">Contact Us</h2>
+        <p class="section-subtitle">Get in touch with our support team for assistance</p>
+        
+        <div class="contact-container">
+            <div class="contact-info">
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="contact-details">
+                        <h4>Our Location</h4>
+                        <p>Dhaka, Bangladesh</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="contact-details">
+                        <h4>Email Address</h4>
+                        <p>support@securevoice.gov.bd</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <div class="contact-details">
+                        <h4>Emergency Hotline</h4>
+                        <p>+880-999-123-4567</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="contact-details">
+                        <h4>Working Hours</h4>
+                        <p>24/7 Support Available</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="contact-form">
+                <h3>Send us a Message</h3>
+                <form id="contactForm">
+                    <div class="form-group">
+                        <input type="text" placeholder="Your Name" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" placeholder="Your Email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" placeholder="Subject" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea placeholder="Your Message" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End: Contact Section -->
+
+<!-- Start: Footer -->
+<footer class="main-footer">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <div class="logo-text">SecureVoice</div>
+                    <div class="logo-subtitle">Crime Reporting System</div>
+                </div>
+                <p class="footer-description">
+                    A secure platform for citizens to report crimes anonymously and help build safer communities across Bangladesh.
+                </p>
+                <div class="footer-social">
+                    <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="#how-it-works">How To Report</a></li>
+                    <li><a href="#cases-section">Our Services</a></li>
+                    <li><a href="#contact-section">Contact Us</a></li>
+                    <li><a href="/faq">FAQ</a></li>
+                    <li><a href="/privacy">Privacy Policy</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Services</h4>
+                <ul class="footer-links">
+                    <li><a href="/report?type=personal">Personal Safety</a></li>
+                    <li><a href="/report?type=property">Property Crimes</a></li>
+                    <li><a href="/report?type=fraud">Financial Fraud</a></li>
+                    <li><a href="/report?type=cyber">Cyber Crimes</a></li>
+                    <li><a href="/track">Track Report</a></li>
+                    <li><a href="/emergency">Emergency Help</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Contact Info</h4>
+                <div class="contact-info">
+                    <p><i class="fas fa-map-marker-alt"></i> Dhaka, Bangladesh</p>
+                    <p><i class="fas fa-envelope"></i> support@securevoice.gov.bd</p>
+                    <p><i class="fas fa-phone"></i> +880-999-123-4567</p>
+                    <p><i class="fas fa-clock"></i> 24/7 Support Available</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 SecureVoice Crime Reporting System. All rights reserved.</p>
+            <p>Developed for a safer Bangladesh</p>
+        </div>
+    </div>
+</footer>
+<!-- End: Footer -->
+
+<script src="assets/js/main.js"></script>
+<script src="assets/js/slider.js"></script>
+<script src="assets/js/navigation.js"></script>
+</body>
+</html>
