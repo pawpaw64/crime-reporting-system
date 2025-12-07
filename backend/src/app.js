@@ -34,23 +34,54 @@ app.use(session({
 app.use(express.static(path.join(__dirname, '../../frontend')));
 app.use('/css', express.static(path.join(__dirname, '../../frontend/src/css')));
 app.use('/js', express.static(path.join(__dirname, '../../frontend/src/js')));
-app.use('/images', express.static(path.join(__dirname, '../../frontend/public/images')));
+app.use('/images', express.static(path.join(__dirname, '../../frontend/images')));
+app.use('/public', express.static(path.join(__dirname, '../../frontend/public')));
 
-// Import routes
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const reportRoutes = require('./routes/reportRoutes');
-const adminRoutes = require('./routes/adminRoutes');
+// Import controllers
+const authController = require('./controllers/authController');
+const authMiddleware = require('./middleware/authMiddleware');
 
-// Use routes
-app.use('/auth', authRoutes);
-app.use('/user', userRoutes);
-app.use('/reports', reportRoutes);
-app.use('/admin', adminRoutes);
+// Auth routes
+app.post('/api/signup', authController.signup);
+app.post('/api/login', authController.login);
+app.post('/api/logout', (req, res) => {
+    req.session.destroy();
+    res.json({ success: true, message: "Logged out successfully" });
+});
+
+// User routes (placeholder for now)
+app.get('/api/profile', authMiddleware.requireUser, (req, res) => {
+    res.json({ 
+        success: true, 
+        user: { 
+            id: req.session.userId, 
+            username: req.session.username, 
+            email: req.session.email 
+        } 
+    });
+});
+
+// Complaint routes (placeholder for now)
+app.post('/api/complaints', authMiddleware.requireUser, (req, res) => {
+    res.json({ success: true, message: "Complaint submitted (placeholder)" });
+});
+
+app.get('/api/complaints', authMiddleware.requireUser, (req, res) => {
+    res.json({ success: true, complaints: [] });
+});
+
+// Admin routes (placeholder for now)
+app.post('/api/admin/login', (req, res) => {
+    res.json({ success: false, message: "Admin login not implemented yet" });
+});
+
+app.get('/api/admin/dashboard', authMiddleware.requireAdmin, (req, res) => {
+    res.json({ success: true, message: "Admin dashboard placeholder" });
+});
 
 // Serve main pages
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/pages/index.html'));
+    res.sendFile(path.join(__dirname, '../../frontend/index.html'));
 });
 
 app.get('/login', (req, res) => {
