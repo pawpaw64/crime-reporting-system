@@ -44,10 +44,15 @@ const authMiddleware = require('./middleware/authMiddleware');
 // Auth routes
 app.post('/api/signup', authController.signup);
 app.post('/api/login', authController.login);
-app.post('/api/logout', (req, res) => {
-    req.session.destroy();
-    res.json({ success: true, message: "Logged out successfully" });
-});
+app.post('/api/logout', authController.logout);
+app.get('/api/auth/check', authController.checkAuth);
+
+// Registration step routes
+app.post('/api/auth/send-otp', authController.sendOTP);
+app.post('/api/auth/verify-otp', authController.verifyOTP);
+app.post('/api/auth/verify-nid', authController.verifyNID);
+app.post('/api/auth/save-face', authController.saveFaceImage);
+app.post('/api/auth/save-address', authController.saveAddress);
 
 // User routes (placeholder for now)
 app.get('/api/profile', authMiddleware.requireUser, (req, res) => {
@@ -85,31 +90,31 @@ app.get('/', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/pages/login.html'));
+    res.sendFile(path.join(__dirname, '../../frontend/src/pages/login.html'));
 });
 
 app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/pages/register.html'));
+    res.sendFile(path.join(__dirname, '../../frontend/src/pages/register.html'));
 });
 
 app.get('/admin-login', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/pages/admin-login.html'));
+    res.sendFile(path.join(__dirname, '../../frontend/src/pages/adminLogin.html'));
 });
 
 app.get('/contact', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/pages/contact.html'));
+    res.sendFile(path.join(__dirname, '../../frontend/src/pages/contact-us.html'));
 });
 
 app.get('/profile', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/pages/profile.html'));
+    res.sendFile(path.join(__dirname, '../../frontend/src/pages/profile.html'));
 });
 
 app.get('/complain', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/pages/report-crime.html'));
+    res.sendFile(path.join(__dirname, '../../frontend/src/pages/complain.html'));
 });
 
 app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/pages/dashboard.html'));
+    res.sendFile(path.join(__dirname, '../../frontend/index.html'));
 });
 
 // Health check endpoint

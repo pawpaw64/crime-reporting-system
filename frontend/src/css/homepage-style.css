@@ -2,132 +2,209 @@
     header codes on assets/css/base/header-base.css
 end: header  */
 
-/* start: Image Slider */
-.slider{
-    height: 100vh;
+/* start: Hero Slider */
+.slider {
+    height: 85vh;
+    min-height: 500px;
+    max-height: 800px;
     position: relative;
+    overflow: hidden;
 }
-.slider .list .item{
+
+.slider .list .item {
     position: absolute;
     inset: 0 0 0 0;
     overflow: hidden;
     opacity: 0;
-    transition: 0.6s;
+    transition: opacity 0.8s ease-in-out;
 }
-.slider .list .item img{
+
+.slider .list .item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    filter: blur(2px) brightness(0.7);
+    transform: scale(1.05);
 }
-.slider .list .item::after{
+
+.slider .list .item::after {
     content: '';
     width: 100%;
     height: 100%;
     position: absolute;
     left: 0;
-    bottom: 0;
-    background-image: linear-gradient(to top, var(--black-color) 30%, transparent);
+    top: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.3) 0%,
+        rgba(0, 0, 0, 0.2) 50%,
+        rgba(0, 0, 0, 0.7) 100%
+    );
 }
-.slider .list .item .content{
+
+.slider .list .item .content {
     position: absolute;
-    left: 10%;
-    top: 5%;
-    width: 650px;
-    max-width: 80%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 700px;
+    max-width: 90%;
     z-index: 1;
     color: var(--white-color);
-    text-align: justify;
+    text-align: center;
 }
-.slider .list .item .content h3{
-    font-size: 70px;
-    margin: 0;
-    text-shadow: 0 8px 16px rgba(0, 0, 1);
+
+.slider .list .item .content h3 {
+    font-size: 48px;
+    margin: 0 0 16px 0;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    font-weight: 700;
+    letter-spacing: 2px;
 }
-.slider .list .item .content p{
+
+.slider .list .item .content p {
     font-size: 16px;
-    color: var(--light-grey-green);
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 600px;
+    margin: 0 auto;
 }
-.slider .list .item.active{
+
+.slider .list .item.active {
     opacity: 1;
     z-index: 10;
 }
+
 @keyframes contentShow {
-    to{
-        transform: translateY(0);
+    to {
+        transform: translate(-50%, -50%);
         filter: blur(0);
         opacity: 1;
     }
 }
-.slider .list .item.active h3,
-.slider .list .item.active p{
-    transform: translateY(30px);
-    filter: blur(20px);
+
+.slider .list .item.active .content {
+    transform: translate(-50%, -40%);
+    filter: blur(10px);
     opacity: 0;
-    animation: contentShow .5s .7s ease-in-out forwards;
+    animation: contentShow 0.6s 0.3s ease-out forwards;
 }
-.slider .list .item.active h3{
-    animation-delay: 1s;
-}
-.slider-arrow{
+
+/* Slider Navigation - Bottom Dots */
+.slider-nav {
     position: absolute;
-    top: 20%;
-    right: 50px;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 100;
-}
-.slider-arrow button{
-    border: none;
-    width: 45px;
-    height: 45px;
-    border-radius: 5px;
-    font-size: x-large;
-    background-color: rgba(255, 255, 255, 0.2);
-    color: var(--dark-charcoal-blue);
-    transition: .6s;
-    box-shadow: 0 8px 16px rgba(0, 0, 0.5);
-}
-.slider-arrow button:hover{
-    background-color: var(--dark-charcoal-blue);
-    color: var(--light-grey-green);
-    box-shadow: 0 8px 16px rgba(0, 0, 1);
-}
-.thumbnail{
-    position: absolute;
     display: flex;
-    gap: 8px;
-    bottom: 10px;
-    z-index: 11;
-    width: 100%;
-    height: 170px;
-    padding: 0 30px;
-    box-sizing: border-box;
-    overflow: auto;
+    gap: 12px;
+    align-items: center;
+}
+
+.slider-nav button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+}
+
+.slider-nav button:hover {
+    background: rgba(255, 255, 255, 0.5);
+    border-color: #fff;
+}
+
+.slider-nav button.active {
+    background: #fff;
+    border-color: #fff;
+    width: 32px;
+    border-radius: 6px;
+}
+
+/* Arrow buttons */
+.slider-arrow {
+    position: absolute;
+    bottom: 25px;
+    z-index: 100;
+    display: flex;
+    gap: 10px;
+}
+
+.slider-arrow.left {
+    left: 30px;
+}
+
+.slider-arrow.right {
+    right: 30px;
+}
+
+.slider-arrow button {
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 16px;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
     justify-content: center;
 }
-.thumbnail::-webkit-scrollbar{
-    width: 0;
+
+.slider-arrow button:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
 }
-.thumbnail .item{
-    width: 100px;
-    height: 140px;
-    filter: brightness(.3);
-    transition: .6s;
-    flex-shrink: 0;
-}
-.thumbnail .item img{
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 10px;
-}
-.thumbnail .item.active{
-    filter: brightness(1.1)
-}
-.thumbnail .item .content{
+
+/* Report Crime Button */
+.report-crime-btn-container {
     position: absolute;
-    inset: auto 10px 10px 10px;
-    color: var(--white-color);
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
 }
-/* end: Image Slider */
+
+.report-crime-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 8px 32px rgba(220, 53, 69, 0.4);
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.report-crime-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(220, 53, 69, 0.6);
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+}
+
+.report-crime-btn i {
+    font-size: 18px;
+}
+
+/* Hide old thumbnail navigation */
+.thumbnail {
+    display: none;
+}
+/* end: Hero Slider */
 
 /* start: explore us */
 .explore-us{
@@ -174,8 +251,9 @@ end: header  */
 
 /* start: how it works */
 #how-it-works{
-    width: 90%;
-    margin: 5% auto;
+    width: 100%;
+    height: 100%;
+    margin: auto;
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.20);
 }

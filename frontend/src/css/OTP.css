@@ -1,187 +1,284 @@
-@import url('https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap');
 
-/* Base OTP container styling */
-#otp-container {
+/* OTP container styling */
+.otp-container {
     width: 100%;
-    margin-top: 15px;
-    padding: 0.8rem 1rem;
-    background-color: #ffffffaa;
-    border-radius: 49px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: flex;
+    max-width: 380px;
+    margin: 20px auto;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.95) 100%);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    display: none;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
-    transition: all 0.3s ease;
-    box-sizing: border-box;
+    gap: 15px;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    border: 2px solid transparent;
     position: relative;
+    overflow: hidden;
 }
 
-/* Override input-field grid styling */
-#otp-container.input-field {
-    display: none; /* Start hidden, JavaScript will show it */
-    align-items: center !important;
-    grid-template-columns: initial !important;
-    width: 100%;
-    margin-top: 15px;
-    padding: 0 1rem;
-    background-color: #ffffffaa;
-    border-radius: 49px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    box-sizing: border-box;
-    position: relative;
-    height: 55px;
-    z-index: 10; /* Ensure it displays above other elements */
+.otp-container.active {
+    display: flex;
+    animation: slideUp 0.5s ease-out forwards;
 }
 
-/* When JavaScript shows the container */
-#otp-container.input-field[style*="display: flex"],
-#otp-container.input-field[style*="display:flex"],
-#otp-container.input-field[style*="display: block"],
-#otp-container.input-field[style*="display:block"] {
-    display: flex !important; /* Override with flex when shown */
-}
-
-/* Key logo styling */
-#key-logo {
-    position: static !important;
-    font-size: 20px;
-    padding: 0 1rem !important;
-    flex-shrink: 0;
-    line-height: 55px;
-    color: #acacac;
-}
-
-#key-logo-2 {
+.otp-container::before {
+    content: '';
     position: absolute;
-    font-size: 20px;
-    padding-left: 1.5rem;
+    top: 0;
     left: 0;
-    bottom: 0.5px;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #212A31, #0F3E52);
+    z-index: 1;
 }
 
-/* OTP input styling */
-#otp-input-2 {
-    width: 100%;
-    position: absolute;
-    left: 0;
-    bottom: 10px;
-    font-size: 20px;
-    border: none;
-    border-radius: 5px;
-    outline: none;
-    text-align: center;
-    background-color: transparent;
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-#otp-input {
-    flex-grow: 1 !important;
-    font-size: 20px;
-    padding-left: .4rem;
-    border: none;
-    border-radius: 5px;
-    outline: none;
-    text-align: center;
-    background-color: transparent;
-}
-
-/* Verify OTP button styling */
-#verify-otp-btn {
-    margin-top: 1rem;
-    background-color: #212A31;
-    color: #D3D9D4;
-    padding: 0.7rem 1.5rem;
-    border: none;
-    cursor: pointer;
-    border-radius: 5rem;
+.otp-title {
+    color: #212A31;
+    font-size: 1.3rem;
     font-weight: 600;
-    transition: background-color 0.3s ease;
-    z-index: 10; /* Ensure button stays above other elements */
-    position: relative; /* Add positioning context */
-    display: none; /* Start hidden, JavaScript will show it */
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.otp-subtitle {
+    color: #666;
+    font-size: 0.9rem;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.otp-input-container {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.otp-input {
+    width: 50px;
+    height: 60px;
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 600;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    background: white;
+    color: #212A31;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.otp-input:focus {
+    border-color: #0F3E52;
+    box-shadow: 0 0 0 3px rgba(15, 62, 82, 0.1);
+    transform: translateY(-2px);
+}
+
+.otp-input.filled {
+    border-color: #0F3E52;
+    background: rgba(15, 62, 82, 0.05);
 }
 
 #otp-error {
-    font-size: 14px;
     color: #e74c3c;
-    margin-top: 5px;
+    font-size: 0.9rem;
+    text-align: center;
+    min-height: 20px;
+    margin: 5px 0;
+}
+
+.otp-timer {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 10px 0;
+}
+
+.otp-timer .time {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+.resend-otp {
+    background: none;
+    border: none;
+    color: #0F3E52;
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    margin-top: 10px;
+    transition: color 0.3s ease;
+}
+
+.resend-otp:hover:not(:disabled) {
+    color: #212A31;
+}
+
+.resend-otp:disabled {
+    color: #999;
+    cursor: not-allowed;
+}
+
+.verify-otp-btn {
+    width: 100%;
+    max-width: 200px;
+    background: linear-gradient(135deg, #212A31 0%, #0F3E52 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+    display: none;
+}
+
+.verify-otp-btn.active {
     display: block;
+    animation: fadeIn 0.3s ease-out;
 }
 
-#verify-otp-btn:hover {
-    background-color: #0F3E52;
+.verify-otp-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 20px rgba(15, 62, 82, 0.4);
 }
 
-/* Animation */
+.verify-otp-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* Mobile responsiveness */
+/* Loading animation */
+.verify-otp-btn.loading {
+    pointer-events: none;
+}
+
+.verify-otp-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 3px solid transparent;
+    border-top-color: white;
+    border-radius: 50%;
+    animation: loading-spinner 1s linear infinite;
+}
+
+@keyframes loading-spinner {
+    from {
+        transform: translate(-50%, -50%) rotate(0turn);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(1turn);
+    }
+}
+
+/* Success state */
+.otp-container.success {
+    border-color: #2ecc71;
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.05) 0%, rgba(255, 255, 255, 0.95) 100%);
+}
+
+.otp-container.success::before {
+    background: linear-gradient(90deg, #2ecc71, #27ae60);
+}
+
+/* Mobile Responsive */
 @media (max-width: 870px) {
-    /* Fix for signup mode in mobile view */
-    .container.sign-up-mode .signin-signup {
-        top: 3%; /* Move the form higher in the viewport */
-        padding-bottom: 150px; /* Add padding to ensure OTP components are visible */
+    .otp-container {
+        max-width: 100%;
+        margin: 15px 0;
+        padding: 1.2rem;
     }
     
-    /* Make the form scrollable if needed */
-    form.sign-up-form {
-        padding-bottom: 80px; /* Extra space for OTP elements */
-        margin-bottom: 50px;
-        overflow-y: auto;
-        max-height: 90vh;
+    .otp-input-container {
+        gap: 8px;
     }
     
-    /* Ensure OTP container visibility when shown */
-    #otp-container.input-field[style*="display"] {
-        margin-top: 20px;
-        z-index: 10;
+    .otp-input {
+        width: 45px;
+        height: 55px;
+        font-size: 1.6rem;
     }
     
-    /* Ensure verify button visibility when shown */
-    #verify-otp-btn[style*="display"] {
-        margin-top: 20px;
-        margin-bottom: 40px;
-        z-index: 10;
+    .otp-title {
+        font-size: 1.2rem;
+    }
+    
+    .verify-otp-btn {
+        max-width: 180px;
+        padding: 10px 25px;
     }
 }
 
-/* Smaller screens */
-@media (max-width: 600px) {
-    #otp-container[style*="display"] {
-        flex-direction: row; /* Keep it horizontal for better space usage */
-        padding: 0.5rem 0.8rem;
+@media (max-width: 570px) {
+    .otp-container {
+        padding: 1rem;
+        border-radius: 15px;
     }
     
-    #otp-input {
-        font-size: 16px; /* Slightly smaller font for mobile */
+    .otp-input-container {
+        gap: 6px;
     }
     
-    #verify-otp-btn[style*="display"] {
-        width: auto;
-        margin-bottom: 60px; /* Extra margin to avoid overlap */
+    .otp-input {
+        width: 40px;
+        height: 50px;
+        font-size: 1.4rem;
     }
     
-    /* Additional spacing for the signup form */
-    .sign-up-form {
-        padding-bottom: 100px !important;
+    .otp-title {
+        font-size: 1.1rem;
     }
     
-    /* Adjust the container animation for better visibility */
-    .container.sign-up-mode:before {
-        bottom: 35% !important; /* Adjust the background circle position */
+    .otp-subtitle {
+        font-size: 0.85rem;
+    }
+    
+    .verify-otp-btn {
+        max-width: 160px;
+        padding: 10px 20px;
+        font-size: 0.9rem;
     }
 }
 
-/* Extra small screens */
-@media (max-width: 480px) {
-    #verify-otp-btn[style*="display"] {
-        margin-bottom: 80px; /* Even more margin for very small screens */
+@media (max-width: 400px) {
+    .otp-input {
+        width: 35px;
+        height: 45px;
+        font-size: 1.2rem;
     }
     
-    .sign-up-form {
-        padding-bottom: 150px !important; /* More space on very small screens */
+    .otp-input-container {
+        gap: 4px;
     }
 }

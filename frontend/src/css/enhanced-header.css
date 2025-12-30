@@ -470,4 +470,83 @@ header .container .header-contents .header-icons .icon-items:focus {
 /* Fix for body scroll when menu is open */
 body.appear-side-bar {
     overflow: hidden;
+}/* Add these styles to enhanced-header.css or a new CSS file */
+
+/* Better section spacing and positioning */
+section {
+    scroll-margin-top: 100px; /* Accounts for fixed header */
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+/* How It Works section specific fixes */
+#how-it-works {
+    scroll-margin-top: 120px;
+    position: relative;
+    z-index: 1;
+}
+
+#how-it-works .container {
+    padding-top: 60px;
+    padding-bottom: 60px;
+}
+
+/* Cases Section specific fixes */
+#cases-section {
+    scroll-margin-top: 120px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Ready to Get Started section */
+#ready-to-get-started {
+    scroll-margin-top: 120px;
+}
+
+/* Explore Us section */
+.explore-us {
+    scroll-margin-top: 100px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Fix for header z-index to ensure proper layering */
+header {
+    z-index: 1000 !important;
+}
+
+/* Smooth transitions for all anchor jumps */
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 100px;
+}
+
+/* Active state improvements */
+.navigation-item.navigation-active {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.3) 0%, rgba(255, 255, 255, 0.15) 100%) !important;
+    border-color: var(--neon-blue) !important;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4) !important;
+}
+
+.navigation-item.navigation-active .navigation-link {
+    color: var(--neon-blue) !important;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.7) !important;
+}
+
+/* Mobile responsive fixes */
+@media (max-width: 768px) {
+    section {
+        scroll-margin-top: 80px;
+        padding-top: 30px;
+        padding-bottom: 30px;
+    }
+    
+    #how-it-works .container {
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+    
+    html {
+        scroll-padding-top: 80px;
+    }
 }

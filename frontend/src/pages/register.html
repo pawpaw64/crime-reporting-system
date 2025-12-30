@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureVoice | Sign Up</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../css/register.css">
+</head>
+<body>
+    <div class="registration-container">
+        <!-- Header with back to login -->
+        <div class="reg-header">
+            <a href="login.html" class="back-to-login">
+                <i class="fas fa-arrow-left"></i> Back to Login
+            </a>
+            <div class="logo-small">
+                <a href="/">
+                    <img src="../../images/auth/secureVOICE.png" alt="SecureVoice" onerror="this.style.display='none'">
+                </a>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+            <div class="step-indicators">
+                <div class="step-indicator active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <span class="step-label">Mobile</span>
+                </div>
+                <div class="step-indicator" data-step="2">
+                    <div class="step-circle">2</div>
+                    <span class="step-label">OTP</span>
+                </div>
+                <div class="step-indicator" data-step="3">
+                    <div class="step-circle">3</div>
+                    <span class="step-label">NID</span>
+                </div>
+                <div class="step-indicator" data-step="4">
+                    <div class="step-circle">4</div>
+                    <span class="step-label">Face</span>
+                </div>
+                <div class="step-indicator" data-step="5">
+                    <div class="step-circle">5</div>
+                    <span class="step-label">Address</span>
+                </div>
+                <div class="step-indicator" data-step="6">
+                    <div class="step-circle">6</div>
+                    <span class="step-label">Account</span>
+                </div>
+                <div class="step-indicator" data-step="7">
+                    <div class="step-circle">7</div>
+                    <span class="step-label">Done</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Container -->
+        <div class="form-container">
+            <!-- Step 1: Mobile Number -->
+            <div class="form-step active" id="step-1">
+                <div class="step-header">
+                    <h2>Sign Up</h2>
+                    <p class="step-info">Step 1/7: In the first step of sign up, enter your mobile number (e.g., 01XXXXXXXXX).</p>
+                </div>
+                <div class="form-content">
+                    <div class="input-group">
+                        <label for="mobile">Provide your mobile number</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-phone"></i>
+                            <input type="tel" id="mobile" placeholder="Enter mobile number here" maxlength="11">
+                        </div>
+                        <span class="error-message" id="mobile-error"></span>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="validateStep1()">Submit</button>
+                </div>
+            </div>
+
+            <!-- Step 2: OTP Verification -->
+            <div class="form-step" id="step-2">
+                <div class="step-header">
+                    <h2>Sign Up</h2>
+                    <p class="step-info">Step 2/7: Enter the 6-digit OTP code sent to your mobile number.</p>
+                </div>
+                <div class="form-content">
+                    <p class="otp-prompt">A 6-digit code has been sent to your mobile. Please enter your OTP!</p>
+                    <div class="otp-inputs">
+                        <input type="text" class="otp-digit" maxlength="1" data-index="0">
+                        <input type="text" class="otp-digit" maxlength="1" data-index="1">
+                        <input type="text" class="otp-digit" maxlength="1" data-index="2">
+                        <input type="text" class="otp-digit" maxlength="1" data-index="3">
+                        <input type="text" class="otp-digit" maxlength="1" data-index="4">
+                        <input type="text" class="otp-digit" maxlength="1" data-index="5">
+                    </div>
+                    <span class="error-message" id="otp-error"></span>
+                    <div class="otp-timer">
+                        <span id="timer">02:00</span>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="validateStep2()">Submit</button>
+                    <button type="button" class="btn-link" id="resend-otp" disabled onclick="resendOTP()">Resend OTP</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Identity Verification (NID) -->
+            <div class="form-step" id="step-3">
+                <div class="step-header">
+                    <h2>Identity Verification</h2>
+                    <p class="step-info">Step 3/7: Please ensure all information is entered correctly. For successful verification, all details must match your National Identity Card (NID) details.</p>
+                </div>
+                <div class="form-content">
+                    <div class="input-group">
+                        <label for="nid">National Identity Card Number</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-id-card"></i>
+                            <input type="text" id="nid" placeholder="Enter 10 or 17 digit NID number">
+                        </div>
+                        <span class="error-message" id="nid-error"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="dob">Date of Birth</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-calendar"></i>
+                            <input type="date" id="dob">
+                        </div>
+                        <span class="error-message" id="dob-error"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="name-en">Name (English)</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="name-en" placeholder="Enter your name in English">
+                        </div>
+                        <span class="error-message" id="name-en-error"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="name-bn">Name (Bengali) <span class="optional">(Optional)</span></label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="name-bn" placeholder="আপনার নাম বাংলায় লিখুন">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="father-name">Father's Name</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user-tie"></i>
+                            <input type="text" id="father-name" placeholder="Enter father's name">
+                        </div>
+                        <span class="error-message" id="father-error"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="mother-name">Mother's Name</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="mother-name" placeholder="Enter mother's name">
+                        </div>
+                        <span class="error-message" id="mother-error"></span>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="validateStep3()">Verify Identity</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Face Detection -->
+            <div class="form-step" id="step-4">
+                <div class="step-header">
+                    <h2>Face Detection</h2>
+                    <p class="step-info">Position your face inside the frame. Make sure you're in a well-lit environment.</p>
+                </div>
+                <div class="form-content">
+                    <div class="camera-container">
+                        <div class="camera-frame">
+                            <video id="camera-feed" autoplay playsinline></video>
+                            <canvas id="face-canvas" style="display: none;"></canvas>
+                            <div class="face-overlay">
+                                <div class="face-guide"></div>
+                            </div>
+                        </div>
+                        <div class="face-status" id="face-status">
+                            <i class="fas fa-face-smile"></i>
+                            <span>Position your face in the frame</span>
+                        </div>
+                    </div>
+                    <div class="captured-preview" id="captured-preview" style="display: none;">
+                        <img id="captured-image" src="" alt="Captured face">
+                        <div class="preview-actions">
+                            <button type="button" class="btn-secondary" onclick="retakePhoto()">
+                                <i class="fas fa-redo"></i> Retake
+                            </button>
+                        </div>
+                    </div>
+                    <span class="error-message" id="face-error"></span>
+                    <button type="button" class="btn-primary" id="capture-btn" onclick="capturePhoto()">
+                        <i class="fas fa-camera"></i> Capture
+                    </button>
+                    <button type="button" class="btn-primary" id="continue-btn" style="display: none;" onclick="validateStep4()">
+                        Continue
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 5: Address Details -->
+            <div class="form-step" id="step-5">
+                <div class="step-header">
+                    <h2>Contact Information</h2>
+                    <p class="step-info">Step 5/7: Provide your current address. Select Division, District, Police Station, Union, and Village from the dropdowns, and enter any additional details in the text box.</p>
+                </div>
+                <div class="form-content">
+                    <div class="input-group">
+                        <label for="division">Division (বিভাগ)</label>
+                        <div class="input-wrapper select-wrapper">
+                            <i class="fas fa-map"></i>
+                            <select id="division" onchange="loadDistricts()">
+                                <option value="">Select Division</option>
+                                <option value="dhaka">Dhaka</option>
+                                <option value="chittagong">Chittagong</option>
+                                <option value="rajshahi">Rajshahi</option>
+                                <option value="khulna">Khulna</option>
+                                <option value="barishal">Barishal</option>
+                                <option value="sylhet">Sylhet</option>
+                                <option value="rangpur">Rangpur</option>
+                                <option value="mymensingh">Mymensingh</option>
+                            </select>
+                        </div>
+                        <span class="error-message" id="division-error"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="district">District (জেলা)</label>
+                        <div class="input-wrapper select-wrapper">
+                            <i class="fas fa-city"></i>
+                            <select id="district" onchange="loadPoliceStations()" disabled>
+                                <option value="">Select District</option>
+                            </select>
+                        </div>
+                        <span class="error-message" id="district-error"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="police-station">Police Station (থানা)</label>
+                        <div class="input-wrapper select-wrapper">
+                            <i class="fas fa-building-shield"></i>
+                            <select id="police-station" onchange="loadUnions()" disabled>
+                                <option value="">Select Police Station</option>
+                            </select>
+                        </div>
+                        <span class="error-message" id="police-error"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="union">Union (ইউনিয়ন)</label>
+                        <div class="input-wrapper select-wrapper">
+                            <i class="fas fa-map-pin"></i>
+                            <select id="union" onchange="loadVillages()" disabled>
+                                <option value="">Select Union</option>
+                            </select>
+                        </div>
+                        <span class="error-message" id="union-error"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="village">Village (গ্রাম)</label>
+                        <div class="input-wrapper select-wrapper">
+                            <i class="fas fa-home"></i>
+                            <select id="village" disabled>
+                                <option value="">Select Village</option>
+                            </select>
+                        </div>
+                        <span class="error-message" id="village-error"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="place-details">Place Details (স্থানের বিবরণ)</label>
+                        <div class="input-wrapper textarea-wrapper">
+                            <textarea id="place-details" placeholder="Enter additional address details..."></textarea>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="validateStep5()">Save Address</button>
+                </div>
+            </div>
+
+            <!-- Step 6: Account Creation -->
+            <div class="form-step" id="step-6">
+                <div class="step-header">
+                    <h2>Create Account</h2>
+                    <p class="step-info">Step 6/7: This is the final step of sign up. Please provide your email, password, and confirm password correctly to successfully create your account.</p>
+                </div>
+                <div class="form-content">
+                    <div class="face-verification">
+                        <div class="verified-photo">
+                            <img id="verified-face" src="" alt="Verified face">
+                            <div class="verified-badge">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                        <p class="verified-text">Face Verified</p>
+                    </div>
+                    <div class="input-group">
+                        <label for="email">Email</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="email" placeholder="Enter your email address">
+                        </div>
+                        <span class="error-message" id="email-error"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="password" placeholder="Enter password">
+                            <i class="fas fa-eye toggle-password" onclick="togglePassword('password')"></i>
+                        </div>
+                        <span class="error-message" id="password-error"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="confirm-password">Confirm Password</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="confirm-password" placeholder="Confirm your password">
+                            <i class="fas fa-eye toggle-password" onclick="togglePassword('confirm-password')"></i>
+                        </div>
+                        <span class="error-message" id="confirm-error"></span>
+                    </div>
+                    <div class="password-requirements">
+                        <p>Password must contain:</p>
+                        <ul>
+                            <li id="req-length"><i class="fas fa-circle"></i> At least 8 characters</li>
+                            <li id="req-upper"><i class="fas fa-circle"></i> An uppercase letter</li>
+                            <li id="req-number"><i class="fas fa-circle"></i> A number</li>
+                            <li id="req-special"><i class="fas fa-circle"></i> A special character</li>
+                        </ul>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="validateStep6()">Create Account</button>
+                </div>
+            </div>
+
+            <!-- Step 7: Success -->
+            <div class="form-step" id="step-7">
+                <div class="success-container">
+                    <div class="success-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2>Account Created Successfully!</h2>
+                    <p>Welcome to SecureVoice! Your account has been created and verified. You can now login to access the platform and report incidents securely.</p>
+                    <div class="user-summary">
+                        <div class="summary-item">
+                            <i class="fas fa-user"></i>
+                            <span id="summary-name"></span>
+                        </div>
+                        <div class="summary-item">
+                            <i class="fas fa-phone"></i>
+                            <span id="summary-phone"></span>
+                        </div>
+                        <div class="summary-item">
+                            <i class="fas fa-envelope"></i>
+                            <span id="summary-email"></span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="redirectToLogin()">
+                        <i class="fas fa-sign-in-alt"></i> Login to Your Account
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <button type="button" class="btn-back" id="back-btn" onclick="previousStep()" style="display: none;">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+    </div>
+
+    <script src="../js/register.js"></script>
+</body>
+</html>
