@@ -30,15 +30,30 @@ CREATE TABLE IF NOT EXISTS `users` (
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `fullName` varchar(100) DEFAULT NULL,
+  `name_bn` varchar(100) DEFAULT NULL,
+  `father_name` varchar(100) DEFAULT NULL,
+  `mother_name` varchar(100) DEFAULT NULL,
+  `face_image` longtext DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
+  `nid` varchar(17) DEFAULT NULL,
   `dob` date DEFAULT NULL,
   `location` varchar(100) DEFAULT NULL,
+  `division` varchar(50) DEFAULT NULL,
+  `district` varchar(50) DEFAULT NULL,
+  `police_station` varchar(100) DEFAULT NULL,
+  `union_name` varchar(100) DEFAULT NULL,
+  `village` varchar(100) DEFAULT NULL,
+  `place_details` text DEFAULT NULL,
+  `is_verified` tinyint(1) DEFAULT 0,
+  `is_nid_verified` tinyint(1) DEFAULT 0,
+  `is_face_verified` tinyint(1) DEFAULT 0,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `age` int DEFAULT NULL,
   PRIMARY KEY (`username`),
   UNIQUE KEY `unique_user_email` (`email`),
   UNIQUE KEY `unique_user_username` (`username`),
-  UNIQUE KEY `unique_userid` (`userid`)
+  UNIQUE KEY `unique_userid` (`userid`),
+  UNIQUE KEY `unique_user_nid` (`nid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Admins table
