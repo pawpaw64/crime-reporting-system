@@ -297,6 +297,12 @@ body {
     min-height: 20px;
 }
 
+.helper-text {
+    color: #748D92;
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
 /* Buttons */
 .btn-primary {
     width: 200px;
