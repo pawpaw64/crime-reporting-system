@@ -40,9 +40,124 @@ const userData = {
 
 // Initialize OTP Input Handlers
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('[DEBUG] DOMContentLoaded: Initializing event listeners');
+    
     initializeOTPInputs();
     initializePasswordValidation();
+    initializeEventListeners();
 });
+
+// Initialize all event listeners (replaces inline onclick/onchange handlers)
+function initializeEventListeners() {
+    console.log('[DEBUG] initializeEventListeners: Setting up button and select handlers');
+    
+    // Logo error handler
+    const logoImg = document.getElementById('logo-img');
+    if (logoImg) {
+        logoImg.addEventListener('error', function() {
+            this.style.display = 'none';
+        });
+    }
+    
+    // Step 1: Mobile submit
+    const step1Submit = document.getElementById('step1-submit');
+    if (step1Submit) {
+        step1Submit.addEventListener('click', validateStep1);
+    }
+    
+    // Step 2: OTP submit and resend
+    const step2Submit = document.getElementById('step2-submit');
+    if (step2Submit) {
+        step2Submit.addEventListener('click', validateStep2);
+    }
+    
+    const resendOtpBtn = document.getElementById('resend-otp');
+    if (resendOtpBtn) {
+        resendOtpBtn.addEventListener('click', resendOTP);
+    }
+    
+    // Step 3: NID verification
+    const step3Submit = document.getElementById('step3-submit');
+    if (step3Submit) {
+        step3Submit.addEventListener('click', validateStep3);
+    }
+    
+    // Step 4: Face capture
+    const captureBtn = document.getElementById('capture-btn');
+    if (captureBtn) {
+        captureBtn.addEventListener('click', capturePhoto);
+    }
+    
+    const retakeBtn = document.getElementById('retake-btn');
+    if (retakeBtn) {
+        retakeBtn.addEventListener('click', retakePhoto);
+    }
+    
+    const continueBtn = document.getElementById('continue-btn');
+    if (continueBtn) {
+        continueBtn.addEventListener('click', validateStep4);
+    }
+    
+    // Step 5: Address dropdowns
+    const divisionSelect = document.getElementById('division');
+    if (divisionSelect) {
+        divisionSelect.addEventListener('change', loadDistricts);
+    }
+    
+    const districtSelect = document.getElementById('district');
+    if (districtSelect) {
+        districtSelect.addEventListener('change', loadPoliceStations);
+    }
+    
+    const policeStationSelect = document.getElementById('police-station');
+    if (policeStationSelect) {
+        policeStationSelect.addEventListener('change', loadUnions);
+    }
+    
+    const unionSelect = document.getElementById('union');
+    if (unionSelect) {
+        unionSelect.addEventListener('change', loadVillages);
+    }
+    
+    const step5Submit = document.getElementById('step5-submit');
+    if (step5Submit) {
+        step5Submit.addEventListener('click', validateStep5);
+    }
+    
+    // Step 6: Password toggles and submit
+    const togglePassword = document.getElementById('toggle-password');
+    if (togglePassword) {
+        togglePassword.addEventListener('click', function() {
+            togglePasswordVisibility('password');
+        });
+    }
+    
+    const toggleConfirmPassword = document.getElementById('toggle-confirm-password');
+    if (toggleConfirmPassword) {
+        toggleConfirmPassword.addEventListener('click', function() {
+            togglePasswordVisibility('confirm-password');
+        });
+    }
+    
+    const step6Submit = document.getElementById('step6-submit');
+    if (step6Submit) {
+        step6Submit.addEventListener('click', validateStep6);
+    }
+    
+    // Step 7: Login redirect
+    const loginRedirectBtn = document.getElementById('login-redirect-btn');
+    if (loginRedirectBtn) {
+        loginRedirectBtn.addEventListener('click', redirectToLogin);
+    }
+    
+    // Back button
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', previousStep);
+    }
+    
+    console.log('[DEBUG] initializeEventListeners: All event listeners attached');
+}
 
 // OTP Input Auto-Focus
 function initializeOTPInputs() {
@@ -186,29 +301,39 @@ function previousStep() {
 
 // Step 1: Mobile Number Validation
 async function validateStep1() {
+    console.log('[DEBUG] Step 1: validateStep1() called');
+    
     const mobile = document.getElementById('mobile').value.trim();
     const errorEl = document.getElementById('mobile-error');
     const sendOtpBtn = document.querySelector('#step-1 .btn-primary');
+    
+    console.log('[DEBUG] Step 1: Mobile number entered:', mobile);
     
     // Bangladesh phone format: 01XXXXXXXXX (11 digits starting with 01)
     const phoneRegex = /^01[3-9]\d{8}$/;
     
     if (!mobile) {
+        console.log('[DEBUG] Step 1: Validation FAILED - Empty mobile number');
         errorEl.textContent = 'Please enter your mobile number';
         return;
     }
     
     if (!phoneRegex.test(mobile)) {
+        console.log('[DEBUG] Step 1: Validation FAILED - Invalid format:', mobile);
         errorEl.textContent = 'Please enter a valid Bangladesh mobile number (01XXXXXXXXX)';
         return;
     }
     
+    console.log('[DEBUG] Step 1: Validation PASSED - Valid mobile number');
     errorEl.textContent = '';
     userData.mobile = mobile;
     
     // Show loading state
     sendOtpBtn.classList.add('loading');
     sendOtpBtn.disabled = true;
+    
+    console.log('[DEBUG] Step 1: Sending API request to:', `${API_BASE_URL}/auth/send-otp`);
+    console.log('[DEBUG] Step 1: Request payload:', JSON.stringify({ phone: mobile }));
     
     try {
         // Send OTP via backend API
@@ -219,9 +344,12 @@ async function validateStep1() {
             body: JSON.stringify({ phone: mobile })
         });
         
+        console.log('[DEBUG] Step 1: Response status:', response.status);
         const result = await response.json();
+        console.log('[DEBUG] Step 1: Response data:', result);
         
         if (result.success) {
+            console.log('[DEBUG] Step 1: SUCCESS - SessionId received:', result.sessionId);
             registrationSessionId = result.sessionId;
             
             // For development - show OTP in console
@@ -229,15 +357,20 @@ async function validateStep1() {
                 console.log(`[DEV] Your OTP is: ${result.devOTP}`);
             }
             
+            console.log('[DEBUG] Step 1: Navigating to Step 2 (OTP verification)');
             goToStep(2);
             startOTPTimer();
+            console.log('[DEBUG] Step 1: OTP timer started');
         } else {
+            console.log('[DEBUG] Step 1: FAILED - Server returned error:', result.message);
             errorEl.textContent = result.message || 'Failed to send OTP';
+
         }
     } catch (error) {
-        console.error('Send OTP error:', error);
+        console.error('[DEBUG] Step 1: NETWORK ERROR:', error);
         errorEl.textContent = 'Network error. Please try again.';
     } finally {
+        console.log('[DEBUG] Step 1: Resetting button state');
         sendOtpBtn.classList.remove('loading');
         sendOtpBtn.disabled = false;
     }
@@ -259,7 +392,7 @@ async function sendOTP(mobile) {
             registrationSessionId = result.sessionId;
             console.log(`OTP sent to ${mobile}`);
             if (result.devOTP) {
-                console.log(`[DEV] Your OTP is: ${result.devOTP}`);
+            console.log(`[DEV] Your OTP is: ${result.devOTP}`);
             }
         } else {
             console.error('Failed to send OTP:', result.message);
@@ -270,27 +403,38 @@ async function sendOTP(mobile) {
 }
 
 function startOTPTimer() {
+    // Clear any existing timer first
+    if (otpTimer) {
+        clearInterval(otpTimer);
+        otpTimer = null;
+    }
+    
     let timeLeft = 120; // 2 minutes
     const timerEl = document.getElementById('timer');
     const resendBtn = document.getElementById('resend-otp');
     
-    resendBtn.disabled = true;
+    if (resendBtn) resendBtn.disabled = true;
     
     otpTimer = setInterval(() => {
         timeLeft--;
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
-        timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        if (timerEl) timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         
         if (timeLeft <= 0) {
             clearInterval(otpTimer);
-            resendBtn.disabled = false;
-            timerEl.textContent = '00:00';
+            otpTimer = null;
+            if (resendBtn) resendBtn.disabled = false;
+            if (timerEl) timerEl.textContent = '00:00';
         }
     }, 1000);
 }
 
 function resendOTP() {
+    // Prevent multiple rapid clicks
+    const resendBtn = document.getElementById('resend-otp');
+    if (resendBtn && resendBtn.disabled) return;
+    
     sendOTP(userData.mobile);
     startOTPTimer();
 }
@@ -520,7 +664,7 @@ function retakePhoto() {
     startCamera();
 }
 
-function validateStep4() {
+async function validateStep4() {
     const errorEl = document.getElementById('face-error');
     
     if (!capturedImageData) {
@@ -532,7 +676,7 @@ function validateStep4() {
     userData.faceImage = capturedImageData;
     
     // Save face image to backend
-    saveFaceToBackend();
+    await saveFaceToBackend();
     goToStep(5);
 }
 
@@ -801,7 +945,7 @@ async function saveAddressToBackend() {
 }
 
 // Step 6: Account Creation
-function togglePassword(inputId) {
+function togglePasswordVisibility(inputId) {
     const input = document.getElementById(inputId);
     const icon = input.parentElement.querySelector('.toggle-password');
     

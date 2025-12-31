@@ -1,5 +1,5 @@
 const app = require('./app');
-const { pool } = require('./db');
+const pool = require('./db');
 const { exec } = require('child_process');
 const os = require('os');
 

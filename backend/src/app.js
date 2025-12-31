@@ -9,9 +9,33 @@ require('dotenv').config();
 const app = express();
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// CORS configuration - allow multiple origins for development
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
+    'http://localhost:8080',
+    'http://127.0.0.1:3000',
+    process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: function(origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        // For development, allow all localhost origins
+        if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+            return callback(null, true);
+        }
+        return callback(null, true); // Allow all for now in dev
+    },
     credentials: true
 }));
 
@@ -32,6 +56,7 @@ app.use(session({
 
 // Serve static files from frontend
 app.use(express.static(path.join(__dirname, '../../frontend')));
+app.use('/src', express.static(path.join(__dirname, '../../frontend/src')));
 app.use('/css', express.static(path.join(__dirname, '../../frontend/src/css')));
 app.use('/js', express.static(path.join(__dirname, '../../frontend/src/js')));
 app.use('/images', express.static(path.join(__dirname, '../../frontend/images')));
@@ -53,6 +78,8 @@ app.post('/api/auth/verify-otp', authController.verifyOTP);
 app.post('/api/auth/verify-nid', authController.verifyNID);
 app.post('/api/auth/save-face', authController.saveFaceImage);
 app.post('/api/auth/save-address', authController.saveAddress);
+app.post('/api/auth/resend-otp', authController.resendOTP);
+app.get('/api/auth/registration-status/:sessionId', authController.getRegistrationStatus);
 
 // User routes (placeholder for now)
 app.get('/api/profile', authMiddleware.requireUser, (req, res) => {
