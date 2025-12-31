@@ -104,13 +104,19 @@ exports.adminLogin = async (req, res) => {
 exports.signup = async (req, res) => {
     try {
         const { 
-            email, password, sessionId,
+            username, email, password, sessionId,
             phone, nid, dob, nameEn, nameBn, fatherName, motherName,
             faceImage, division, district, policeStation, union, village, placeDetails
         } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ success: false, message: "Email and password are required" });
+        if (!username || !email || !password) {
+            return res.status(400).json({ success: false, message: "Username, email and password are required" });
+        }
+
+        // Username validation
+        const usernameRegex = /^[a-zA-Z0-9_]{3,50}$/;
+        if (!usernameRegex.test(username)) {
+            return res.status(400).json({ success: false, message: "Username must be 3-50 characters (letters, numbers, underscores only)" });
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -120,6 +126,12 @@ exports.signup = async (req, res) => {
 
         if (password.length < 8) {
             return res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
+        }
+
+        // Check if username exists
+        const [existingUsername] = await pool.query('SELECT userid FROM users WHERE username = ?', [username]);
+        if (existingUsername.length > 0) {
+            return res.status(400).json({ success: false, message: "This username is already taken" });
         }
 
         // Check if email exists
@@ -139,8 +151,6 @@ exports.signup = async (req, res) => {
             userData = { phone, nid, dob, fullName: nameEn, nameBn, fatherName, motherName, faceImage, division, district, policeStation, unionName: union, village, placeDetails, location };
         }
 
-        // Generate username from email
-        const username = email.split('@')[0] + '_' + Date.now().toString(36);
         const hashedPassword = await hashPassword(password);
 
         // Calculate age from DOB
@@ -195,6 +205,7 @@ exports.signup = async (req, res) => {
     } catch (err) {
         console.error("Signup error:", err);
         if (err.code === 'ER_DUP_ENTRY') {
+            if (err.message.includes('username')) return res.status(400).json({ success: false, message: "Username already taken" });
             if (err.message.includes('email')) return res.status(400).json({ success: false, message: "Email already registered" });
             if (err.message.includes('nid')) return res.status(400).json({ success: false, message: "NID already registered" });
         }

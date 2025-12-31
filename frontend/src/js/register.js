@@ -34,6 +34,7 @@ const userData = {
     union: '',
     village: '',
     placeDetails: '',
+    username: '',
     email: '',
     password: ''
 };
@@ -961,11 +962,24 @@ function togglePasswordVisibility(inputId) {
 }
 
 function validateStep6() {
+    const username = document.getElementById('username').value.trim();
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirm-password').value;
     
     let isValid = true;
+    
+    // Username validation
+    const usernameRegex = /^[a-zA-Z0-9_]{3,50}$/;
+    if (!username) {
+        document.getElementById('username-error').textContent = 'Please choose a username';
+        isValid = false;
+    } else if (!usernameRegex.test(username)) {
+        document.getElementById('username-error').textContent = 'Username must be 3-50 characters (letters, numbers, underscores only)';
+        isValid = false;
+    } else {
+        document.getElementById('username-error').textContent = '';
+    }
     
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1002,6 +1016,7 @@ function validateStep6() {
     }
     
     if (isValid) {
+        userData.username = username;
         userData.email = email;
         userData.password = password;
         
@@ -1022,6 +1037,7 @@ async function submitRegistration() {
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({
+                username: userData.username,
                 email: userData.email,
                 password: userData.password,
                 sessionId: registrationSessionId,
@@ -1049,7 +1065,12 @@ async function submitRegistration() {
             console.log('Registration successful:', result);
             goToStep(7);
         } else {
-            document.getElementById('email-error').textContent = result.message || 'Registration failed';
+            // Show error on appropriate field
+            if (result.message.toLowerCase().includes('username')) {
+                document.getElementById('username-error').textContent = result.message;
+            } else {
+                document.getElementById('email-error').textContent = result.message || 'Registration failed';
+            }
         }
     } catch (error) {
         console.error('Registration error:', error);
