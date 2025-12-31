@@ -1,57 +1,66 @@
-const authController = require('./controllers/auth');
-const adminController = require('./controllers/admin');
-const complaintController = require('./controllers/complaint');
-const userController = require('./controllers/user');
-const middleware = require('./middleware/auth');
+const express = require('express');
+const router = express.Router();
 
-module.exports = (app) => {
-    // Auth routes
-    app.post('/api/signup', authController.signup);
-    app.post('/api/login', authController.login);
-    app.post('/api/logout', (req, res) => {
-        req.session.destroy();
-        res.json({ success: true, message: "Logged out successfully" });
-    });
-    
-    // User routes (require authentication)
-    app.get('/api/profile', middleware.requireUser, userController.getProfile);
-    app.post('/api/update-profile', middleware.requireUser, userController.updateProfile);
-    app.get('/api/my-complaints', middleware.requireUser, userController.getMyComplaints);
-    
-    // Complaint routes
-    app.post('/api/submit-complaint', 
-        middleware.requireUser,
-        (req, res, next) => {
-            complaintController.uploadMiddleware(req, res, (err) => {
-                if (err) {
-                    return res.status(400).json({
-                        success: false,
-                        message: err.message
-                    });
-                }
-                next();
-            });
-        },
-        complaintController.submitComplaint
-    );
-    
-    // Admin routes (require admin auth)
-    app.post('/api/admin/login', adminController.login);
-    app.get('/api/admin/dashboard', middleware.requireAdmin, adminController.getDashboard);
-    app.post('/api/admin/update-status', middleware.requireAdmin, adminController.updateStatus);
-    
-    // Static file routes for frontend
-    app.get('/', (req, res) => {
-        res.sendFile(path.join(__dirname, '../../frontend/public/index.html'));
-    });
-    
-    app.get('/login', (req, res) => {
-        res.sendFile(path.join(__dirname, '../../frontend/public/login.html'));
-    });
-    
-    app.get('/signup', (req, res) => {
-        res.sendFile(path.join(__dirname, '../../frontend/public/signup.html'));
-    });
-    
-    // Add more routes as needed...
-};
+// Import controllers
+const authController = require('./controllers/authController');
+const adminController = require('./controllers/adminController');
+const userController = require('./controllers/userController');
+const complaintController = require('./controllers/complaintController');
+const pageController = require('./controllers/pageController');
+
+// Import middleware
+const { requireUserAuth } = require('./middleware/authMiddleware');
+const upload = require('./middleware/uploadMiddleware');
+
+// ========== PAGE ROUTES ==========
+router.get('/homepage', pageController.serveHomepage);
+router.get('/contact-us', pageController.serveContactUs);
+router.get('/adminLogin', pageController.serveAdminLogin);
+router.get('/signup', pageController.serveSignup);
+router.get('/login', pageController.serveLogin);
+router.get('/test-email', pageController.testEmail);
+
+// ========== AUTH ROUTES ==========
+// Admin Auth
+router.post('/adminLogin', authController.adminLogin);
+router.post('/admin-logout', authController.adminLogout);
+router.get('/check-admin-auth', authController.checkAdminAuth);
+
+// User Auth
+router.post('/signup', authController.userSignup);
+router.post('/login', authController.userLogin);
+router.post('/logout', authController.userLogout);
+
+// OTP Routes
+router.post('/send-otp', authController.sendOTP);
+router.post('/verify-otp', authController.verifyOTP);
+
+// ========== ADMIN ROUTES ==========
+router.get('/admin-dashboard', adminController.getAdminDashboard);
+router.get('/get-admin-settings', adminController.getAdminSettings);
+router.post('/update-admin-settings', adminController.updateAdminSettings);
+router.post('/update-admin-profile', adminController.updateAdminProfile);
+router.get('/admin-chat/:complaintId', adminController.getAdminChat);
+router.post('/admin-send-chat-message', adminController.sendAdminChatMessage);
+router.get('/get-complaint-evidence/:complaintId', adminController.getComplaintEvidence);
+router.get('/get-admin-cases', adminController.getAdminCases);
+router.post('/update-complaint-status', adminController.updateComplaintStatus);
+
+// ========== USER ROUTES ==========
+router.get('/profile', requireUserAuth, userController.getUserProfile);
+router.post('/update-profile', requireUserAuth, userController.updateUserProfile);
+router.get('/get-user-data', requireUserAuth, userController.getUserData);
+
+// ========== COMPLAINT ROUTES ==========
+router.get('/complain', requireUserAuth, complaintController.serveComplaintForm);
+router.post('/submit-complaint', requireUserAuth, upload.array('evidence', 10), complaintController.submitComplaint);
+router.post('/notify-admin', complaintController.notifyAdmin);
+router.get('/my-complaints', requireUserAuth, complaintController.getUserComplaints);
+router.get('/complaint-notifications/:complaint_id', requireUserAuth, complaintController.getComplaintNotifications);
+router.post('/mark-notifications-read/:complaint_id', requireUserAuth, complaintController.markNotificationsRead);
+router.get('/complaint-chat/:complaintId', requireUserAuth, complaintController.getComplaintChat);
+router.post('/send-chat-message', requireUserAuth, complaintController.sendChatMessage);
+router.delete('/delete-complaint/:id', requireUserAuth, complaintController.deleteComplaint);
+router.get('/dashboard-stats', requireUserAuth, complaintController.getDashboardStats);
+
+module.exports = router;
