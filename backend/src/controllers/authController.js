@@ -1,617 +1,251 @@
-const bcrypt = require('bcrypt');
-const crypto = require('crypto');
-const { query } = require('../db');
+const pool = require('../db');
+const { hashPassword, comparePassword } = require('../utils/passwordUtils');
+const { sendEmail } = require('../utils/emailUtils');
 
-// Generate OTP
-function generateOTP() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
+// Store OTPs temporarily
+const otpStore = new Map();
 
-// Generate session ID
-function generateSessionId() {
-    return crypto.randomBytes(32).toString('hex');
-}
+// Admin Login/Signup
+exports.adminLogin = async (req, res) => {
+    try {
+        const { username, email, password, district_name } = req.body;
+        
+        // Check if admin exists
+        const [results] = await pool.query(
+            'SELECT * FROM admins WHERE username = ? OR email = ?',
+            [username, email]
+        );
 
-module.exports = {
-    // ==================== LOGIN ====================
-    login: async (req, res) => {
-        try {
-            const { username, password } = req.body;
-            
-            // Validation
-            if (!username || !password) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Username and password are required"
-                });
-            }
+        // If admin exists, try to log in
+        if (results.length > 0) {
+            const admin = results[0];
+            const isMatch = await comparePassword(password, admin.password);
 
-            // Get client IP for logging
-            const ipAddress = req.ip || req.connection.remoteAddress;
-
-            // Find user by username or email
-            const users = await query(
-                'SELECT * FROM users WHERE username = ? OR email = ?',
-                [username, username]
-            );
-
-            if (users.length === 0) {
-                // Log failed attempt
-                await query(
-                    'INSERT INTO login_attempts (username, ip_address, success) VALUES (?, ?, 0)',
-                    [username, ipAddress]
-                ).catch(() => {}); // Ignore if table doesn't exist
-
-                return res.status(401).json({
-                    success: false,
-                    message: "Invalid username or password"
-                });
-            }
-
-            const user = users[0];
-
-            // Verify password
-            const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch) {
-                // Log failed attempt
-                await query(
-                    'INSERT INTO login_attempts (username, ip_address, success) VALUES (?, ?, 0)',
-                    [username, ipAddress]
-                ).catch(() => {});
-
                 return res.status(401).json({
                     success: false,
                     message: "Invalid username or password"
                 });
             }
-
-            // Log successful attempt
-            await query(
-                'INSERT INTO login_attempts (username, ip_address, success) VALUES (?, ?, 1)',
-                [username, ipAddress]
-            ).catch(() => {});
 
             // Set session
-            req.session.userId = user.userid;
-            req.session.username = user.username;
-            req.session.email = user.email;
-            req.session.fullName = user.fullName;
-            req.session.isLoggedIn = true;
+            req.session.adminId = admin.adminid;
+            req.session.adminUsername = admin.username;
+            req.session.adminEmail = admin.email;
+            req.session.district = admin.district_name;
 
-            res.json({
+            return res.json({
                 success: true,
                 message: "Login successful",
-                user: {
-                    username: user.username,
-                    email: user.email,
-                    fullName: user.fullName
-                },
-                redirect: "/dashboard"
-            });
-        } catch (error) {
-            console.error("Login error:", error);
-            res.status(500).json({
-                success: false,
-                message: "An error occurred during login. Please try again."
+                redirect: "/admin-dashboard"
             });
         }
-    },
 
-    // ==================== LOGOUT ====================
-    logout: async (req, res) => {
-        try {
-            req.session.destroy((err) => {
-                if (err) {
-                    return res.status(500).json({
-                        success: false,
-                        message: "Error logging out"
-                    });
-                }
-                res.json({
-                    success: true,
-                    message: "Logged out successfully",
-                    redirect: "/login"
-                });
-            });
-        } catch (error) {
-            console.error("Logout error:", error);
-            res.status(500).json({
-                success: false,
-                message: "Error during logout"
-            });
-        }
-    },
+        // Register new admin
+        if (username && email && password && district_name) {
+            const hashedPassword = await hashPassword(password);
+            const createdAT = new Date();
 
-    // ==================== SEND OTP ====================
-    sendOTP: async (req, res) => {
-        try {
-            const { phone } = req.body;
-
-            // Validate Bangladesh phone format
-            const phoneRegex = /^01[3-9]\d{8}$/;
-            if (!phone || !phoneRegex.test(phone)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Please enter a valid Bangladesh mobile number (01XXXXXXXXX)"
-                });
-            }
-
-            // Check if phone already registered
-            const existingUser = await query(
-                'SELECT * FROM users WHERE phone = ?',
-                [phone]
+            const [result] = await pool.query(
+                "INSERT INTO admins(username, email, password, fullName, created_at, district_name) VALUES (?, ?, ?, NULL, ?, ?)",
+                [username, email, hashedPassword, createdAT, district_name]
             );
 
-            if (existingUser.length > 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: "This phone number is already registered"
-                });
-            }
+            req.session.adminId = result.insertId;
+            req.session.adminUsername = username;
+            req.session.adminEmail = email;
+            req.session.district = district_name;
 
-            // Generate OTP
-            const otpCode = generateOTP();
-            const expiresAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
-
-            // Delete old OTPs for this phone
-            await query('DELETE FROM otp_verification WHERE phone = ?', [phone]).catch(() => {});
-
-            // Save OTP to database
-            await query(
-                'INSERT INTO otp_verification (phone, otp_code, expires_at) VALUES (?, ?, ?)',
-                [phone, otpCode, expiresAt]
-            ).catch(() => {
-                // If table doesn't exist, just continue (for development)
-            });
-
-            // Generate registration session
-            const sessionId = generateSessionId();
-            const sessionExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
-
-            // Save registration session
-            await query(
-                'INSERT INTO registration_sessions (session_id, phone, step, data, expires_at) VALUES (?, ?, 1, ?, ?)',
-                [sessionId, phone, JSON.stringify({ phone }), sessionExpires]
-            ).catch(() => {});
-
-            // In production, send SMS here using SMS gateway
-            // For development, log OTP to console
-            console.log(`[DEV] OTP for ${phone}: ${otpCode}`);
-
-            res.json({
+            return res.json({
                 success: true,
-                message: "OTP sent successfully",
-                sessionId: sessionId,
-                // Remove in production - only for development testing
-                devOTP: process.env.NODE_ENV !== 'production' ? otpCode : undefined
-            });
-        } catch (error) {
-            console.error("Send OTP error:", error);
-            res.status(500).json({
-                success: false,
-                message: "Failed to send OTP. Please try again."
+                message: "Admin registration successful!",
+                redirect: "/admin-dashboard"
             });
         }
-    },
 
-    // ==================== VERIFY OTP ====================
-    verifyOTP: async (req, res) => {
-        try {
-            const { phone, otp, sessionId } = req.body;
+        return res.status(400).json({
+            success: false,
+            message: "Missing required fields for registration"
+        });
 
-            if (!phone || !otp) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Phone and OTP are required"
-                });
-            }
+    } catch (err) {
+        console.error("Admin login error:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
 
-            // Find valid OTP
-            const otpRecords = await query(
-                'SELECT * FROM otp_verification WHERE phone = ? AND otp_code = ? AND expires_at > NOW() AND is_verified = 0',
-                [phone, otp]
-            ).catch(() => []);
+// User Signup
+exports.signup = async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
+        const createdAT = new Date();
 
-            // For development, accept any 6-digit OTP if table doesn't exist
-            const isValidOTP = otpRecords.length > 0 || 
-                (process.env.NODE_ENV !== 'production' && otp.length === 6);
+        const hashedPassword = await hashPassword(password);
 
-            if (!isValidOTP) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid or expired OTP"
-                });
-            }
+        const [result] = await pool.query(
+            "INSERT INTO users(username, email, password, created_at) VALUES (?, ?, ?, ?)",
+            [username, email, hashedPassword, createdAT]
+        );
 
-            // Mark OTP as verified
-            if (otpRecords.length > 0) {
-                await query(
-                    'UPDATE otp_verification SET is_verified = 1 WHERE phone = ? AND otp_code = ?',
-                    [phone, otp]
-                );
-            }
+        req.session.userId = result.insertId;
+        req.session.username = username;
+        req.session.email = email;
 
-            // Update registration session
-            if (sessionId) {
-                await query(
-                    'UPDATE registration_sessions SET step = 2, data = JSON_SET(COALESCE(data, "{}"), "$.otpVerified", true) WHERE session_id = ?',
-                    [sessionId]
-                ).catch(() => {});
-            }
+        res.json({
+            success: true,
+            message: "Registration successful!"
+        });
+    } catch (err) {
+        console.error("Signup error:", err);
+        res.status(500).send("Error registering user");
+    }
+};
 
-            res.json({
-                success: true,
-                message: "OTP verified successfully"
-            });
-        } catch (error) {
-            console.error("Verify OTP error:", error);
-            res.status(500).json({
+// User Login
+exports.login = async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        if (!username || !password) {
+            return res.status(400).json({
                 success: false,
-                message: "Failed to verify OTP"
+                message: "Username and password are required"
             });
         }
-    },
 
-    // ==================== VERIFY NID ====================
-    verifyNID: async (req, res) => {
-        try {
-            const { nid, dob, nameEn, nameBn, fatherName, motherName, sessionId } = req.body;
+        const [results] = await pool.query(
+            'SELECT * FROM users WHERE username = ?',
+            [username]
+        );
 
-            // Validate NID format (10 or 17 digits)
-            if (!nid || !/^(\d{10}|\d{17})$/.test(nid)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "NID must be 10 or 17 digits"
-                });
-            }
-
-            // Check if NID already registered
-            const existingUser = await query(
-                'SELECT * FROM users WHERE nid = ?',
-                [nid]
-            ).catch(() => []);
-
-            if (existingUser.length > 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: "This NID is already registered"
-                });
-            }
-
-            // In production, verify NID with government API here
-            // For development, just validate the format
-
-            // Update registration session with NID data
-            if (sessionId) {
-                await query(
-                    `UPDATE registration_sessions SET step = 3, 
-                    data = JSON_SET(COALESCE(data, "{}"), 
-                        "$.nid", ?, 
-                        "$.dob", ?, 
-                        "$.nameEn", ?, 
-                        "$.nameBn", ?, 
-                        "$.fatherName", ?, 
-                        "$.motherName", ?,
-                        "$.nidVerified", true
-                    ) WHERE session_id = ?`,
-                    [nid, dob, nameEn, nameBn || '', fatherName, motherName, sessionId]
-                ).catch(() => {});
-            }
-
-            res.json({
-                success: true,
-                message: "Identity verified successfully"
-            });
-        } catch (error) {
-            console.error("Verify NID error:", error);
-            res.status(500).json({
+        if (results.length === 0) {
+            return res.status(401).json({
                 success: false,
-                message: "Failed to verify identity"
+                message: "Invalid username or password"
             });
         }
-    },
 
-    // ==================== SAVE FACE IMAGE ====================
-    saveFaceImage: async (req, res) => {
-        try {
-            const { faceImage, sessionId } = req.body;
+        const user = results[0];
+        const isMatch = await comparePassword(password, user.password);
 
-            if (!faceImage) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Face image is required"
-                });
-            }
-
-            // Update registration session with face image
-            if (sessionId) {
-                await query(
-                    `UPDATE registration_sessions SET step = 4, 
-                    data = JSON_SET(COALESCE(data, "{}"), 
-                        "$.faceImage", ?,
-                        "$.faceVerified", true
-                    ) WHERE session_id = ?`,
-                    [faceImage, sessionId]
-                ).catch(() => {});
-            }
-
-            res.json({
-                success: true,
-                message: "Face image saved successfully"
-            });
-        } catch (error) {
-            console.error("Save face error:", error);
-            res.status(500).json({
+        if (!isMatch) {
+            return res.status(401).json({
                 success: false,
-                message: "Failed to save face image"
+                message: "Invalid username or password"
             });
         }
-    },
 
-    // ==================== SAVE ADDRESS ====================
-    saveAddress: async (req, res) => {
-        try {
-            const { division, district, policeStation, union, village, placeDetails, sessionId } = req.body;
+        req.session.userId = user.userid;
+        req.session.username = user.username;
+        req.session.email = user.email;
 
-            if (!division || !district || !policeStation) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Division, District and Police Station are required"
-                });
-            }
+        res.json({
+            success: true,
+            message: "Login successful",
+            redirect: "/profile"
+        });
+    } catch (err) {
+        console.error("Login error:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
 
-            // Update registration session with address
-            if (sessionId) {
-                await query(
-                    `UPDATE registration_sessions SET step = 5, 
-                    data = JSON_SET(COALESCE(data, "{}"), 
-                        "$.division", ?,
-                        "$.district", ?,
-                        "$.policeStation", ?,
-                        "$.union", ?,
-                        "$.village", ?,
-                        "$.placeDetails", ?
-                    ) WHERE session_id = ?`,
-                    [division, district, policeStation, union || '', village || '', placeDetails || '', sessionId]
-                ).catch(() => {});
-            }
+// Send OTP
+exports.sendOTP = async (req, res) => {
+    try {
+        const { email } = req.body;
 
-            res.json({
-                success: true,
-                message: "Address saved successfully"
-            });
-        } catch (error) {
-            console.error("Save address error:", error);
-            res.status(500).json({
-                success: false,
-                message: "Failed to save address"
-            });
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Email is required" });
         }
-    },
 
-    // ==================== COMPLETE SIGNUP ====================
-    signup: async (req, res) => {
-        try {
-            const { 
-                email, 
-                password, 
-                sessionId,
-                // Direct data (if not using session)
-                phone,
-                nid,
-                dob,
-                nameEn,
-                nameBn,
-                fatherName,
-                motherName,
-                faceImage,
-                division,
-                district,
-                policeStation,
-                union,
-                village,
-                placeDetails
-            } = req.body;
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-            // Validate required fields
-            if (!email || !password) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Email and password are required"
-                });
-            }
+        otpStore.set(email, {
+            otp: otp,
+            expires: Date.now() + 5 * 60 * 1000
+        });
 
-            // Validate email format
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Please enter a valid email address"
-                });
-            }
+        const html = `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2>SecureVoice - Email Verification</h2>
+                <p>Your OTP code is:</p>
+                <h1 style="background-color: #f0f0f0; padding: 15px; text-align: center; letter-spacing: 5px;">
+                    ${otp}
+                </h1>
+                <p>This code will expire in 5 minutes.</p>
+            </div>
+        `;
 
-            // Validate password strength
-            const passwordRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
-            if (!passwordRegex.test(password)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Password must be at least 8 characters with uppercase, number, and special character"
-                });
-            }
+        await sendEmail(email, 'SecureVoice - Your OTP Code', html);
 
-            // Get registration data from session or direct input
-            let registrationData = {
-                phone, nid, dob, nameEn, nameBn, fatherName, motherName,
-                faceImage, division, district, policeStation, union, village, placeDetails
-            };
+        res.json({ success: true, message: "OTP sent successfully" });
+    } catch (err) {
+        console.error("Send OTP error:", err);
+        res.status(500).json({ success: false, message: "Failed to send OTP" });
+    }
+};
 
-            if (sessionId) {
-                const sessions = await query(
-                    'SELECT * FROM registration_sessions WHERE session_id = ? AND expires_at > NOW()',
-                    [sessionId]
-                ).catch(() => []);
+// Verify OTP
+exports.verifyOTP = (req, res) => {
+    const { email, otp } = req.body;
 
-                if (sessions.length > 0 && sessions[0].data) {
-                    const sessionData = typeof sessions[0].data === 'string' 
-                        ? JSON.parse(sessions[0].data) 
-                        : sessions[0].data;
-                    registrationData = { ...registrationData, ...sessionData };
-                }
-            }
+    if (!email || !otp) {
+        return res.status(400).json({ success: false, message: "Email and OTP are required" });
+    }
 
-            // Check if email already exists
-            const existingEmail = await query(
-                'SELECT * FROM users WHERE email = ?',
-                [email]
-            );
+    const storedData = otpStore.get(email);
 
-            if (existingEmail.length > 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: "This email is already registered"
-                });
-            }
+    if (!storedData) {
+        return res.status(400).json({ success: false, message: "OTP not found or expired" });
+    }
 
-            // Check if phone already exists
-            if (registrationData.phone) {
-                const existingPhone = await query(
-                    'SELECT * FROM users WHERE phone = ?',
-                    [registrationData.phone]
-                );
+    if (Date.now() > storedData.expires) {
+        otpStore.delete(email);
+        return res.status(400).json({ success: false, message: "OTP has expired" });
+    }
 
-                if (existingPhone.length > 0) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "This phone number is already registered"
-                    });
-                }
-            }
+    if (storedData.otp !== otp) {
+        return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
 
-            // Generate username from name or email
-            let username = registrationData.nameEn 
-                ? registrationData.nameEn.toLowerCase().replace(/\s+/g, '_').substring(0, 20)
-                : email.split('@')[0];
-            
-            // Check if username exists and make unique
-            let usernameExists = true;
-            let counter = 0;
-            let finalUsername = username;
-            
-            while (usernameExists) {
-                const existing = await query(
-                    'SELECT * FROM users WHERE username = ?',
-                    [finalUsername]
-                );
-                if (existing.length === 0) {
-                    usernameExists = false;
-                } else {
-                    counter++;
-                    finalUsername = `${username}_${counter}`;
-                }
-            }
+    otpStore.delete(email);
+    res.json({ success: true, message: "OTP verified successfully" });
+};
 
-            // Hash password
-            const hashedPassword = await bcrypt.hash(password, 12);
-
-            // Insert user
-            const result = await query(
-                `INSERT INTO users (
-                    username, email, password, fullName, phone, dob, location, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-                [
-                    finalUsername,
-                    email,
-                    hashedPassword,
-                    registrationData.nameEn || '',
-                    registrationData.phone || '',
-                    registrationData.dob || null,
-                    `${registrationData.village || ''}, ${registrationData.district || ''}`.trim()
-                ]
-            );
-
-            // Clean up registration session
-            if (sessionId) {
-                await query('DELETE FROM registration_sessions WHERE session_id = ?', [sessionId]).catch(() => {});
-            }
-
-            // Clean up OTP records
-            if (registrationData.phone) {
-                await query('DELETE FROM otp_verification WHERE phone = ?', [registrationData.phone]).catch(() => {});
-            }
-
-            // Set session for auto-login
-            req.session.userId = result.insertId;
-            req.session.username = finalUsername;
-            req.session.email = email;
-            req.session.fullName = registrationData.nameEn || '';
-            req.session.isLoggedIn = true;
-
-            res.json({
-                success: true,
-                message: "Account created successfully!",
-                user: {
-                    username: finalUsername,
-                    email: email,
-                    fullName: registrationData.nameEn || ''
-                }
-            });
-        } catch (error) {
-            console.error("Signup error:", error);
-            
-            // Handle duplicate entry errors
-            if (error.code === 'ER_DUP_ENTRY') {
-                if (error.message.includes('email')) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "This email is already registered"
-                    });
-                }
-                if (error.message.includes('phone')) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "This phone number is already registered"
-                    });
-                }
-                if (error.message.includes('nid')) {
-                    return res.status(400).json({
-                        success: false,
-                        message: "This NID is already registered"
-                    });
-                }
-            }
-
-            res.status(500).json({
-                success: false,
-                message: "Registration failed. Please try again."
-            });
+// Admin Logout
+exports.adminLogout = (req, res) => {
+    req.session.destroy(function(err) {
+        if (err) {
+            return res.status(500).json({ success: false, message: "Error logging out" });
         }
-    },
+        res.clearCookie('connect.sid');
+        res.json({ success: true, message: "Logged out successfully" });
+    });
+};
 
-    // ==================== CHECK AUTH STATUS ====================
-    checkAuth: async (req, res) => {
-        try {
-            if (req.session && req.session.isLoggedIn) {
-                res.json({
-                    success: true,
-                    isLoggedIn: true,
-                    user: {
-                        username: req.session.username,
-                        email: req.session.email,
-                        fullName: req.session.fullName
-                    }
-                });
-            } else {
-                res.json({
-                    success: true,
-                    isLoggedIn: false
-                });
-            }
-        } catch (error) {
-            console.error("Check auth error:", error);
-            res.status(500).json({
-                success: false,
-                message: "Error checking authentication status"
-            });
+// User Logout
+exports.userLogout = (req, res) => {
+    req.session.destroy(function(err) {
+        if (err) {
+            return res.status(500).json({ success: false, message: "Error logging out" });
         }
+        res.clearCookie('connect.sid');
+        res.json({ success: true, message: "Logout successful" });
+    });
+};
+
+// Check admin auth
+exports.checkAdminAuth = (req, res) => {
+    if (req.session && req.session.adminId) {
+        res.json({ authenticated: true });
+    } else {
+        res.status(401).json({ authenticated: false });
     }
 };
