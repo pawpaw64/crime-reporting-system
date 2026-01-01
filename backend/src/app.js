@@ -81,25 +81,75 @@ app.post('/api/auth/save-address', authController.saveAddress);
 app.post('/api/auth/resend-otp', authController.resendOTP);
 app.get('/api/auth/registration-status/:sessionId', authController.getRegistrationStatus);
 
-// User routes (placeholder for now)
-app.get('/api/profile', authMiddleware.requireUser, (req, res) => {
-    res.json({ 
-        success: true, 
-        user: { 
-            id: req.session.userId, 
-            username: req.session.username, 
-            email: req.session.email 
-        } 
-    });
+// User routes - Full profile data
+app.get('/api/profile', authMiddleware.requireUser, async (req, res) => {
+    try {
+        const db = require('./db');
+        const [users] = await db.query(
+            'SELECT userid, username, email, fullName, name_bn, father_name, mother_name, face_image, phone, nid, dob, location, division, district, police_station, union_name, village, place_details, is_verified, is_nid_verified, is_face_verified, created_at, age FROM users WHERE username = ?',
+            [req.session.username]
+        );
+        
+        if (users.length > 0) {
+            res.json({ 
+                success: true, 
+                user: users[0]
+            });
+        } else {
+            res.json({ 
+                success: true, 
+                user: { 
+                    id: req.session.userId, 
+                    username: req.session.username, 
+                    email: req.session.email 
+                } 
+            });
+        }
+    } catch (error) {
+        console.error('Profile fetch error:', error);
+        res.json({ 
+            success: true, 
+            user: { 
+                id: req.session.userId, 
+                username: req.session.username, 
+                email: req.session.email 
+            } 
+        });
+    }
 });
 
-// Complaint routes (placeholder for now)
-app.post('/api/complaints', authMiddleware.requireUser, (req, res) => {
-    res.json({ success: true, message: "Complaint submitted (placeholder)" });
+// Update profile
+app.put('/api/profile/update', authMiddleware.requireUser, async (req, res) => {
+    try {
+        const db = require('./db');
+        const { email, phone, division, district, place_details } = req.body;
+        
+        await db.query(
+            'UPDATE users SET email = ?, phone = ?, division = ?, district = ?, place_details = ? WHERE username = ?',
+            [email, phone, division, district, place_details, req.session.username]
+        );
+        
+        res.json({ success: true, message: 'Profile updated successfully' });
+    } catch (error) {
+        console.error('Profile update error:', error);
+        res.status(500).json({ success: false, message: 'Failed to update profile' });
+    }
 });
 
-app.get('/api/complaints', authMiddleware.requireUser, (req, res) => {
-    res.json({ success: true, complaints: [] });
+// Get user complaints
+app.get('/api/my-complaints', authMiddleware.requireUser, async (req, res) => {
+    try {
+        const db = require('./db');
+        const [complaints] = await db.query(
+            'SELECT * FROM complaint WHERE username = ? ORDER BY created_at DESC',
+            [req.session.username]
+        );
+        
+        res.json({ success: true, complaints });
+    } catch (error) {
+        console.error('Complaints fetch error:', error);
+        res.json({ success: true, complaints: [] });
+    }
 });
 
 // Admin routes (placeholder for now)
