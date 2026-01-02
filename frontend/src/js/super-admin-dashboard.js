@@ -77,12 +77,80 @@ function switchTab(tabName) {
         case 'statistics':
             loadStatistics();
             break;
+        case 'settings':
+            loadSettings();
+            break;
     }
 }
 
 // Setup event listeners
 function setupEventListeners() {
     document.getElementById('logout-btn').addEventListener('click', logout);
+    
+    // Refresh buttons
+    document.getElementById('refresh-pending-btn')?.addEventListener('click', loadPendingRequests);
+    document.getElementById('refresh-admins-btn')?.addEventListener('click', loadAllAdmins);
+    document.getElementById('refresh-logs-btn')?.addEventListener('click', loadAuditLogs);
+    document.getElementById('view-all-logs-btn')?.addEventListener('click', () => switchTab('audit-logs'));
+    
+    // Filter inputs
+    document.getElementById('filter-status')?.addEventListener('change', filterAdmins);
+    document.getElementById('filter-district')?.addEventListener('change', filterAdmins);
+    document.getElementById('search-admin')?.addEventListener('input', filterAdmins);
+    
+    // Audit log filters
+    document.getElementById('filter-audit-admin')?.addEventListener('change', loadAuditLogs);
+    document.getElementById('filter-date-from')?.addEventListener('change', loadAuditLogs);
+    document.getElementById('filter-date-to')?.addEventListener('change', loadAuditLogs);
+    
+    // Settings
+    document.getElementById('save-settings-btn')?.addEventListener('click', saveSettings);
+    document.getElementById('change-password-btn')?.addEventListener('click', () => {
+        alert('Password change feature coming soon!');
+    });
+    
+    // Modal confirm buttons
+    document.getElementById('confirm-approve-btn')?.addEventListener('click', confirmApprove);
+    document.getElementById('confirm-reject-btn')?.addEventListener('click', confirmReject);
+    
+    // Modal close buttons (using event delegation for data-modal)
+    document.addEventListener('click', function(e) {
+        // Close modal buttons
+        if (e.target.closest('[data-modal]')) {
+            const modalId = e.target.closest('[data-modal]').dataset.modal;
+            closeModal(modalId);
+            return;
+        }
+        
+        // Action buttons (view, approve, reject, suspend, reactivate)
+        const target = e.target.closest('button[data-action]');
+        if (!target) return;
+        
+        const action = target.dataset.action;
+        const adminId = parseInt(target.dataset.adminId);
+        const username = target.dataset.username;
+        const district = target.dataset.district;
+        
+        console.log('Button clicked:', { action, adminId, username, district });
+        
+        switch(action) {
+            case 'view':
+                viewAdminDetails(adminId);
+                break;
+            case 'approve':
+                approveRequest(adminId, username, district);
+                break;
+            case 'reject':
+                rejectRequest(adminId, username);
+                break;
+            case 'suspend':
+                suspendAdmin(adminId, username);
+                break;
+            case 'reactivate':
+                reactivateAdmin(adminId, username);
+                break;
+        }
+    });
 }
 
 // Load dashboard data
@@ -186,13 +254,13 @@ async function loadPendingRequests() {
                                 <td>${formatDate(req.request_date)}</td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button class="action-btn-small btn-view" onclick="viewAdminDetails(${req.admin_id})">
+                                        <button class="action-btn-small btn-view" data-action="view" data-admin-id="${req.admin_id}">
                                             <i class="fas fa-eye"></i> View
                                         </button>
-                                        <button class="action-btn-small btn-approve" onclick="approveRequest(${req.admin_id}, '${req.username}', '${req.district_name}')">
+                                        <button class="action-btn-small btn-approve" data-action="approve" data-admin-id="${req.admin_id}" data-username="${req.username}" data-district="${req.district_name}">
                                             <i class="fas fa-check"></i> Approve
                                         </button>
-                                        <button class="action-btn-small btn-reject" onclick="rejectRequest(${req.admin_id}, '${req.username}')">
+                                        <button class="action-btn-small btn-reject" data-action="reject" data-admin-id="${req.admin_id}" data-username="${req.username}">
                                             <i class="fas fa-times"></i> Reject
                                         </button>
                                     </div>
@@ -266,15 +334,15 @@ function displayAdmins(admins) {
                             <td>${admin.last_login ? formatDate(admin.last_login) : 'Never'}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <button class="action-btn-small btn-view" onclick="viewAdminDetails(${admin.admin_id})">
+                                    <button class="action-btn-small btn-view" data-action="view" data-admin-id="${admin.admin_id}">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     ${admin.approval_status === 'suspended' ? 
-                                        `<button class="action-btn-small btn-reactivate" onclick="reactivateAdmin(${admin.admin_id}, '${admin.username}')">
+                                        `<button class="action-btn-small btn-reactivate" data-action="reactivate" data-admin-id="${admin.admin_id}" data-username="${admin.username}">
                                             <i class="fas fa-undo"></i> Reactivate
                                         </button>` :
                                         admin.approval_status === 'active' ?
-                                        `<button class="action-btn-small btn-suspend" onclick="suspendAdmin(${admin.admin_id}, '${admin.username}')">
+                                        `<button class="action-btn-small btn-suspend" data-action="suspend" data-admin-id="${admin.admin_id}" data-username="${admin.username}">
                                             <i class="fas fa-ban"></i> Suspend
                                         </button>` : ''
                                     }
@@ -311,6 +379,7 @@ function filterAdmins() {
 
 // View admin details
 async function viewAdminDetails(adminId) {
+    console.log('View details clicked:', adminId);
     try {
         const response = await fetch(`/super-admin-admin-details/${adminId}`, {
             credentials: 'include'
@@ -386,6 +455,7 @@ async function viewAdminDetails(adminId) {
 
 // Approve request
 function approveRequest(adminId, username, district) {
+    console.log('Approve clicked:', { adminId, username, district });
     currentAdminId = adminId;
     document.getElementById('approve-username').textContent = username;
     document.getElementById('approve-district').textContent = district;
@@ -394,8 +464,9 @@ function approveRequest(adminId, username, district) {
 
 // Confirm approve
 async function confirmApprove() {
+    console.log('Confirming approve for admin ID:', currentAdminId);
     try {
-        const response = await fetch('/super-admin-approve-request', {
+        const response = await fetch('/super-admin-approve', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -403,6 +474,7 @@ async function confirmApprove() {
         });
 
         const data = await response.json();
+        console.log('Approve response:', data);
 
         if (data.success) {
             alert('Admin request approved successfully! Notification email sent.');
@@ -421,6 +493,7 @@ async function confirmApprove() {
 
 // Reject request
 function rejectRequest(adminId, username) {
+    console.log('Reject clicked:', { adminId, username });
     currentAdminId = adminId;
     document.getElementById('reject-username').textContent = username;
     document.getElementById('rejection-reason').value = '';
@@ -437,7 +510,7 @@ async function confirmReject() {
     }
 
     try {
-        const response = await fetch('/super-admin-reject-request', {
+        const response = await fetch('/super-admin-reject', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -469,7 +542,7 @@ async function suspendAdmin(adminId, username) {
     if (!confirm(`Are you sure you want to suspend ${username}?`)) return;
 
     try {
-        const response = await fetch('/super-admin-suspend-admin', {
+        const response = await fetch('/super-admin-suspend', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -497,7 +570,7 @@ async function reactivateAdmin(adminId, username) {
     if (!confirm(`Are you sure you want to reactivate ${username}?`)) return;
 
     try {
-        const response = await fetch('/super-admin-reactivate-admin', {
+        const response = await fetch('/super-admin-reactivate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -645,6 +718,125 @@ function formatDate(dateString) {
         hour: '2-digit',
         minute: '2-digit'
     });
+}
+
+// Load settings
+async function loadSettings() {
+    try {
+        const response = await fetch('/super-admin-settings', {
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.settings) {
+                document.getElementById('notify-new-registration').checked = data.settings.notifyNewRegistration !== false;
+                document.getElementById('notify-email').checked = data.settings.notifyEmail !== false;
+                document.getElementById('notify-browser').checked = data.settings.notifyBrowser === true;
+                document.getElementById('auto-logout').checked = data.settings.autoLogout !== false;
+            }
+        }
+
+        // Set system admin ID
+        if (req.session && req.session.superAdminUsername) {
+            document.getElementById('system-admin-id').textContent = req.session.superAdminUsername;
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+        // Use defaults if error
+        document.getElementById('notify-new-registration').checked = true;
+        document.getElementById('notify-email').checked = true;
+        document.getElementById('notify-browser').checked = false;
+        document.getElementById('auto-logout').checked = true;
+    }
+
+    // Request browser notification permission if enabled
+    if (document.getElementById('notify-browser').checked && 'Notification' in window) {
+        Notification.requestPermission();
+    }
+}
+
+// Save settings
+async function saveSettings() {
+    try {
+        const settings = {
+            notifyNewRegistration: document.getElementById('notify-new-registration').checked,
+            notifyEmail: document.getElementById('notify-email').checked,
+            notifyBrowser: document.getElementById('notify-browser').checked,
+            autoLogout: document.getElementById('auto-logout').checked
+        };
+
+        const response = await fetch('/super-admin-settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(settings)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert('Settings saved successfully!');
+
+            // Request browser notification permission if enabled
+            if (settings.notifyBrowser && 'Notification' in window) {
+                if (Notification.permission !== 'granted') {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            new Notification('SecureVoice Notifications Enabled', {
+                                body: 'You will now receive browser notifications for new admin requests.',
+                                icon: '../../images/auth/secureVOICE.png'
+                            });
+                        }
+                    });
+                }
+            }
+        } else {
+            alert('Failed to save settings: ' + (data.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        alert('Network error. Please try again.');
+    }
+}
+
+// Check for new pending requests periodically (if notifications enabled)
+let notificationCheckInterval;
+function startNotificationCheck() {
+    // Check every 2 minutes
+    notificationCheckInterval = setInterval(async () => {
+        try {
+            const notifyEnabled = document.getElementById('notify-browser')?.checked;
+            if (!notifyEnabled) return;
+
+            const response = await fetch('/super-admin-stats', { credentials: 'include' });
+            if (!response.ok) return;
+
+            const data = await response.json();
+            const pendingCount = data.pendingRequests || 0;
+            const previousCount = parseInt(localStorage.getItem('previousPendingCount') || '0');
+
+            if (pendingCount > previousCount) {
+                // New pending requests
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('New Admin Registration Request', {
+                        body: `You have ${pendingCount} pending admin registration request(s).`,
+                        icon: '../../images/auth/secureVOICE.png',
+                        tag: 'admin-request'
+                    });
+                }
+            }
+
+            localStorage.setItem('previousPendingCount', pendingCount.toString());
+        } catch (error) {
+            console.error('Error checking for notifications:', error);
+        }
+    }, 120000); // 2 minutes
+}
+
+// Start notification check on page load
+if ('Notification' in window) {
+    startNotificationCheck();
 }
 
 // Close modals when clicking outside
