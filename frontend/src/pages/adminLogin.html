@@ -2,91 +2,662 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Login</title>
+    <title>District Admin Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="../css/adminLogin.css">
     <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
-
-
-    <link rel="stylesheet" href="../css/FormValidationSignUp.css">
-    <link rel="stylesheet" href="../css/OTP.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: "Poppins", sans-serif;
+            background: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            padding: 0;
+        }
+        
+        .main-container {
+            display: flex;
+            width: 100%;
+            max-width: none;
+            background: #D3D9D4;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+            min-height: 100vh;
+            max-height: none;
+        }
+        
+        .left-panel {
+            flex: 0 0 420px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            text-align: center;
+        }
+        
+        .left-panel img {
+            width: 200px;
+            margin-bottom: 30px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .left-panel h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .left-panel p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-bottom: 25px;
+        }
+        
+        .security-features {
+            text-align: left;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+        }
+        
+        .security-features h4 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: #a5b4fc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .security-features li {
+            font-size: 0.85rem;
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0.9;
+        }
+        
+        .security-features li i {
+            color: #4ade80;
+            font-size: 0.9rem;
+            width: 20px;
+        }
+        
+        .form-panel {
+            flex: 1;
+            padding: 40px 60px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100vh;
+            max-height: 100vh;
+            position: relative;
+        }
+        
+        .back-arrow {
+            position: absolute;
+            top: 20px;
+            left: 25px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(26, 26, 46, 0.3);
+        }
+        
+        .back-arrow:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(26, 26, 46, 0.4);
+        }
+        
+        .back-arrow i {
+            font-size: 1rem;
+        }
+        
+        .form-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .form-panel::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .form-panel::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        .form-panel::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        
+        .form-content {
+            max-width: 420px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+        
+        .form-header h2 {
+            font-size: 1.8rem;
+            color: #1a1a2e;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .form-header h2 i {
+            color: #0f3460;
+        }
+        
+        .form-header p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #444;
+            margin-bottom: 8px;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-wrapper i {
+            position: absolute;
+            left: 16px;
+            color: #9ca3af;
+            font-size: 1rem;
+        }
+        
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+        
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #1a1a2e;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(26, 26, 46, 0.1);
+        }
+        
+        .error-message {
+            font-size: 0.75rem;
+            color: #ef4444;
+            margin-top: 6px;
+            display: block;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 26, 46, 0.4);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .submit-btn.secondary {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            margin-top: 15px;
+        }
+        
+        .submit-btn.secondary:hover {
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+        }
+        
+        .otp-container {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed #e5e7eb;
+        }
+        
+        .otp-container.show {
+            display: block;
+        }
+        
+        .otp-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .otp-header i {
+            font-size: 2.5rem;
+            color: #0f3460;
+            margin-bottom: 10px;
+        }
+        
+        .otp-header h3 {
+            font-size: 1.1rem;
+            color: #1a1a2e;
+            margin-bottom: 5px;
+        }
+        
+        .otp-header p {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .message-box {
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        
+        .message-box.show {
+            display: flex;
+        }
+        
+        .message-box.info {
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+            border-left: 4px solid #0ea5e9;
+            color: #0369a1;
+        }
+        
+        .message-box.success {
+            background: #dcfce7;
+            border-left: 4px solid #22c55e;
+            color: #166534;
+        }
+        
+        .message-box.error {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+        }
+        
+        .links-section {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .links-section p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .links-section a {
+            color: #0f3460;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .links-section a:hover {
+            color: #1a1a2e;
+            text-decoration: underline;
+        }
+        
+        .super-admin-link {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #e5e7eb;
+        }
+        
+        .super-admin-link a {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .super-admin-link a:hover {
+            color: #ef4444;
+        }
+        
+        .super-admin-link i {
+            color: #ef4444;
+        }
+        
+        @media (max-width: 900px) {
+            .main-container {
+                flex-direction: column;
+                max-height: none;
+                overflow-y: auto;
+            }
+            
+            html, body {
+                overflow: auto;
+            }
+            
+            .left-panel {
+                flex: none;
+                padding: 30px 20px;
+            }
+            
+            .left-panel img {
+                width: 140px;
+            }
+            
+            .form-panel {
+                padding: 30px 25px;
+                height: auto;
+                max-height: none;
+            }
+            
+            .form-content {
+                max-width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-    <div class="forms-container">
-        <div class="signin-signup">
 
-            <form action="" class="sign-in-form">
-                <h2 class="title">Admin Login</h2>
-
-                <div class="input-field">
-                    <i class="fas fa-user"></i>
-                    <input type="text" placeholder="Username" name="username">
-                    <span id="name-error-admin"></span>
-                </div>
-
-                <div class="input-field">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" placeholder="Email" name="email">
-                    <span id="email-error-admin"></span>
-                </div>
-
-                <div class="input-field">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" placeholder="Password" name="password">
-                    <span id="password-error-admin"></span>
-                </div>
-
-                <div class="input-field">
-                    <i class="fas fa-location-dot"></i>
-                    <select class="district-select" name="district">
-                        <option value="" disabled selected>Select District</option>
-                        <option>Dhaka</option>
-                        <option>Rajshahi</option>
-                        <option>Barishal</option>
-                        <option>Khulna</option>
-                        <option>Sylhet</option>
-                    </select>
-                </div>
-
-                <input type="submit" value="Login" class="btn solid">
-                <!-- OTP Option-->
-                <div class="input-field" id="otp-container" style="display: none;">
-                <i class="fas fa-key" id="key-logo-2"></i>
-                <input type="text" placeholder="Enter OTP" id="otp-input-2">
-                <span id="otp-error"></span>
-                </div>
-
-        <input type="button" value="Verify OTP" class="btn solid" id="verify-otp-btn" style="display: none;">
-
-
-                <!-- OTP Option Ends-->
-                <div class="social-media">
-                    <a href="/signup" class="social-icon">
-                        <i class="fa-solid fa-user"></i>
-                    </a>
-                </div>
-
-            </form>
-
+<div class="main-container">
+    <!-- Left Panel -->
+    <div class="left-panel">
+        <a href="/">
+            <img src="../../images/auth/secureVOICE.png" alt="SecureVoice Logo">
+        </a>
+        <h3>Welcome Back</h3>
+        <p>District Administrator Portal</p>
+        
+        <div class="security-features">
+            <h4><i class="fas fa-shield-alt"></i> Security Features</h4>
+            <ul>
+                <li><i class="fas fa-check-circle"></i> Two-Factor Authentication</li>
+                <li><i class="fas fa-check-circle"></i> OTP Email Verification</li>
+                <li><i class="fas fa-check-circle"></i> Encrypted Sessions</li>
+                <li><i class="fas fa-check-circle"></i> Activity Audit Logs</li>
+            </ul>
         </div>
     </div>
-
-    <div class="panels-container">
-        <div class="panel left-panel">
-            <div class="content">
-                <h3>Welcome Admin</h3>
-                <p>District administrators login here</p>
+    
+    <!-- Form Panel -->
+    <div class="form-panel">
+        <a href="/" class="back-arrow" title="Back to Home">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        
+        <div class="form-content">
+            <div class="form-header">
+                <h2><i class="fas fa-user-shield"></i> Admin Login</h2>
+                <p>Secure access for district-level administrators</p>
             </div>
-            <a href="/">
-                <img src="../../images/auth/secureVOICE.png" alt="image" class="image">
-            </a>
+            
+            <form id="admin-login-form">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                    </div>
+                    <span id="name-error-admin" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+                    <span id="password-error-admin" class="error-message"></span>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                
+                <!-- OTP Verification Section -->
+                <div class="otp-container" id="otp-container">
+                    <div class="otp-header">
+                        <i class="fas fa-envelope-open-text"></i>
+                        <h3>OTP Verification Required</h3>
+                        <p>Enter the 6-digit code sent to your email</p>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="otp-input">Verification Code</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-key"></i>
+                            <input type="text" id="otp-input" placeholder="Enter 6-digit OTP" maxlength="6">
+                        </div>
+                        <span id="otp-error" class="error-message"></span>
+                    </div>
+                    
+                    <button type="button" class="submit-btn secondary" id="verify-otp-btn">
+                        <i class="fas fa-check-circle"></i> Verify & Login
+                    </button>
+                </div>
+                
+                <div class="message-box info" id="info-message">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="info-text"></span>
+                </div>
+                
+                <div class="message-box error" id="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="error-text"></span>
+                </div>
+                
+                <div class="links-section">
+                    <p>Don't have an account?</p>
+                    <a href="admin-registration.html">
+                        <i class="fas fa-user-plus"></i> Request Admin Access
+                    </a>
+                    
+                    <div class="super-admin-link">
+                        <a href="super-admin-login.html">
+                            <i class="fas fa-crown"></i> Super Admin Access
+                        </a>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
-<!-- EmailJS removed - Now using Nodemailer backend for OTP -->
-<script src="../js/adminLogin.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('admin-login-form');
+    const loginBtn = document.getElementById('login-btn');
+    const otpContainer = document.getElementById('otp-container');
+    const otpInput = document.getElementById('otp-input');
+    const verifyOtpBtn = document.getElementById('verify-otp-btn');
+    const infoMessage = document.getElementById('info-message');
+    const errorMessage = document.getElementById('error-message');
+    
+    let currentUsername = '';
+    
+    // Login form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        
+        if (!username || !password) {
+            showError('Please enter both username and password');
+            return;
+        }
+        
+        currentUsername = username;
+        
+        try {
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+            loginBtn.disabled = true;
+            hideMessages();
+            
+            const response = await fetch('/adminLogin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success && data.requireOTP) {
+                // Show OTP section
+                otpContainer.classList.add('show');
+                loginBtn.style.display = 'none';
+                document.getElementById('username').disabled = true;
+                document.getElementById('password').disabled = true;
+                showInfo('OTP sent to your registered email. Please check your inbox.');
+                otpInput.focus();
+            } else if (data.success) {
+                showInfo('Login successful! Redirecting...');
+                window.location.href = data.redirect || '/admin-dashboard';
+            } else {
+                showError(data.message || 'Login failed. Please try again.');
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                loginBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            showError('An error occurred. Please try again.');
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+            loginBtn.disabled = false;
+        }
+    });
+    
+    // OTP verification
+    verifyOtpBtn.addEventListener('click', async function() {
+        const otp = otpInput.value.trim();
+        
+        if (!otp || otp.length !== 6) {
+            showError('Please enter a valid 6-digit OTP');
+            return;
+        }
+        
+        try {
+            verifyOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+            verifyOtpBtn.disabled = true;
+            hideMessages();
+            
+            const response = await fetch('/admin-verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUsername, otp })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showInfo('Verification successful! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = data.redirect || '/admin-dashboard';
+                }, 1000);
+            } else {
+                showError(data.message || 'Invalid OTP. Please try again.');
+                verifyOtpBtn.innerHTML = '<i class="fas fa-check-circle"></i> Verify & Login';
+                verifyOtpBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('OTP verification error:', error);
+            showError('An error occurred. Please try again.');
+            verifyOtpBtn.innerHTML = '<i class="fas fa-check-circle"></i> Verify & Login';
+            verifyOtpBtn.disabled = false;
+        }
+    });
+    
+    // OTP input - only allow numbers
+    otpInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+    
+    function showInfo(message) {
+        infoMessage.classList.add('show');
+        errorMessage.classList.remove('show');
+        document.getElementById('info-text').textContent = message;
+    }
+    
+    function showError(message) {
+        errorMessage.classList.add('show');
+        infoMessage.classList.remove('show');
+        document.getElementById('error-text').textContent = message;
+    }
+    
+    function hideMessages() {
+        infoMessage.classList.remove('show');
+        errorMessage.classList.remove('show');
+    }
+});
+</script>
 
 </body>
 </html>

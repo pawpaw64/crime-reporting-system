@@ -10,6 +10,30 @@ const app = express();
 
 // Security middleware
 app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: [
+                "'self'", 
+                "'unsafe-inline'",  // Allow inline scripts
+                "https://cdn.tailwindcss.com",
+                "https://cdnjs.cloudflare.com"
+            ],
+            styleSrc: [
+                "'self'", 
+                "'unsafe-inline'",
+                "https://cdnjs.cloudflare.com",
+                "https://fonts.googleapis.com"
+            ],
+            fontSrc: [
+                "'self'",
+                "https://cdnjs.cloudflare.com",
+                "https://fonts.gstatic.com"
+            ],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'"]
+        }
+    },
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
@@ -65,6 +89,12 @@ app.use('/public', express.static(path.join(__dirname, '../../frontend/public'))
 // Import controllers
 const authController = require('./controllers/authController');
 const authMiddleware = require('./middleware/authMiddleware');
+
+// Import routes
+const routes = require('./routes');
+
+// Mount API routes BEFORE static files
+app.use('/', routes);
 
 // Auth routes
 app.post('/api/signup', authController.signup);

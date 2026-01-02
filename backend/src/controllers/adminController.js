@@ -1,5 +1,6 @@
 const pool = require('../db');
 const { createNotification } = require('../utils/notificationUtils');
+const { logAdminAction, getAdminAuditLogs } = require('../utils/auditUtils');
 
 // Get Admin Dashboard
 exports.getAdminDashboard = async (req, res) => {
@@ -11,7 +12,7 @@ exports.getAdminDashboard = async (req, res) => {
         const adminUsername = req.session.adminUsername;
 
         const [adminResults] = await pool.query(
-            'SELECT * FROM admins WHERE adminid = ?',
+            'SELECT * FROM admins WHERE adminid = ? AND is_active = 1',
             [req.session.adminId]
         );
 
@@ -20,6 +21,22 @@ exports.getAdminDashboard = async (req, res) => {
             return res.redirect('/adminLogin');
         }
 
+        const admin = adminResults[0];
+
+        // Check if admin is approved and active
+        if (admin.status !== 'approved' || !admin.is_active) {
+            req.session.destroy();
+            return res.redirect('/adminLogin?error=inactive');
+        }
+
+        // Log dashboard access
+        await logAdminAction(adminUsername, 'dashboard_access', {
+            result: 'success',
+            ipAddress: req.ip,
+            userAgent: req.headers['user-agent']
+        });
+
+        // District-scoped: Only show complaints from admin's district
         const complaintsQuery = `
             SELECT 
                 c.complaint_id,
@@ -34,11 +51,15 @@ exports.getAdminDashboard = async (req, res) => {
             FROM complaint c 
             INNER JOIN users u ON c.username = u.username
             LEFT JOIN admin_cases ac ON c.complaint_id = ac.complaint_id AND ac.admin_username = ?
-            WHERE c.admin_username = ?
+            LEFT JOIN location l ON c.location_id = l.location_id
+            WHERE (c.admin_username = ? OR l.district_name = ? OR u.district = ?)
             ORDER BY c.created_at DESC
         `;
 
-        const [complaintsResults] = await pool.query(complaintsQuery, [adminUsername, adminUsername]);
+        const [complaintsResults] = await pool.query(
+            complaintsQuery, 
+            [adminUsername, adminUsername, admin.district_name, admin.district_name]
+        );
 
         const usersQuery = `
             SELECT DISTINCT 
@@ -47,14 +68,15 @@ exports.getAdminDashboard = async (req, res) => {
                 u.email,
                 u.phone,
                 u.location,
-                u.age
+                u.age,
+                u.district
             FROM users u 
             INNER JOIN complaint c ON u.username = c.username 
-            WHERE c.admin_username = ?
+            WHERE c.admin_username = ? OR u.district = ?
             ORDER BY u.fullName ASC
         `;
 
-        const [usersResults] = await pool.query(usersQuery, [adminUsername]);
+        const [usersResults] = await pool.query(usersQuery, [adminUsername, admin.district_name]);
 
         res.set({
             'X-Frame-Options': 'DENY',
@@ -64,7 +86,7 @@ exports.getAdminDashboard = async (req, res) => {
         });
 
         res.render('admin-page', {
-            admin: adminResults[0],
+            admin: admin,
             complaints: complaintsResults,
             users: usersResults
         });
@@ -364,7 +386,7 @@ exports.updateComplaintStatus = async (req, res) => {
 
         // Verify complaint
         const [results] = await pool.query(
-            'SELECT admin_username FROM complaint WHERE complaint_id = ?',
+            'SELECT admin_username, username FROM complaint WHERE complaint_id = ?',
             [complaintIdInt]
         );
 
@@ -373,6 +395,12 @@ exports.updateComplaintStatus = async (req, res) => {
         }
 
         if (results[0].admin_username !== adminUsername) {
+            await logAdminAction(adminUsername, 'status_update_denied', {
+                result: 'failure',
+                actionDetails: 'Attempted to update complaint from different admin',
+                complaintId: complaintIdInt,
+                ipAddress: req.ip
+            });
             return res.status(403).json({ success: false, message: 'Access denied' });
         }
 
@@ -404,6 +432,17 @@ exports.updateComplaintStatus = async (req, res) => {
                 [complaintIdInt, adminUsername, newStatus, complaintIdInt]
             );
 
+            await connection.commit();
+
+            // Log status update action
+            await logAdminAction(adminUsername, 'status_update', {
+                result: 'success',
+                actionDetails: JSON.stringify({ oldStatus: results[0].status, newStatus }),
+                complaintId: complaintIdInt,
+                targetUsername: results[0].username,
+                ipAddress: req.ip
+            });
+
             // Create notification
             const notificationMessage = `Your complaint #${complaintIdInt} status has been updated to: ${newStatus.toUpperCase()}`;
             await connection.query(
@@ -423,5 +462,35 @@ exports.updateComplaintStatus = async (req, res) => {
     } catch (err) {
         console.error("Update status error:", err);
         res.status(500).json({ success: false, message: "Error updating status" });
+    }
+};
+
+// Get Admin's Audit Logs
+exports.getAdminLogs = async (req, res) => {
+    try {
+        if (!req.session.adminId) {
+            return res.status(401).json({ success: false, message: "Unauthorized access" });
+        }
+
+        const adminUsername = req.session.adminUsername;
+        const { action, startDate, endDate, limit } = req.query;
+
+        const filters = {
+            action,
+            startDate,
+            endDate,
+            limit: parseInt(limit) || 100
+        };
+
+        const logs = await getAdminAuditLogs(adminUsername, filters);
+
+        res.json({
+            success: true,
+            logs: logs
+        });
+
+    } catch (err) {
+        console.error("Error fetching admin logs:", err);
+        res.status(500).json({ success: false, message: "Error fetching logs" });
     }
 };

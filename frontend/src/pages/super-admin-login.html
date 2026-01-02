@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Login | SecureVoice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: "Poppins", sans-serif;
+            background: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            padding: 0;
+        }
+        
+        .main-container {
+            display: flex;
+            width: 100%;
+            max-width: none;
+            background: #fff;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+            min-height: 100vh;
+            max-height: none;
+        }
+        
+        .left-panel {
+            flex: 0 0 420px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 50%, #dc3545 100%);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            text-align: center;
+        }
+        
+        .left-panel img {
+            width: 200px;
+            margin-bottom: 30px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .crown-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #fff;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .left-panel h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .left-panel > p {
+            font-size: 0.95rem;
+            opacity: 0.95;
+            margin-bottom: 25px;
+        }
+        
+        .access-features {
+            text-align: left;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .access-features h4 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .access-features ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .access-features li {
+            font-size: 0.85rem;
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0.95;
+        }
+        
+        .access-features li i {
+            color: #fff;
+            font-size: 0.9rem;
+            width: 20px;
+        }
+        
+        .form-panel {
+            flex: 1;
+            padding: 40px 60px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100vh;
+            max-height: 100vh;
+            position: relative;
+        }
+        
+        .back-arrow {
+            position: absolute;
+            top: 20px;
+            left: 25px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 50%, #dc3545 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+        }
+        
+        .back-arrow:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+        }
+        
+        .back-arrow i {
+            font-size: 1rem;
+        }
+        
+        .form-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .form-panel::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .form-panel::-webkit-scrollbar-thumb {
+            background: #ffb3b3;
+            border-radius: 10px;
+        }
+        
+        .form-panel::-webkit-scrollbar-thumb:hover {
+            background: #ff8080;
+        }
+        
+        .form-content {
+            max-width: 420px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .super-admin-badge {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+        
+        .form-header h2 {
+            font-size: 1.8rem;
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .form-header h2 i {
+            color: #ff6b6b;
+        }
+        
+        .form-header p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #444;
+            margin-bottom: 8px;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-wrapper i {
+            position: absolute;
+            left: 16px;
+            color: #9ca3af;
+            font-size: 1rem;
+        }
+        
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+        
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.15);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 50%, #dc3545 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .message-box {
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        
+        .message-box.show {
+            display: flex;
+        }
+        
+        .message-box.error {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+        }
+        
+        .message-box.success {
+            background: #dcfce7;
+            border-left: 4px solid #22c55e;
+            color: #166534;
+        }
+        
+        .links-section {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .links-section p {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .links-section p i {
+            color: #ff6b6b;
+        }
+        
+        .links-section a {
+            color: #ff6b6b;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .links-section a:hover {
+            color: #dc3545;
+            text-decoration: underline;
+        }
+        
+        .security-notice {
+            margin-top: 25px;
+            padding: 15px;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+            border-radius: 10px;
+            border: 1px dashed #ffb3b3;
+        }
+        
+        .security-notice p {
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .security-notice i {
+            color: #ff6b6b;
+        }
+        
+        @media (max-width: 900px) {
+            .main-container {
+                flex-direction: column;
+                max-height: none;
+                overflow-y: auto;
+            }
+            
+            html, body {
+                overflow: auto;
+            }
+            
+            .left-panel {
+                flex: none;
+                padding: 30px 20px;
+            }
+            
+            .left-panel img {
+                width: 140px;
+            }
+            
+            .crown-icon {
+                font-size: 2rem;
+            }
+            
+            .form-panel {
+                padding: 30px 25px;
+                height: auto;
+                max-height: none;
+            }
+            
+            .form-content {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <!-- Left Panel -->
+    <div class="left-panel">
+        <a href="/">
+            <img src="../../images/auth/secureVOICE.png" alt="SecureVoice Logo">
+        </a>
+        <i class="fas fa-crown crown-icon"></i>
+        <h3>Super Administrator</h3>
+        <p>System-wide Control & Management</p>
+        
+        <div class="access-features">
+            <h4><i class="fas fa-shield-alt"></i> System Privileges</h4>
+            <ul>
+                <li><i class="fas fa-check-circle"></i> Manage District Admins</li>
+                <li><i class="fas fa-check-circle"></i> Approve/Reject Requests</li>
+                <li><i class="fas fa-check-circle"></i> View Audit Logs</li>
+                <li><i class="fas fa-check-circle"></i> System Configuration</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Form Panel -->
+    <div class="form-panel">
+        <a href="adminLogin.html" class="back-arrow" title="Back to Admin Login">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        
+        <div class="form-content">
+            <div class="form-header">
+                <span class="super-admin-badge">
+                    <i class="fas fa-crown"></i> Super Administrator
+                </span>
+                <h2><i class="fas fa-user-shield"></i> Secure Login</h2>
+                <p>Highest level administrative access</p>
+            </div>
+            
+            <form id="super-admin-login-form">
+                <div class="input-group">
+                    <label for="username">Super Admin Username</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user-shield"></i>
+                        <input type="text" id="username" name="username" placeholder="Enter super admin username" required autofocus>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Secure Login
+                </button>
+                
+                <div class="message-box error" id="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="error-text"></span>
+                </div>
+                
+                <div class="security-notice">
+                    <p><i class="fas fa-shield-alt"></i> This area requires highest level security clearance</p>
+                </div>
+                
+                <div class="links-section">
+                    <p><i class="fas fa-arrow-left"></i> Not a Super Admin?</p>
+                    <a href="adminLogin.html">
+                        <i class="fas fa-user"></i> Go to District Admin Login
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("super-admin-login-form");
+    const loginBtn = document.getElementById("login-btn");
+    const errorMessage = document.getElementById("error-message");
+
+    function showError(message) {
+        document.getElementById('error-text').textContent = message;
+        errorMessage.classList.add('show');
+    }
+
+    function hideError() {
+        errorMessage.classList.remove('show');
+    }
+
+    form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        hideError();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            showError('Please fill in all fields');
+            return;
+        }
+
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+        loginBtn.disabled = true;
+
+        try {
+            const response = await fetch('/super-admin-login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                loginBtn.innerHTML = '<i class="fas fa-check"></i> Success!';
+                setTimeout(() => {
+                    window.location.href = 'super-admin-dashboard.html';
+                }, 500);
+            } else {
+                showError(data.message || 'Invalid credentials');
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Secure Login';
+                loginBtn.disabled = false;
+            }
+
+        } catch (error) {
+            console.error('Login error:', error);
+            showError('Network error. Please check if the server is running.');
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Secure Login';
+            loginBtn.disabled = false;
+        }
+    });
+
+    // Clear error on input
+    document.getElementById('username').addEventListener('input', hideError);
+    document.getElementById('password').addEventListener('input', hideError);
+});
+</script>
+
+</body>
+</html>
