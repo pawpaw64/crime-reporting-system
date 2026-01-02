@@ -12,6 +12,17 @@
     <link rel="stylesheet" href="src/css/homepage-style.css">
     <link rel="stylesheet" href="src/css/homepage-responsive.css">
     <link rel="stylesheet" href="src/css/auth-header.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Map Styles -->
+    <link rel="stylesheet" href="src/css/map.css">
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+
 </head>
 <body>
 
@@ -66,72 +77,35 @@
     </header>
 <!-- End: Header -->
 
-<!-- Start: Hero Slider -->
-    <div class="slider">
-        <div class="list">
-            <div class="item active">
-                <img src="images/dhaka.jpg" alt="dhaka">
-                <div class="content">
-                    <h3>DHAKA</h3>
-                    <p>The capital and economic center of Bangladesh, Dhaka Division is a vibrant mix of culture, commerce, and history. Our system ensures that citizens across Dhaka can easily report crimes and get timely justice.</p>
-                </div>
-            </div>
-            <div class="item">
-                <img src="images/rajshahi.jpg" alt="rajshahi">
-                <div class="content">
-                    <h3>RAJSHAHI</h3>
-                    <p>Famous for mangoes, silk, and rich heritage, Rajshahi shines with tradition and education. We help Rajshahi's citizens raise their voices safely and ensure every complaint is investigated with care.</p>
-                </div>
-            </div>
-            <div class="item">
-                <img src="images/barishal.jpg" alt="barishal">
-                <div class="content">
-                    <h3>BARISHAL</h3>
-                    <p>Often called the 'Venice of Bengal,' Barishal is filled with rivers and lush beauty. Our system bridges remote communities, making crime and complaint reporting more efficient than ever.</p>
-                </div>
-            </div>
-            <div class="item">
-                <img src="images/khulna.jpg" alt="khulna">
-                <div class="content">
-                    <h3>KHULNA</h3>
-                    <p>Home to the majestic Sundarbans and strong industries, Khulna represents resilience. Our service strengthens public safety here by making crime reporting simple and reliable.</p>
-                </div>
-            </div>
-            <div class="item">
-                <img src="images/sylhet.jpg" alt="sylhet">
-                <div class="content">
-                    <h3>SYLHET</h3>
-                    <p>With its tea gardens and vibrant culture, Sylhet stands proud. We support Sylhet's citizens by offering a secure platform to report incidents and receive prompt investigations.</p>
-                </div>
-            </div>
-        </div>
+<!-- Start: Map Section -->
+<section class="map-section">
+    <div class="map-container">
+        <div id="map"></div>
         
-        <!-- Report Crime Button -->
-        <div class="report-crime-btn-container">
-            <button id="report-crime-btn" class="report-crime-btn" onclick="handleReportCrime()">
-                <i class="fa-solid fa-exclamation-triangle"></i>
-                Report a Crime
+        <!-- Map Controls -->
+        <div class="map-controls">
+            <button id="locateMe" class="map-btn">
+                <i class="fas fa-location-arrow"></i>
+                Find My Location
+            </button>
+            <button id="resetView" class="map-btn">
+                <i class="fas fa-sync-alt"></i>
+                Reset View
+            </button>
+            <button id="toggleFullscreen" class="map-btn">
+                <i class="fas fa-expand"></i>
+                Fullscreen
             </button>
         </div>
-        
-        <!-- Navigation Arrows -->
-        <div class="slider-arrow left">
-            <button id="previous"><i class="fas fa-chevron-left"></i></button>
-        </div>
-        <div class="slider-arrow right">
-            <button id="next"><i class="fas fa-chevron-right"></i></button>
-        </div>
-        
-        <!-- Dot Navigation -->
-        <div class="slider-nav">
-            <button class="active" data-index="0"></button>
-            <button data-index="1"></button>
-            <button data-index="2"></button>
-            <button data-index="3"></button>
-            <button data-index="4"></button>
-        </div>
     </div>
-<!-- End: Hero Slider -->
+
+    <!-- Map Information Cards -->
+
+</section>
+<!-- End: Map Section -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script src="src/js/map.js"></script>
 
 <!-- Start: How it works -->
 <section id="how-it-works">
