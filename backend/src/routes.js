@@ -43,15 +43,16 @@ router.post('/verify-otp', authController.verifyOTP);
 
 // ========== SUPER ADMIN ROUTES ==========
 router.post('/super-admin-login', superAdminController.superAdminLogin);
+router.get('/super-admin-check-auth', superAdminController.checkSuperAdminAuth);
 router.post('/super-admin-logout', superAdminController.superAdminLogout);
 router.get('/super-admin-stats', superAdminController.getSuperAdminStats);
-router.get('/pending-admin-requests', superAdminController.getPendingAdminRequests);
-router.get('/all-admin-requests', superAdminController.getAllAdminRequests);
-router.post('/approve-admin', superAdminController.approveAdminRequest);
-router.post('/reject-admin', superAdminController.rejectAdminRequest);
-router.post('/suspend-admin', superAdminController.suspendAdminAccount);
-router.post('/reactivate-admin', superAdminController.reactivateAdminAccount);
-router.get('/admin-audit-logs', superAdminController.getAuditLogs);
+router.get('/super-admin-pending-requests', superAdminController.getPendingAdminRequests);
+router.get('/super-admin-all-admins', superAdminController.getAllAdminRequests);
+router.post('/super-admin-approve', superAdminController.approveAdminRequest);
+router.post('/super-admin-reject', superAdminController.rejectAdminRequest);
+router.post('/super-admin-suspend', superAdminController.suspendAdminAccount);
+router.post('/super-admin-reactivate', superAdminController.reactivateAdminAccount);
+router.get('/super-admin-audit-logs', superAdminController.getAuditLogs);
 
 // ========== ADMIN ROUTES ==========
 router.get('/admin-dashboard', adminController.getAdminDashboard);

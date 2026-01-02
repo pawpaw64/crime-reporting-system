@@ -570,6 +570,33 @@ exports.getSuperAdminStats = async (req, res) => {
     }
 };
 
+// ========== CHECK SUPER ADMIN AUTH ==========
+exports.checkSuperAdminAuth = async (req, res) => {
+    try {
+        if (req.session.superAdminId && req.session.isSuperAdmin) {
+            return res.json({
+                success: true,
+                authenticated: true,
+                superAdmin: {
+                    id: req.session.superAdminId,
+                    username: req.session.superAdminUsername
+                }
+            });
+        }
+        res.status(401).json({
+            success: false,
+            authenticated: false
+        });
+    } catch (err) {
+        console.error("Check auth error:", err);
+        res.status(500).json({
+            success: false,
+            authenticated: false,
+            message: "Server error"
+        });
+    }
+};
+
 // ========== SUPER ADMIN LOGOUT ==========
 exports.superAdminLogout = async (req, res) => {
     try {
