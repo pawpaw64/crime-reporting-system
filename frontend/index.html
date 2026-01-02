@@ -402,14 +402,25 @@
 <script>
     // Handle Report a Crime button click
     function handleReportCrime() {
-        // Check if user is authenticated
-        if (window.isAuthenticated && window.currentUser) {
-            // User is logged in, redirect to complaint form
-            window.location.href = 'src/pages/complain.html';
-        } else {
-            // User is not logged in, redirect to login page
+        // Check if user is authenticated by checking session
+        fetch('/get-user-data', {
+            method: 'GET',
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.user) {
+                // User is logged in, redirect to complaint form
+                window.location.href = '/complain';
+            } else {
+                // User is not logged in, redirect to login page
+                window.location.href = 'src/pages/login.html';
+            }
+        })
+        .catch(error => {
+            // On error, redirect to login
             window.location.href = 'src/pages/login.html';
-        }
+        });
     }
 </script>
 </body>
