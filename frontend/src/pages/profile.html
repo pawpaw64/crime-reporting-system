@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureVoice | User Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../css/userDashboard.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <img src="../../images/auth/secureVOICE.png" alt="SecureVoice" class="logo-img">
+                </div>
+            </div>
+
+            <div class="profile">
+                <img id="user-avatar" src="../../public/images/icons/default-avatar.png" alt="User Avatar" class="avatar">
+                <h2 id="user-fullname">Loading...</h2>
+                <p class="email" id="user-email">loading@email.com</p>
+                <div class="verification-badges">
+                    <span class="badge verified" id="nid-badge" title="NID Verified" style="display: none;">
+                        <i class="fas fa-id-card"></i> NID
+                    </span>
+                    <span class="badge verified" id="face-badge" title="Face Verified" style="display: none;">
+                        <i class="fas fa-face-smile"></i> Face
+                    </span>
+                </div>
+            </div>
+
+            <nav class="nav-links">
+                <button class="tab-btn active" data-tab="dashboard">
+                    <i class="fas fa-home"></i> Dashboard
+                </button>
+                <button class="tab-btn" data-tab="profile">
+                    <i class="fas fa-user"></i> My Profile
+                </button>
+                <button class="tab-btn" data-tab="complaints">
+                    <i class="fas fa-file-alt"></i> My Complaints
+                </button>
+                <button class="tab-btn" data-tab="new-report">
+                    <i class="fas fa-plus-circle"></i> File New complaint
+                </button>
+                <button class="tab-btn" data-tab="notifications">
+                    <i class="fas fa-bell"></i> Notifications
+                    <span class="notification-count" id="notification-count" style="display: none;">0</span>
+                </button>
+            </nav>
+
+            <div class="bottom-nav">
+                <button class="outline-btn2" id="settings-btn">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+                <button class="logout-btn" id="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Dashboard Tab -->
+            <div class="tab-content active" id="dashboard">
+                <div class="header">
+                    <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+                    <div class="header-actions">
+                        <span class="welcome-text">Welcome back, <span id="welcome-name">User</span>!</span>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon pending">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="pending-count">0</h3>
+                            <p>Pending Reports</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon verifying">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="verifying-count">0</h3>
+                            <p>Under Review</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon investigating">
+                            <i class="fas fa-user-secret"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="investigating-count">0</h3>
+                            <p>Investigating</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon resolved">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="resolved-count">0</h3>
+                            <p>Resolved</p>
+                        </div>
+                    </div>
+                </div>
+                 <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                    <div class="actions-grid">
+                        <button class="action-btn" onclick="switchTab('new-report')">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>File New Complaint/span>
+                        </button>
+                        <button class="action-btn" onclick="window.location.href='complain.html'">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Emergency Complaint</span>
+                        </button>
+                        <button class="action-btn" onclick="switchTab('profile')">
+                            <i class="fas fa-user-edit"></i>
+                            <span>Update Profile</span>
+                        </button>
+                        <button class="action-btn" onclick="window.location.href='contact-us.html'">
+                            <i class="fas fa-headset"></i>
+                            <span>Contact Support</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                        <button class="outline-btn" onclick="switchTab('complaints')">View All</button>
+                    </div>
+                    <div class="recent-complaints" id="recent-complaints">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i> Loading recent activities...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div class="tab-content" id="profile">
+                <div class="header">
+                    <h1><i class="fas fa-user"></i> My Profile</h1>
+                    <button class="edit-btn" id="edit-profile-btn">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                </div>
+
+                <!-- Profile Picture Section -->
+                <div class="card profile-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar-section">
+                            <img id="profile-avatar" src="../../public/images/icons/default-avatar.png" alt="Profile" class="avatar-large">
+                            <div class="profile-badges">
+                                <span class="badge verified" id="profile-nid-badge" style="display: none;">
+                                    <i class="fas fa-check-circle"></i> NID Verified
+                                </span>
+                                <span class="badge verified" id="profile-face-badge" style="display: none;">
+                                    <i class="fas fa-check-circle"></i> Face Verified
+                                </span>
+                            </div>
+                        </div>
+                        <div class="profile-summary">
+                            <h2 id="profile-fullname">Loading...</h2>
+                            <p class="username">@<span id="profile-username">username</span></p>
+                            <p class="member-since"><i class="fas fa-calendar-alt"></i> Member since <span id="member-since">N/A</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="card">
+                    <h3><i class="fas fa-user-circle"></i> Personal Information</h3>
+                    <div class="grid">
+                        <div class="info-group">
+                            <label>Full Name (English)</label>
+                            <p id="info-fullname">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Full Name (বাংলা)</label>
+                            <p id="info-fullname-bn">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Father's Name</label>
+                            <p id="info-father">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Mother's Name</label>
+                            <p id="info-mother">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Date of Birth</label>
+                            <p id="info-dob">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Age</label>
+                            <p id="info-age">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>NID Number</label>
+                            <p id="info-nid">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="card">
+                    <h3><i class="fas fa-address-book"></i> Contact Information</h3>
+                    <div class="grid">
+                        <div class="info-group">
+                            <label>Email Address</label>
+                            <p id="info-email">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Phone Number</label>
+                            <p id="info-phone">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Information -->
+                <div class="card">
+                    <h3><i class="fas fa-map-marker-alt"></i> Address Information</h3>
+                    <div class="grid">
+                        <div class="info-group">
+                            <label>Division (বিভাগ)</label>
+                            <p id="info-division">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>District (জেলা)</label>
+                            <p id="info-district">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Police Station (থানা)</label>
+                            <p id="info-police-station">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Union (ইউনিয়ন)</label>
+                            <p id="info-union">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Village (গ্রাম)</label>
+                            <p id="info-village">-</p>
+                        </div>
+                        <div class="info-group full-width">
+                            <label>Place Details (স্থানের বিবরণ)</label>
+                            <p id="info-place-details">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Complaints Tab -->
+            <div class="tab-content" id="complaints">
+                <div class="header">
+                    <h1><i class="fas fa-file-alt"></i> My Complaints</h1>
+                    <button class="edit-btn" onclick="switchTab('new-report')">
+                        <i class="fas fa-plus"></i> New Report
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-section">
+                    <h4 class="filters-title"><i class="fas fa-filter"></i> Filter Complaints</h4>
+                    <div class="filters-grid">
+                        <div class="filter-group">
+                            <label class="filter-label">Status</label>
+                            <select class="filter-select" id="filter-status">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="verifying">Verifying</option>
+                                <option value="investigating">Investigating</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Category</label>
+                            <select class="filter-select" id="filter-category">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Date Range</label>
+                            <input type="date" class="filter-input" id="filter-date">
+                        </div>
+                    </div>
+                    <div class="filter-actions">
+                        <button class="outline-btn" id="apply-filters">
+                            <i class="fas fa-search"></i> Apply Filters
+                        </button>
+                        <button class="outline-btn" id="clear-filters">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Complaints List -->
+                <div class="complaint-list" id="complaints-list">
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i> Loading complaints...
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Report Tab -->
+            <div class="tab-content" id="new-report">
+                <div class="header">
+                    <h1><i class="fas fa-plus-circle"></i> File New Report</h1>
+                </div>
+
+                <div class="card report-form-card">
+                    <form id="report-form">
+                        <!-- Crime Type -->
+                        <div class="form-group">
+                            <label for="crime-type"><i class="fas fa-exclamation-triangle"></i> Crime Type *</label>
+                            <select id="crime-type" required>
+                                <option value="">Select Crime Type</option>
+                                <option value="theft">Theft / Robbery</option>
+                                <option value="assault">Assault / Violence</option>
+                                <option value="fraud">Fraud / Scam</option>
+                                <option value="harassment">Harassment</option>
+                                <option value="cybercrime">Cybercrime</option>
+                                <option value="domestic">Domestic Violence</option>
+                                <option value="missing">Missing Person</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Incident Date & Time -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="incident-date"><i class="fas fa-calendar"></i> Incident Date *</label>
+                                <input type="date" id="incident-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="incident-time"><i class="fas fa-clock"></i> Incident Time</label>
+                                <input type="time" id="incident-time">
+                            </div>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="form-group">
+                            <label for="incident-location"><i class="fas fa-map-marker-alt"></i> Location *</label>
+                            <div class="location-input-wrapper">
+                                <input type="text" id="incident-location" placeholder="Enter incident location" required>
+                                <button type="button" class="location-btn" id="get-location" title="Get Current Location">
+                                    <i class="fas fa-crosshairs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-group">
+                            <label for="incident-description"><i class="fas fa-align-left"></i> Description *</label>
+                            <textarea id="incident-description" rows="5" placeholder="Provide detailed description of the incident..." required></textarea>
+                        </div>
+
+                        <!-- Evidence Upload -->
+                        <div class="form-group">
+                            <label><i class="fas fa-paperclip"></i> Evidence (Optional)</label>
+                            <div class="file-upload-area" id="file-upload-area">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag & drop files here or click to browse</p>
+                                <span>Supports: Images, Videos, Documents (Max 10MB each)</span>
+                                <input type="file" id="evidence-files" multiple accept="image/*,video/*,.pdf,.doc,.docx" hidden>
+                            </div>
+                            <div class="uploaded-files" id="uploaded-files"></div>
+                        </div>
+
+                        <!-- Witnesses -->
+                        <div class="form-group">
+                            <label for="witnesses"><i class="fas fa-users"></i> Witnesses (Optional)</label>
+                            <textarea id="witnesses" rows="2" placeholder="Name and contact of any witnesses..."></textarea>
+                        </div>
+
+                        <!-- Anonymous Option -->
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="anonymous-report">
+                                <span class="checkmark"></span>
+                                File this report anonymously
+                            </label>
+                            <p class="helper-text">Your identity will be kept confidential</p>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="form-actions">
+                            <button type="button" class="outline-btn" onclick="switchTab('dashboard')">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                            <button type="submit" class="submit-btn">
+                                <i class="fas fa-paper-plane"></i> Submit Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Notifications Tab -->
+            <div class="tab-content" id="notifications">
+                <div class="header">
+                    <h1><i class="fas fa-bell"></i> Notifications</h1>
+                    <button class="outline-btn" id="mark-all-read">
+                        <i class="fas fa-check-double"></i> Mark All Read
+                    </button>
+                </div>
+
+                <div class="notifications-list" id="notifications-list">
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i> Loading notifications...
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal-overlay" id="edit-profile-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-edit"></i> Edit Profile</h2>
+                <button class="modal-close" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-profile-form">
+                    <div class="form-group">
+                        <label for="edit-email">Email Address</label>
+                        <input type="email" id="edit-email" placeholder="Enter email">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-phone">Phone Number</label>
+                        <input type="tel" id="edit-phone" placeholder="Enter phone number">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-division">Division</label>
+                        <select id="edit-division">
+                            <option value="">Select Division</option>
+                            <option value="Dhaka">Dhaka</option>
+                            <option value="Chittagong">Chittagong</option>
+                            <option value="Rajshahi">Rajshahi</option>
+                            <option value="Khulna">Khulna</option>
+                            <option value="Barishal">Barishal</option>
+                            <option value="Sylhet">Sylhet</option>
+                            <option value="Rangpur">Rangpur</option>
+                            <option value="Mymensingh">Mymensingh</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-district">District</label>
+                        <input type="text" id="edit-district" placeholder="Enter district">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-place-details">Address Details</label>
+                        <textarea id="edit-place-details" rows="3" placeholder="Enter address details"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="outline-btn" id="cancel-edit">Cancel</button>
+                        <button type="submit" class="submit-btn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complaint Detail Modal -->
+    <div class="modal-overlay" id="complaint-detail-modal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-alt"></i> Complaint Details</h2>
+                <button class="modal-close" id="close-complaint-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="complaint-detail-content">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/profile.js"></script>
+</body>
+</html>
