@@ -143,6 +143,61 @@
     font-size: 16px;
 }
 
+/* Report Crime Button */
+.report-crime-btn-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 0 30px;
+}
+
+.report-crime-btn {
+    padding: 15px 30px;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.report-crime-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.report-crime-btn:hover::before {
+    left: 100%;
+}
+
+.report-crime-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(220, 53, 69, 0.5);
+    background: linear-gradient(135deg, #bd2130 0%, #a71e2a 100%);
+}
+
+.report-crime-btn i {
+    font-size: 18px;
+    color: #fff;
+}
+
 .map-info {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -225,6 +280,16 @@
         font-size: 13px;
     }
     
+    .report-crime-btn-container {
+        margin-top: 15px;
+        padding: 0 20px;
+    }
+    
+    .report-crime-btn {
+        padding: 12px 25px;
+        font-size: 14px;
+    }
+    
     .map-info {
         grid-template-columns: 1fr;
         gap: 15px;
@@ -266,6 +331,16 @@
     .map-btn {
         padding: 8px 15px;
         font-size: 12px;
+    }
+    
+    .report-crime-btn-container {
+        margin-top: 10px;
+        padding: 0 15px;
+    }
+    
+    .report-crime-btn {
+        padding: 10px 20px;
+        font-size: 13px;
     }
     
     .info-card {

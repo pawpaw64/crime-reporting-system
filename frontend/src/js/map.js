@@ -123,12 +123,6 @@ class CrimeMap {
         if (resetBtn) {
             resetBtn.addEventListener('click', () => this.resetView());
         }
-
-        // Fullscreen button
-        const fullscreenBtn = document.getElementById('toggleFullscreen');
-        if (fullscreenBtn) {
-            fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
-        }
     }
 
     // Locate user on map
@@ -252,6 +246,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize the map
     crimeMap.init();
 });
+
+// Handle Report Crime button click
+function handleReportCrime() {
+   
+    window.location.href = 'src/pages/complain.html';
+}
 
 // Export for use in other scripts
 if (typeof module !== 'undefined' && module.exports) {

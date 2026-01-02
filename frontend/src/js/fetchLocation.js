@@ -11,7 +11,7 @@ function success(position) {
     const lng = position.coords.longitude;
 
     // Optional: Replace this with your Google Maps Geocoding API key
-    const apiKey = "YOUR_GOOGLE_MAPS_API_KEY";
+    const apiKey = "AIzaSyCJMg7m2fwRuhDsH40nXyeG0BdfSPqzlyg";//tanzil er api key
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
 
     fetch(url)
