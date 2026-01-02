@@ -1,103 +1,154 @@
-// Admin Login and OTP Verification (Using Nodemailer Backend)
+// Admin Login with OTP Verification (NEW SECURE SYSTEM)
 document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector(".sign-in-form");
-    const usernameInput = form.querySelector('input[name="username"]');
-    const emailInput = form.querySelector('input[name="email"]');
-    const passwordInput = form.querySelector('input[name="password"]');
-    const districtSelect = form.querySelector('select[name="district"]');
+    const form = document.getElementById("admin-login-form");
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
     const otpContainer = document.getElementById("otp-container");
-    const otpInputField = document.getElementById("otp-input-2");
+    const otpInput = document.getElementById("otp-input");
     const otpError = document.getElementById("otp-error");
     const verifyOtpBtn = document.getElementById("verify-otp-btn");
+    const loginBtn = document.getElementById("login-btn");
+    const infoMessage = document.getElementById("info-message");
+    const infoText = document.getElementById("info-text");
 
-    // Validation Error Elements
-    const nameError = document.getElementById("name-error-admin");
-    const emailError = document.getElementById("email-error-admin");
-    const passwordError = document.getElementById("password-error-admin");
+    let currentUsername = '';
 
-    // Validation Functions
-    function validateUsername() {
-        const username = usernameInput.value;
-        if (username.length === 0) {
-            nameError.innerHTML = "Username is required!";
-            return false;
-        }
-        if (username.length <= 5) {
-            nameError.innerHTML = "Username must contain at least 5 characters!";
-            return false;
-        }
-        if (!username.match(/^[^\s]+$/)) {
-            nameError.innerHTML = "Username can't contain spaces!";
-            return false;
-        }
-        nameError.innerHTML = '<i class="fas fa-check-circle"></i>';
-        return true;
+    // Show info message
+    function showInfo(message) {
+        infoMessage.style.display = 'block';
+        infoText.textContent = message;
     }
 
-    function validateEmail() {
-        const email = emailInput.value;
-        if (email.length === 0) {
-            emailError.innerHTML = "Email is required";
-            return false;
-        }
-        if (!email.match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/)) {
-            emailError.innerHTML = "Invalid email!";
-            return false;
-        }
-        emailError.innerHTML = '<i class="fas fa-check-circle"></i>';
-        return true;
+    // Show error message
+    function showError(message) {
+        otpError.innerHTML = message;
+        otpError.style.color = "#f44336";
     }
 
-    function validatePassword() {
-        const password = passwordInput.value;
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
-
-        if (password.length === 0) {
-            passwordError.innerHTML = "Password is required!";
-            return false;
-        }
-        if (!passwordRegex.test(password)) {
-            passwordError.innerHTML = "Must contain letter, number, special character";
-            return false;
-        }
-        passwordError.innerHTML = '<i class="fas fa-check-circle"></i>';
-        return true;
+    // Clear messages
+    function clearMessages() {
+        infoMessage.style.display = 'none';
+        otpError.innerHTML = '';
     }
 
-    function validateDistrict() {
-        if (districtSelect.value === "" || districtSelect.value === null) {
-            return false;
-        }
-        return true;
-    }
-
-    function validateForm() {
-        return validateUsername() && validateEmail() && validatePassword() && validateDistrict();
-    }
-
-    // Event Listeners
-    usernameInput.addEventListener("blur", validateUsername);
-    emailInput.addEventListener("blur", validateEmail);
-    passwordInput.addEventListener("blur", validatePassword);
-
-    // Form submission handler - Send OTP via backend
-    form.addEventListener("submit", function (e) {
+    // Step 1: Login form submission - Verify credentials & send OTP
+    form.addEventListener("submit", async function (e) {
         e.preventDefault();
+        clearMessages();
 
-        if (!validateForm()) {
-            otpError.innerHTML = "Please fix all errors before proceeding!";
-            otpError.style.color = "#f44336";
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!username || !password) {
+            showError("Please enter username and password");
             return;
         }
 
-        // Send OTP via backend
-        const email = emailInput.value;
-        otpError.innerHTML = "Sending OTP...";
-        otpError.style.color = "#2196F3";
+        loginBtn.value = "Verifying...";
+        loginBtn.disabled = true;
 
-        fetch('/send-otp', {
-            method: 'POST',
-            headers: {
+        try {
+            const response = await fetch('/adminLogin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.requireOTP) {
+                // OTP sent successfully
+                currentUsername = username;
+                showInfo("OTP sent to your registered email. Please check and enter it below.");
+                
+                // Hide login fields, show OTP field
+                usernameInput.disabled = true;
+                passwordInput.disabled = true;
+                loginBtn.style.display = 'none';
+                otpContainer.style.display = 'flex';
+                verifyOtpBtn.style.display = 'block';
+                
+                otpInput.focus();
+            } else if (data.success) {
+                // Direct login (shouldn't happen with new system)
+                window.location.href = data.redirect || '/admin-dashboard';
+            } else {
+                showError(data.message || "Login failed");
+                loginBtn.value = "Login";
+                loginBtn.disabled = false;
+            }
+
+        } catch (error) {
+            console.error('Login error:', error);
+            showError("Network error. Please try again.");
+            loginBtn.value = "Login";
+            loginBtn.disabled = false;
+        }
+    });
+
+    // Step 2: Verify OTP
+    verifyOtpBtn.addEventListener("click", async function() {
+        clearMessages();
+        
+        const otp = otpInput.value.trim();
+
+        if (!otp || otp.length !== 6) {
+            showError("Please enter a valid 6-digit OTP");
+            return;
+        }
+
+        verifyOtpBtn.value = "Verifying...";
+        verifyOtpBtn.disabled = true;
+
+        try {
+            const response = await fetch('/admin-verify-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    username: currentUsername, 
+                    otp: otp 
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showInfo("Login successful! Redirecting...");
+                setTimeout(() => {
+                    window.location.href = data.redirect || '/admin-dashboard';
+                }, 1000);
+            } else {
+                showError(data.message || "Invalid OTP. Please try again.");
+                verifyOtpBtn.value = "Verify OTP & Login";
+                verifyOtpBtn.disabled = false;
+            }
+
+        } catch (error) {
+            console.error('OTP verification error:', error);
+            showError("Network error. Please try again.");
+            verifyOtpBtn.value = "Verify OTP & Login";
+            verifyOtpBtn.disabled = false;
+        }
+    });
+
+    // Allow OTP submission with Enter key
+    otpInput.addEventListener("keypress", function(e) {
+        if (e.key === 'Enter') {
+            verifyOtpBtn.click();
+        }
+    });
+
+    // Check for error parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error');
+    if (errorParam === 'inactive') {
+        showError("Your account is inactive or pending approval. Please contact Super Admin.");
+    }
+});
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ email: email })

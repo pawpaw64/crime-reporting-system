@@ -217,8 +217,220 @@ textarea {
 .modal-content button:hover {
     background-color: #0f3e52;
 }
+
+/* Status Message Styles */
+.status-message {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-message.hidden {
+    display: none;
+}
+
+.status-message.info {
+    background-color: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #90caf9;
+}
+
+.status-message.success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+.status-message.error {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+}
+
+/* Loading Button Styles */
+.submit-btn {
+    position: relative;
+    min-width: 180px;
+}
+
+.submit-btn:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.btn-text.hidden,
+.btn-loading.hidden {
+    display: none;
+}
+
+.btn-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Map Instructions */
+.map-instructions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 200px;
+    padding: 30px;
+    text-align: center;
+    color: #2E3944;
+}
+
+.map-instructions .map-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.map-instructions p {
+    margin: 0 0 8px 0;
+    font-weight: 500;
+}
+
+.map-instructions small {
+    color: #748D92;
+}
+
+/* Map Controls */
+.map-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background: #f5f5f5;
+    border-top: 1px solid #ddd;
+}
+
+.location-btn {
+    padding: 10px 20px;
+    background-color: #124E66;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.location-btn:hover {
+    background-color: #0f3e52;
+    transform: scale(1.02);
+}
+
+.map-hint {
+    margin: 8px 0 0 0;
+    font-size: 12px;
+    color: #748D92;
+}
+
+/* Improved Modal Styles */
+.success-icon,
+.error-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.modal-content.error-modal {
+    border-top: 4px solid #c62828;
+}
+
+.complaint-id-display {
+    margin: 20px 0;
+}
+
+.complaint-id-box {
+    display: inline-flex;
+    flex-direction: column;
+    padding: 15px 25px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    border: 2px solid #4caf50;
+}
+
+.id-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.id-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #124E66;
+}
+
+.status-note {
+    font-size: 14px;
+    color: #666;
+    margin-top: 10px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.modal-buttons .view-btn {
+    padding: 12px 24px;
+    background-color: #124E66;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.modal-buttons .view-btn:hover {
+    background-color: #0f3e52;
+}
+
+.modal-buttons .close-btn {
+    padding: 12px 24px;
+    background-color: #748D92;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.modal-buttons .close-btn:hover {
+    background-color: #5a6d71;
+}
+
 .map-placeholder {
-    height: 300px;
+    height: auto;
+    min-height: 200px;
     width: 100%;
     padding: 0;
     max-width: 100%;
@@ -227,6 +439,11 @@ textarea {
     border-radius: 8px;
     overflow: hidden;
     position: relative;
+    background-color: #f9f9f9;
+}
+
+.map-placeholder.map-active {
+    min-height: 400px;
 }
 
 /* Enhanced Location Picker Styles */
@@ -242,6 +459,12 @@ textarea {
 
 .map-container.hidden {
     display: none;
+}
+
+#map {
+    height: 350px !important;
+    width: 100% !important;
+    z-index: 1;
 }
 
 /* Radius visualization notice */
@@ -491,6 +714,21 @@ textarea {
     .leaflet-map {
         height: 250px;
     }
+}
+
+/* Fix Leaflet z-index issues */
+.leaflet-pane {
+    z-index: 1;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+    z-index: 2;
+}
+
+.leaflet-popup {
+    z-index: 3;
+}
 }
 
 /* Responsive tweaks */

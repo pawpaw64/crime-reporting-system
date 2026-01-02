@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification | SecureVoice</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 50px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .icon.loading {
+            color: #667eea;
+            animation: spin 1s linear infinite;
+        }
+
+        .icon.success {
+            color: #4caf50;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        .icon.error {
+            color: #f44336;
+            animation: shake 0.5s ease-out;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+
+        p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .countdown {
+            margin-top: 15px;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loading-state">
+            <i class="fas fa-spinner icon loading"></i>
+            <h1>Verifying Your Email</h1>
+            <p>Please wait while we verify your email address...</p>
+        </div>
+
+        <div id="success-state" style="display: none;">
+            <i class="fas fa-check-circle icon success"></i>
+            <h1>Email Verified Successfully!</h1>
+            <p>Your email has been verified. You can now login to your District Admin account.</p>
+            <a href="adminLogin.html" class="btn">Proceed to Login</a>
+            <div class="countdown">
+                Redirecting in <span id="countdown">5</span> seconds...
+            </div>
+        </div>
+
+        <div id="error-state" style="display: none;">
+            <i class="fas fa-times-circle icon error"></i>
+            <h1>Verification Failed</h1>
+            <p id="error-message">The verification link is invalid or has expired.</p>
+            <a href="adminLogin.html" class="btn">Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        // Get token from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        const loadingState = document.getElementById('loading-state');
+        const successState = document.getElementById('success-state');
+        const errorState = document.getElementById('error-state');
+
+        // Auto-verify on page load
+        if (!token) {
+            showError('Missing verification token. Please use the link from your email.');
+        } else {
+            verifyEmail(token);
+        }
+
+        async function verifyEmail(token) {
+            try {
+                const response = await fetch(`/verify-admin-email?token=${encodeURIComponent(token)}`, {
+                    method: 'GET'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess();
+                    startCountdown();
+                } else {
+                    showError(data.message || 'Verification failed. Please try again.');
+                }
+
+            } catch (error) {
+                console.error('Verification error:', error);
+                showError('Network error. Please check your connection and try again.');
+            }
+        }
+
+        function showSuccess() {
+            loadingState.style.display = 'none';
+            successState.style.display = 'block';
+            errorState.style.display = 'none';
+        }
+
+        function showError(message) {
+            loadingState.style.display = 'none';
+            successState.style.display = 'none';
+            errorState.style.display = 'block';
+            document.getElementById('error-message').textContent = message;
+        }
+
+        function startCountdown() {
+            let seconds = 5;
+            const countdownElement = document.getElementById('countdown');
+
+            const interval = setInterval(() => {
+                seconds--;
+                countdownElement.textContent = seconds;
+
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    window.location.href = 'adminLogin.html';
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

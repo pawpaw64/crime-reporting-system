@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Complaint Form</title>
+    <title>Report a Crime - SecureVoice</title>
     <link rel="stylesheet" href="../css/complainForm.css" />
-
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="../../config/config.js"></script>
+    <!-- OpenCage API Key for geocoding -->
+    <script>
+        const OPENCAGE_API_KEY = 'YOUR_OPENCAGE_API_KEY'; // Replace with your actual API key
+    </script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
 
@@ -46,6 +48,8 @@
             <input type="text" id="location" name="location" placeholder="Enter address or location details" required />
             <button type="button" id="mapBtn" class="map-btn">📍 Use Map</button>
         </div>
+        <input type="hidden" id="latitude" name="latitude" />
+        <input type="hidden" id="longitude" name="longitude" />
         
         <!-- Enhanced Map Container -->
         <div id="mapContainer" class="map-container hidden">
@@ -96,6 +100,16 @@
                 <button type="button" id="cancelLocation" class="cancel-btn">✗ Cancel</button>
             </div>
         </div>
+        
+        <div class="map-placeholder" id="mapPlaceholder">
+            <div class="map-instructions">
+                <i class="map-icon">🗺️</i>
+                <p>Click "Use Map" to open the map and pin your location</p>
+                <small>You can drag the marker or click anywhere on the map to set the location</small>
+            </div>
+        </div>
+            </div>
+        </div>
 
         <label>Evidence</label>
         <div class="evidence-upload">
@@ -124,17 +138,42 @@
             </div>
         </div>
 
+        <!-- Status Message -->
+        <div id="statusMessage" class="status-message hidden"></div>
+
         <div class="form-buttons">
             <button type="button" id="cancelBtn" class="cancel-btn">Cancel</button>
-            <button type="submit" class="submit-btn">Submit Complaint</button>
+            <button type="submit" id="submitBtn" class="submit-btn">
+                <span class="btn-text">Submit Complaint</span>
+                <span class="btn-loading hidden">
+                    <span class="spinner"></span> Submitting...
+                </span>
+            </button>
         </div>
     </form>
+
     <!-- Success Modal -->
     <div id="successModal" class="modal hidden">
         <div class="modal-content">
-            <h3>✅ Complaint Submitted!</h3>
-            <p>Your complaint has been successfully submitted. We will take action shortly.</p>
-            <button id="closeModalBtn">Close</button>
+            <div class="success-icon">✅</div>
+            <h3>Complaint Submitted Successfully!</h3>
+            <p>Your complaint has been registered in our system.</p>
+            <div id="complaintIdDisplay" class="complaint-id-display"></div>
+            <p class="status-note">You can track the status of your complaint from your profile dashboard.</p>
+            <div class="modal-buttons">
+                <button id="viewComplaintsBtn" class="view-btn">View My Complaints</button>
+                <button id="closeModalBtn" class="close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal hidden">
+        <div class="modal-content error-modal">
+            <div class="error-icon">❌</div>
+            <h3>Submission Failed</h3>
+            <p id="errorMessage">An error occurred while submitting your complaint.</p>
+            <button id="closeErrorBtn" class="close-btn">Try Again</button>
         </div>
     </div>
 </div>
