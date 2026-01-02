@@ -43,6 +43,9 @@ function initEventDelegation() {
                     document.getElementById('complaint-detail-modal').style.display = 'none';
                 }
                 break;
+            case 'openChat':
+                if (id) openChatModal(id);
+                break;
             case 'switchTab':
                 if (tab) switchTab(tab);
                 break;
@@ -256,6 +259,9 @@ function renderAllComplaints() {
             <div class="complaint-actions">
                 <button class="outline-btn" data-action="viewComplaint" data-id="${c.complaint_id}">
                     <i class="fas fa-eye"></i> View Details
+                </button>
+                <button class="chat-btn-small" data-action="openChat" data-id="${c.complaint_id}">
+                    <i class="fas fa-comments"></i> Message
                 </button>
                 ${c.status === 'pending' ? `
                     <button class="danger-btn" data-action="deleteComplaint" data-id="${c.complaint_id}">
@@ -510,7 +516,10 @@ function viewComplaint(id) {
                 </div>
             </div>
             
-            <div class="detail-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--light-grey);">
+            <div class="detail-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--light-grey); display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="primary-btn" data-action="openChat" data-id="${complaint.complaint_id}">
+                    <i class="fas fa-comments"></i> Message Admin
+                </button>
                 ${complaint.status === 'pending' ? `
                     <button class="danger-btn" data-action="deleteComplaintAndClose" data-id="${complaint.complaint_id}">
                         <i class="fas fa-trash"></i> Delete Report
@@ -863,7 +872,184 @@ function maskNID(nid) {
     return nid.substring(0, 4) + '****' + nid.substring(nid.length - 4);
 }
 
+// ===== CHAT SYSTEM =====
+let currentChatComplaintId = null;
+let chatRefreshInterval = null;
+
+function openChatModal(complaintId) {
+    currentChatComplaintId = complaintId;
+    const complaint = complaints.find(c => c.complaint_id === complaintId);
+    
+    const chatModal = document.getElementById('chat-modal');
+    if (!chatModal) {
+        createChatModal();
+    }
+    
+    document.getElementById('chat-complaint-id').textContent = `#${complaintId}`;
+    document.getElementById('chat-complaint-type').textContent = complaint ? complaint.complaint_type : 'Complaint';
+    document.getElementById('chat-modal').style.display = 'flex';
+    
+    loadChatMessages(complaintId);
+    
+    // Auto-refresh messages every 5 seconds
+    if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+    chatRefreshInterval = setInterval(() => loadChatMessages(complaintId), 5000);
+}
+
+function closeChatModal() {
+    document.getElementById('chat-modal').style.display = 'none';
+    currentChatComplaintId = null;
+    if (chatRefreshInterval) {
+        clearInterval(chatRefreshInterval);
+        chatRefreshInterval = null;
+    }
+}
+
+function createChatModal() {
+    const modalHTML = `
+        <div class="modal-overlay" id="chat-modal">
+            <div class="modal chat-modal-container">
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <h3><i class="fas fa-comments"></i> Chat with Admin</h3>
+                        <span class="chat-complaint-badge">
+                            <span id="chat-complaint-type">Complaint</span> 
+                            <span id="chat-complaint-id">#0</span>
+                        </span>
+                    </div>
+                    <button class="modal-close" id="close-chat-modal">&times;</button>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading messages...
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <form id="chat-form" class="chat-form">
+                        <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off" required>
+                        <button type="submit" class="chat-send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add event listeners
+    document.getElementById('close-chat-modal').addEventListener('click', closeChatModal);
+    document.getElementById('chat-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'chat-modal') closeChatModal();
+    });
+    document.getElementById('chat-form').addEventListener('submit', handleSendMessage);
+}
+
+async function loadChatMessages(complaintId) {
+    try {
+        const response = await fetch(`/complaint-chat/${complaintId}`, {
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            renderChatMessages(data.messages);
+        } else {
+            console.error('Failed to load messages:', data.message);
+        }
+    } catch (error) {
+        console.error('Error loading chat:', error);
+    }
+}
+
+function renderChatMessages(messages) {
+    const container = document.getElementById('chat-messages');
+    
+    if (!messages || messages.length === 0) {
+        container.innerHTML = `
+            <div class="chat-empty">
+                <i class="fas fa-comment-slash"></i>
+                <p>No messages yet</p>
+                <span>Start a conversation with the admin about your complaint</span>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = messages.map(msg => `
+        <div class="chat-message ${msg.sender_type === 'user' ? 'sent' : 'received'}">
+            <div class="message-bubble">
+                <p>${escapeHtml(msg.message)}</p>
+                <span class="message-time">${formatChatTime(msg.sent_at)}</span>
+            </div>
+            <span class="message-sender">${msg.sender_type === 'user' ? 'You' : 'Admin'}</span>
+        </div>
+    `).join('');
+    
+    // Scroll to bottom
+    container.scrollTop = container.scrollHeight;
+}
+
+async function handleSendMessage(e) {
+    e.preventDefault();
+    
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    
+    if (!message || !currentChatComplaintId) return;
+    
+    const sendBtn = document.querySelector('.chat-send-btn');
+    sendBtn.disabled = true;
+    
+    try {
+        const response = await fetch(`/send-chat-message`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                complaintId: currentChatComplaintId,
+                message: message
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            input.value = '';
+            loadChatMessages(currentChatComplaintId);
+        } else {
+            alert(data.message || 'Failed to send message');
+        }
+    } catch (error) {
+        console.error('Send message error:', error);
+        alert('Failed to send message. Please try again.');
+    } finally {
+        sendBtn.disabled = false;
+    }
+}
+
+function formatChatTime(dateStr) {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    
+    if (isToday) {
+        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Make functions globally available
 window.switchTab = switchTab;
 window.viewComplaint = viewComplaint;
 window.deleteComplaint = deleteComplaint;
+window.openChatModal = openChatModal;
+window.closeChatModal = closeChatModal;
