@@ -662,27 +662,28 @@ exports.getDashboardStats = async (req, res) => {
 // Get Complaint Location Data for Heatmap
 exports.getComplaintHeatmapData = async (req, res) => {
     try {
-        const [complaints] = await pool.query(
-            `SELECT 
-                c.latitude, 
-                c.longitude, 
-                c.complaint_type,
-                c.status,
-                c.created_at,
-                cat.name as category_name,
-                l.location_name,
-                l.district_name,
-                COUNT(*) as incident_count
-             FROM complaint c
-             LEFT JOIN category cat ON c.category_id = cat.category_id
-             LEFT JOIN location l ON c.location_id = l.location_id
-             WHERE c.latitude IS NOT NULL 
-               AND c.longitude IS NOT NULL
-               AND c.latitude != 0 
-               AND c.longitude != 0
-             GROUP BY c.latitude, c.longitude, c.complaint_type, cat.name
-             ORDER BY c.created_at DESC`
-        );
+                const [complaints] = await pool.query(
+                        `SELECT 
+                                COALESCE(c.latitude, l.latitude) AS latitude,
+                                COALESCE(c.longitude, l.longitude) AS longitude,
+                                c.complaint_type,
+                                c.status,
+                                c.created_at,
+                                cat.name AS category_name,
+                                l.location_name,
+                                l.district_name,
+                                c.location_id,
+                                COUNT(*) AS incident_count
+                         FROM complaint c
+                         LEFT JOIN category cat ON c.category_id = cat.category_id
+                         LEFT JOIN location l ON c.location_id = l.location_id
+                         WHERE COALESCE(c.latitude, l.latitude) IS NOT NULL
+                             AND COALESCE(c.longitude, l.longitude) IS NOT NULL
+                             AND COALESCE(c.latitude, l.latitude) != 0
+                             AND COALESCE(c.longitude, l.longitude) != 0
+                         GROUP BY c.location_id, COALESCE(c.latitude, l.latitude), COALESCE(c.longitude, l.longitude), c.complaint_type, cat.name
+                         ORDER BY c.created_at DESC`
+                );
 
         // Transform data for heatmap
         const heatmapData = complaints.map(complaint => ({
@@ -694,7 +695,8 @@ exports.getComplaintHeatmapData = async (req, res) => {
             location: complaint.location_name,
             district: complaint.district_name,
             status: complaint.status,
-            created_at: complaint.created_at
+            created_at: complaint.created_at,
+            location_id: complaint.location_id
         }));
 
         // Get summary statistics
@@ -704,8 +706,12 @@ exports.getComplaintHeatmapData = async (req, res) => {
                 COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_complaints,
                 COUNT(CASE WHEN status = 'resolved' THEN 1 END) as resolved_complaints,
                 COUNT(CASE WHEN status = 'investigating' THEN 1 END) as investigating_complaints
-             FROM complaint 
-             WHERE latitude IS NOT NULL AND longitude IS NOT NULL`
+                         FROM complaint 
+                         LEFT JOIN location l ON complaint.location_id = l.location_id
+                         WHERE COALESCE(complaint.latitude, l.latitude) IS NOT NULL 
+                             AND COALESCE(complaint.longitude, l.longitude) IS NOT NULL
+                             AND COALESCE(complaint.latitude, l.latitude) != 0
+                             AND COALESCE(complaint.longitude, l.longitude) != 0`
         );
 
         // Get complaints by category
@@ -713,9 +719,13 @@ exports.getComplaintHeatmapData = async (req, res) => {
             `SELECT 
                 cat.name as category,
                 COUNT(*) as count
-             FROM complaint c
-             LEFT JOIN category cat ON c.category_id = cat.category_id
-             WHERE c.latitude IS NOT NULL AND c.longitude IS NOT NULL
+                         FROM complaint c
+                         LEFT JOIN category cat ON c.category_id = cat.category_id
+                         LEFT JOIN location l ON c.location_id = l.location_id
+                         WHERE COALESCE(c.latitude, l.latitude) IS NOT NULL 
+                             AND COALESCE(c.longitude, l.longitude) IS NOT NULL
+                             AND COALESCE(c.latitude, l.latitude) != 0
+                             AND COALESCE(c.longitude, l.longitude) != 0
              GROUP BY cat.name
              ORDER BY count DESC`
         );
