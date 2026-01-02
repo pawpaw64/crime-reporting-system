@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="src/css/auth-header.css">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Leaflet Heatmap Plugin CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.min.css" />
     <!-- Map Styles -->
     <link rel="stylesheet" href="src/css/map.css">
     <style>
@@ -92,6 +94,14 @@
                 <i class="fas fa-sync-alt"></i>
                 Reset View
             </button>
+            <button id="toggleHeatmap" class="map-btn">
+                <i class="fas fa-fire"></i>
+                Crime Heatmap
+            </button>
+            <button id="toggleMarkers" class="map-btn">
+                <i class="fas fa-map-pin"></i>
+                Division Markers
+            </button>
         </div>
         
         <div class="report-crime-btn-container">
@@ -100,6 +110,35 @@
                 Report a Crime
             </button>
         </div>
+        
+        <!-- Heatmap Info Panel -->
+        <div id="heatmapInfo" class="heatmap-info" style="display: none;">
+            <div class="heatmap-legend">
+                <h4><i class="fas fa-fire"></i> Crime Heat Map</h4>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color high"></div>
+                        <span>High Activity</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color medium"></div>
+                        <span>Medium Activity</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color low"></div>
+                        <span>Low Activity</span>
+                    </div>
+                </div>
+                <div class="heatmap-stats">
+                    <div id="totalComplaints" class="stat-item">
+                        <strong>0</strong> Total Reports
+                    </div>
+                    <div id="pendingComplaints" class="stat-item">
+                        <strong>0</strong> Pending
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Map Information Cards -->
@@ -107,6 +146,8 @@
 </section>
 <!-- End: Map Section -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<!-- Leaflet Heatmap Plugin -->
+<script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.min.js"></script>
 
 <script src="src/js/map.js"></script>
 
@@ -379,25 +420,8 @@
 <script>
     // Handle Report a Crime button click
     function handleReportCrime() {
-        // Check if user is authenticated by checking session
-        fetch('/get-user-data', {
-            method: 'GET',
-            credentials: 'include'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.user) {
-                // User is logged in, redirect to complaint form
-                window.location.href = '/complain';
-            } else {
-                // User is not logged in, redirect to login page
-                window.location.href = 'src/pages/login.html';
-            }
-        })
-        .catch(error => {
-            // On error, redirect to login
-            window.location.href = 'src/pages/login.html';
-        });
+        // Directly open the complaint form page
+        window.location.href = 'src/pages/complain.html';
     }
 </script>
 </body>

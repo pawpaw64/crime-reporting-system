@@ -658,3 +658,76 @@ exports.getDashboardStats = async (req, res) => {
         res.status(500).json({ success: false, message: "Database error" });
     }
 };
+
+// Get Complaint Location Data for Heatmap
+exports.getComplaintHeatmapData = async (req, res) => {
+    try {
+        const [complaints] = await pool.query(
+            `SELECT 
+                c.latitude, 
+                c.longitude, 
+                c.complaint_type,
+                c.status,
+                c.created_at,
+                cat.name as category_name,
+                l.location_name,
+                l.district_name,
+                COUNT(*) as incident_count
+             FROM complaint c
+             LEFT JOIN category cat ON c.category_id = cat.category_id
+             LEFT JOIN location l ON c.location_id = l.location_id
+             WHERE c.latitude IS NOT NULL 
+               AND c.longitude IS NOT NULL
+               AND c.latitude != 0 
+               AND c.longitude != 0
+             GROUP BY c.latitude, c.longitude, c.complaint_type, cat.name
+             ORDER BY c.created_at DESC`
+        );
+
+        // Transform data for heatmap
+        const heatmapData = complaints.map(complaint => ({
+            lat: parseFloat(complaint.latitude),
+            lng: parseFloat(complaint.longitude),
+            intensity: complaint.incident_count,
+            type: complaint.complaint_type,
+            category: complaint.category_name,
+            location: complaint.location_name,
+            district: complaint.district_name,
+            status: complaint.status,
+            created_at: complaint.created_at
+        }));
+
+        // Get summary statistics
+        const [totalStats] = await pool.query(
+            `SELECT 
+                COUNT(*) as total_complaints,
+                COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_complaints,
+                COUNT(CASE WHEN status = 'resolved' THEN 1 END) as resolved_complaints,
+                COUNT(CASE WHEN status = 'investigating' THEN 1 END) as investigating_complaints
+             FROM complaint 
+             WHERE latitude IS NOT NULL AND longitude IS NOT NULL`
+        );
+
+        // Get complaints by category
+        const [categoryStats] = await pool.query(
+            `SELECT 
+                cat.name as category,
+                COUNT(*) as count
+             FROM complaint c
+             LEFT JOIN category cat ON c.category_id = cat.category_id
+             WHERE c.latitude IS NOT NULL AND c.longitude IS NOT NULL
+             GROUP BY cat.name
+             ORDER BY count DESC`
+        );
+
+        res.json({
+            success: true,
+            heatmapData: heatmapData,
+            totalStats: totalStats[0],
+            categoryStats: categoryStats
+        });
+    } catch (err) {
+        console.error("Get complaint heatmap data error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
