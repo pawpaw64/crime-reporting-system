@@ -44,9 +44,58 @@
         <label for="location">Location</label>
         <div class="location-section">
             <input type="text" id="location" name="location" placeholder="Enter address or location details" required />
-            <button type="button" class="map-btn">📍 Use Map</button>
+            <button type="button" id="mapBtn" class="map-btn">📍 Use Map</button>
         </div>
-        <div class="map-placeholder">Map will be displayed here</div>
+        
+        <!-- Enhanced Map Container -->
+        <div id="mapContainer" class="map-container hidden">
+            <div class="location-accuracy">
+                <h4>📍 Select Location Accuracy</h4>
+                <div class="accuracy-options">
+                    <label class="accuracy-option">
+                        <input type="radio" name="locationAccuracy" value="accurate" checked>
+                        <span class="accuracy-label">
+                            <strong>📍 Accurate Location</strong>
+                            <small>Exact incident location</small>
+                        </span>
+                    </label>
+                    <label class="accuracy-option">
+                        <input type="radio" name="locationAccuracy" value="approximate">
+                        <span class="accuracy-label">
+                            <strong>🌐 Approximate Location</strong>
+                            <small>General area (privacy protection)</small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Map Display -->
+            <div id="mapDisplay" class="map-display">
+                <div class="map-instructions">
+                    <p>📌 Click on the map or drag the marker to select the incident location</p>
+                    <button type="button" id="useCurrentLocation" class="current-location-btn">📍 Use My Current Location</button>
+                </div>
+                <div id="leafletMap" class="leaflet-map"></div>
+                
+                <!-- Radius visualization notice -->
+                <div id="radiusNotice" class="radius-notice">
+                    <strong>🌐 Privacy Area Shown:</strong> The orange circle shows the 100m approximate area that will be associated with your report. Your exact location remains private.
+                </div>
+            </div>
+            
+            <!-- Selected Location Info -->
+            <div id="locationInfo" class="location-info hidden">
+                <h5>📍 Selected Location:</h5>
+                <p id="selectedAddress">No location selected</p>
+                <p id="selectedCoords" class="coordinates">Coordinates: Not set</p>
+                <p id="accuracyInfo" class="accuracy-info hidden">Privacy radius: 500m</p>
+            </div>
+            
+            <div class="map-actions">
+                <button type="button" id="confirmLocation" class="confirm-btn">✓ Confirm Location</button>
+                <button type="button" id="cancelLocation" class="cancel-btn">✗ Cancel</button>
+            </div>
+        </div>
 
         <label>Evidence</label>
         <div class="evidence-upload">

@@ -14,7 +14,15 @@ exports.submitComplaint = async (req, res) => {
             return res.status(401).json({ success: false, message: "Not authenticated" });
         }
 
-        const { complaintType, description, incidentDate, location } = req.body;
+        const { 
+            complaintType, 
+            description, 
+            incidentDate, 
+            location, 
+            latitude, 
+            longitude, 
+            accuracyRadius 
+        } = req.body;
         const username = req.session.username;
 
         if (!complaintType || !description || !incidentDate || !location) {
@@ -42,13 +50,42 @@ exports.submitComplaint = async (req, res) => {
         const formattedDate = new Date(incidentDate).toISOString().slice(0, 19).replace('T', ' ');
         const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-        // Insert complaint
+        // Parse coordinates if provided
+        let lat = null, lng = null, radius = null;
+        
+        if (latitude && longitude) {
+            lat = parseFloat(latitude);
+            lng = parseFloat(longitude);
+            
+            // Validate coordinate ranges
+            if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid coordinate values"
+                });
+            }
+            
+            // Parse accuracy radius if provided (for approximate locations)
+            if (accuracyRadius) {
+                radius = parseInt(accuracyRadius);
+                if (radius <= 0) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid accuracy radius"
+                    });
+                }
+            }
+        }
+
+        // Insert complaint with location coordinates
         const [complaintResult] = await pool.query(
             `INSERT INTO complaint (
                 description, created_at, status, username, admin_username, 
-                location_id, complaint_type, location_address, category_id
-            ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?)`,
-            [description, formattedDate, username, adminUsername, locationId, complaintType, location, categoryId]
+                location_id, complaint_type, location_address, category_id,
+                latitude, longitude, location_accuracy_radius
+            ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [description, formattedDate, username, adminUsername, locationId, 
+             complaintType, location, categoryId, lat, lng, radius]
         );
 
         const complaintId = complaintResult.insertId;
@@ -83,7 +120,13 @@ exports.submitComplaint = async (req, res) => {
         res.json({
             success: true,
             message: "Complaint submitted successfully!",
-            complaintId: complaintId
+            complaintId: complaintId,
+            complaint: {
+                id: complaintId,
+                latitude: lat,
+                longitude: lng,
+                accuracyRadius: radius
+            }
         });
     } catch (err) {
         console.error("Submit complaint error:", err);

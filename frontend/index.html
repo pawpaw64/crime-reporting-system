@@ -92,9 +92,12 @@
                 <i class="fas fa-sync-alt"></i>
                 Reset View
             </button>
-            <button id="toggleFullscreen" class="map-btn">
-                <i class="fas fa-expand"></i>
-                Fullscreen
+        </div>
+        
+        <div class="report-crime-btn-container">
+            <button id="report-crime-btn" class="report-crime-btn" onclick="handleReportCrime()">
+                <i class="fa-solid fa-exclamation-triangle"></i>
+                Report a Crime
             </button>
         </div>
     </div>
@@ -373,18 +376,5 @@
 <script src="src/js/navigation-fix.js"></script>
 <script src="src/js/header.js"></script>
 <script src="src/js/auth-handler.js" defer></script>
-<script>
-    // Handle Report a Crime button click
-    function handleReportCrime() {
-        // Check if user is authenticated
-        if (window.isAuthenticated && window.currentUser) {
-            // User is logged in, redirect to complaint form
-            window.location.href = 'src/pages/complain.html';
-        } else {
-            // User is not logged in, redirect to login page
-            window.location.href = 'src/pages/login.html';
-        }
-    }
-</script>
 </body>
 </html>

@@ -75,13 +75,19 @@ CREATE TABLE IF NOT EXISTS `admins` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Location table
-CREATE TABLE IF NOT EXISTS `location` (
+CREATE TABLE `location` (
   `location_id` int NOT NULL AUTO_INCREMENT,
   `location_name` varchar(100) DEFAULT NULL,
   `district_name` varchar(100) DEFAULT NULL,
+  `latitude` decimal(10,8) DEFAULT NULL COMMENT 'Latitude coordinate of the location',
+  `longitude` decimal(11,8) DEFAULT NULL COMMENT 'Longitude coordinate of the location',
+  `accuracy_radius` int DEFAULT NULL COMMENT 'Radius in meters for location accuracy',
   PRIMARY KEY (`location_id`),
   KEY `fk_location_district_name` (`district_name`),
-  CONSTRAINT `fk_location_district_name` FOREIGN KEY (`district_name`) REFERENCES `districts` (`district_name`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `fk_location_district_name` FOREIGN KEY (`district_name`) REFERENCES `districts` (`district_name`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `chk_location_accuracy_radius` CHECK (((`accuracy_radius` is null) or (`accuracy_radius` > 0))),
+  CONSTRAINT `chk_location_latitude` CHECK (((`latitude` >= -(90)) and (`latitude` <= 90))),
+  CONSTRAINT `chk_location_longitude` CHECK (((`longitude` >= -(180)) and (`longitude` <= 180)))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Complaint table
