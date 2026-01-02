@@ -82,5 +82,6 @@ router.get('/complaint-chat/:complaintId', requireUser, complaintController.getC
 router.post('/send-chat-message', requireUser, complaintController.sendChatMessage);
 router.delete('/delete-complaint/:id', requireUser, complaintController.deleteComplaint);
 router.get('/dashboard-stats', requireUser, complaintController.getDashboardStats);
+router.get('/complaint-heatmap-data', complaintController.getComplaintHeatmapData);
 
 module.exports = router;

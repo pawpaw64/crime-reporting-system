@@ -138,6 +138,13 @@
             </div>
         </div>
 
+        <div class="report-crime-btn-container">
+            <button id="report-crime-btn" class="report-crime-btn" onclick="handleReportCrime()">
+                <i class="fa-solid fa-exclamation-triangle"></i>
+                Report a Crime
+            </button>
+        </div>
+        
         <!-- Status Message -->
         <div id="statusMessage" class="status-message hidden"></div>
 
@@ -177,7 +184,28 @@
         </div>
     </div>
 </div>
+
+<script>
+// Debug function to check if user is authenticated
+function checkAuthStatus() {
+    fetch('/check-auth')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Auth status:', data);
+            if (!data.success || !data.authenticated) {
+                console.error('User not authenticated, redirecting to login');
+                window.location.href = '/login';
+            }
+        })
+        .catch(error => {
+            console.error('Auth check failed:', error);
+            window.location.href = '/login';
+        });
+}
+
+// Check auth status on page load
+checkAuthStatus();
+</script>
+
 </body>
-
-
 </html>

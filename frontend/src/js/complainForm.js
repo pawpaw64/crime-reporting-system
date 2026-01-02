@@ -264,18 +264,39 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Enhanced form submission
+    // Enhanced form submission with better error handling
     form.addEventListener("submit", function (e) {
         e.preventDefault();
+
+        // Show loading state
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoading = submitBtn.querySelector('.btn-loading');
+        
+        btnText.classList.add('hidden');
+        btnLoading.classList.remove('hidden');
+        submitBtn.disabled = true;
 
         // Create FormData object
         const formData = new FormData();
 
-        // Add form fields
-        formData.append('complaintType', document.getElementById('complaintType').value);
-        formData.append('description', document.getElementById('description').value);
-        formData.append('incidentDate', document.getElementById('incidentDate').value);
-        formData.append('location', document.getElementById('location').value);
+        // Add form fields with validation
+        const complaintType = document.getElementById('complaintType').value;
+        const description = document.getElementById('description').value;
+        const incidentDate = document.getElementById('incidentDate').value;
+        const location = document.getElementById('location').value;
+
+        // Basic validation
+        if (!complaintType || !description || !incidentDate || !location) {
+            showError('Please fill in all required fields');
+            resetSubmitButton();
+            return;
+        }
+
+        formData.append('complaintType', complaintType);
+        formData.append('description', description);
+        formData.append('incidentDate', incidentDate);
+        formData.append('location', location);
 
         // Add location data if available
         if (locationData.latitude && locationData.longitude) {
@@ -292,14 +313,43 @@ document.addEventListener("DOMContentLoaded", () => {
         if (selectedFiles.video) formData.append('evidence', selectedFiles.video);
         if (selectedFiles.audio) formData.append('evidence', selectedFiles.audio);
 
+        console.log('Submitting complaint with data:', {
+            complaintType,
+            description: description.substring(0, 50) + '...',
+            incidentDate,
+            location,
+            hasCoordinates: !!(locationData.latitude && locationData.longitude),
+            fileCount: Object.values(selectedFiles).filter(f => f).length
+        });
+
         // Submit form
         fetch('/submit-complaint', {
             method: 'POST',
-            body: formData
+            body: formData,
+            credentials: 'include' // Important for session cookies
         })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Please log in to submit a complaint');
+                    }
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Response data:', data);
                 if (data.success) {
+                    // Show complaint ID in the success modal
+                    const complaintIdDisplay = document.getElementById('complaintIdDisplay');
+                    if (complaintIdDisplay && data.complaintId) {
+                        complaintIdDisplay.innerHTML = `
+                            <strong>Complaint ID: #${data.complaintId}</strong>
+                            <p>Please save this ID for future reference.</p>
+                        `;
+                    }
+
                     // Notify admin about new complaint
                     if (data.complaint && data.complaint.id) {
                         fetch('/notify-admin', {
@@ -309,19 +359,19 @@ document.addEventListener("DOMContentLoaded", () => {
                             },
                             body: JSON.stringify({
                                 complaintId: data.complaint.id
-                            })
+                            }),
+                            credentials: 'include'
                         })
                             .then(notifyResponse => notifyResponse.json())
                             .then(notifyData => {
                                 console.log('Notification response:', notifyData);
                                 if (notifyData.success && notifyData.complaint && notifyData.adminEmail) {
                                     sendEmailToAdmin(notifyData.adminEmail, notifyData.complaint);
-                                } else {
-                                    console.error('Failed to get admin email or complaint data');
                                 }
                             })
                             .catch(error => {
                                 console.error('Error notifying admin:', error);
+                                // Don't show error to user as complaint was successful
                             });
                     }
 
@@ -337,14 +387,38 @@ document.addEventListener("DOMContentLoaded", () => {
                     };
                     resetUploadDisplays();
                 } else {
-                    alert(data.message || 'Error submitting complaint');
+                    showError(data.message || 'Error submitting complaint');
                 }
+                resetSubmitButton();
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Error submitting complaint');
+                console.error('Submission error:', error);
+                showError(error.message || 'Unable to submit complaint. Please check your connection and try again.');
+                resetSubmitButton();
             });
     });
+
+    function resetSubmitButton() {
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoading = submitBtn.querySelector('.btn-loading');
+        
+        btnText.classList.remove('hidden');
+        btnLoading.classList.add('hidden');
+        submitBtn.disabled = false;
+    }
+
+    function showError(message) {
+        const errorModal = document.getElementById('errorModal');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        if (errorModal && errorMessage) {
+            errorMessage.textContent = message;
+            errorModal.classList.remove('hidden');
+        } else {
+            alert(message);
+        }
+    }
 
     function resetUploadDisplays() {
         const uploadBoxes = document.querySelectorAll('.upload-box');
@@ -398,3 +472,37 @@ function sendEmailToAdmin(adminEmail, complaintData) {
         console.warn('EmailJS not loaded, skipping email notification');
     }
 }
+
+    // Modal event listeners
+    const errorModal = document.getElementById('errorModal');
+    const closeErrorBtn = document.getElementById('closeErrorBtn');
+    
+    if (closeErrorBtn) {
+        closeErrorBtn.addEventListener('click', () => {
+            errorModal.classList.add('hidden');
+        });
+    }
+
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', () => {
+            successModal.classList.add('hidden');
+        });
+    }
+
+    const viewComplaintsBtn = document.getElementById('viewComplaintsBtn');
+    if (viewComplaintsBtn) {
+        viewComplaintsBtn.addEventListener('click', () => {
+            window.location.href = '/profile';
+        });
+    }
+
+    // Cancel button event listener
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to cancel? Any unsaved data will be lost.')) {
+                window.location.href = '/profile';
+            }
+        });
+    }
+
+;
