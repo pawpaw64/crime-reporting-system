@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function() {
         // API Base URL - Use same origin if running from backend server
         const API_BASE_URL = (() => {
             const port = window.location.port;
-            if (port === '3000' || port === '30001' || port === '5000') {
+            if (port === '3000' || port === '30001' || port === '5000'|| port === '5500') {
                 return window.location.origin + '/api';
             }
             return `http://${window.location.hostname}:3000/api`;
