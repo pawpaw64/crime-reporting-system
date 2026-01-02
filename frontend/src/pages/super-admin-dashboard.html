@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Dashboard | SecureVoice</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../css/userDashboard.css">
+    <style>
+        .super-admin-badge {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: 10px;
+        }
+
+        .requests-table {
+            width: 100%;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .requests-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .requests-table th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 16px 15px;
+            text-align: left;
+            font-weight: 700;
+            color: #212529;
+            border-bottom: 3px solid #dee2e6;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .requests-table td {
+            padding: 16px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+            color: #495057;
+        }
+
+        .requests-table tr:hover {
+            background: #f8f9fa;
+            transition: background 0.2s;
+        }
+
+        .requests-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffe8a1 100%);
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+
+        .status-approved {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 1px solid #28a745;
+        }
+
+        .status-rejected {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 1px solid #dc3545;
+        }
+
+        .status-suspended {
+            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+            color: #495057;
+            border: 1px solid #999;
+        }
+
+        .status-active {
+            background: linear-gradient(135deg, #cfe2ff 0%, #b6d4fe 100%);
+            color: #084298;
+            border: 1px solid #0d6efd;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn-small {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .action-btn-small:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .action-btn-small i {
+            font-size: 11px;
+        }
+
+        .btn-approve {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+        }
+
+        .btn-reject {
+            background: linear-gradient(135deg, #f44336 0%, #da190b 100%);
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: linear-gradient(135deg, #da190b 0%, #c41400 100%);
+        }
+
+        .btn-suspend {
+            background: linear-gradient(135deg, #ff9800 0%, #e68900 100%);
+            color: white;
+        }
+
+        .btn-suspend:hover {
+            background: linear-gradient(135deg, #e68900 0%, #cc7a00 100%);
+        }
+
+        .btn-reactivate {
+            background: linear-gradient(135deg, #2196F3 0%, #0b7dda 100%);
+            color: white;
+        }
+
+        .btn-reactivate:hover {
+            background: linear-gradient(135deg, #0b7dda 0%, #0a6ebc 100%);
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, #607d8b 0%, #546e7a 100%);
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: linear-gradient(135deg, #546e7a 0%, #455a64 100%);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            animation: slideDown 0.3s;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+        }
+
+        .close-btn {
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            margin: 20px 0;
+        }
+
+        .detail-group {
+            margin-bottom: 15px;
+        }
+
+        .detail-group label {
+            font-weight: 600;
+            color: #666;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .detail-group p {
+            color: #333;
+            padding: 8px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .audit-log-item {
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            background: #f9f9f9;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .audit-log-item .timestamp {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .audit-log-item .action {
+            font-weight: 600;
+            color: #333;
+            margin: 5px 0;
+        }
+
+        .audit-log-item .details {
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <img src="../../images/auth/secureVOICE.png" alt="SecureVoice" class="logo-img">
+                </div>
+            </div>
+
+            <div class="profile">
+                <img src="../../public/images/icons/default-avatar.png" alt="Super Admin" class="avatar">
+                <h2 id="super-admin-name">Super Admin</h2>
+                <p class="email" id="super-admin-email">admin@securevoice.gov</p>
+                <div class="verification-badges">
+                    <span class="super-admin-badge">
+                        <i class="fas fa-crown"></i> SUPER ADMIN
+                    </span>
+                </div>
+            </div>
+
+            <nav class="nav-links">
+                <button class="tab-btn active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </button>
+                <button class="tab-btn" data-tab="pending-requests">
+                    <i class="fas fa-user-clock"></i> Pending Requests
+                    <span class="notification-count" id="pending-count-badge" style="display: none;">0</span>
+                </button>
+                <button class="tab-btn" data-tab="all-admins">
+                    <i class="fas fa-users-cog"></i> All Admins
+                </button>
+                <button class="tab-btn" data-tab="audit-logs">
+                    <i class="fas fa-history"></i> Audit Logs
+                </button>
+                <button class="tab-btn" data-tab="statistics">
+                    <i class="fas fa-chart-bar"></i> Statistics
+                </button>
+            </nav>
+
+            <div class="bottom-nav">
+                <button class="outline-btn2" id="settings-btn">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+                <button class="logout-btn" id="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Dashboard Tab -->
+            <div class="tab-content active" id="dashboard">
+                <div class="header">
+                    <h1><i class="fas fa-tachometer-alt"></i> Super Admin Dashboard</h1>
+                    <div class="header-actions">
+                        <span class="welcome-text">Welcome, <span id="welcome-name">Super Administrator</span>!</span>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon pending">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-pending">0</h3>
+                            <p>Pending Requests</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon verifying">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-approved">0</h3>
+                            <p>Approved Admins</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon investigating">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-active">0</h3>
+                            <p>Active Admins</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon resolved">
+                            <i class="fas fa-user-times"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-suspended">0</h3>
+                            <p>Suspended Admins</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                        <button class="outline-btn" onclick="switchTab('audit-logs')">View All Logs</button>
+                    </div>
+                    <div id="recent-activity">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i> Loading recent activities...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Requests Tab -->
+            <div class="tab-content" id="pending-requests">
+                <div class="header">
+                    <h1><i class="fas fa-user-clock"></i> Pending Admin Requests</h1>
+                    <button class="edit-btn" onclick="loadPendingRequests()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="requests-table" id="pending-table">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i> Loading pending requests...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Admins Tab -->
+            <div class="tab-content" id="all-admins">
+                <div class="header">
+                    <h1><i class="fas fa-users-cog"></i> All District Admins</h1>
+                    <button class="edit-btn" onclick="loadAllAdmins()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="filter-section">
+                        <div class="filter-group">
+                            <label>Filter by Status</label>
+                            <select id="filter-status" onchange="filterAdmins()">
+                                <option value="">All Statuses</option>
+                                <option value="approved">Approved</option>
+                                <option value="active">Active</option>
+                                <option value="suspended">Suspended</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Filter by District</label>
+                            <select id="filter-district" onchange="filterAdmins()">
+                                <option value="">All Districts</option>
+                                <option value="Dhaka">Dhaka</option>
+                                <option value="Rajshahi">Rajshahi</option>
+                                <option value="Barishal">Barishal</option>
+                                <option value="Khulna">Khulna</option>
+                                <option value="Sylhet">Sylhet</option>
+                                <option value="Chattogram">Chattogram</option>
+                                <option value="Rangpur">Rangpur</option>
+                                <option value="Mymensingh">Mymensingh</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Search</label>
+                            <input type="text" id="search-admin" placeholder="Search by name or username..." oninput="filterAdmins()">
+                        </div>
+                    </div>
+
+                    <div class="requests-table" id="admins-table">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i> Loading admins...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Logs Tab -->
+            <div class="tab-content" id="audit-logs">
+                <div class="header">
+                    <h1><i class="fas fa-history"></i> Audit Logs</h1>
+                    <button class="edit-btn" onclick="loadAuditLogs()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="filter-section">
+                        <div class="filter-group">
+                            <label>Filter by Admin</label>
+                            <select id="filter-audit-admin" onchange="loadAuditLogs()">
+                                <option value="">All Admins</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Date From</label>
+                            <input type="date" id="filter-date-from" onchange="loadAuditLogs()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Date To</label>
+                            <input type="date" id="filter-date-to" onchange="loadAuditLogs()">
+                        </div>
+                    </div>
+
+                    <div id="audit-logs-container">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i> Loading audit logs...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Tab -->
+            <div class="tab-content" id="statistics">
+                <div class="header">
+                    <h1><i class="fas fa-chart-bar"></i> System Statistics</h1>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #4caf50;">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-admins">0</h3>
+                            <p>Total Admins</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #2196F3;">
+                            <i class="fas fa-map"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-districts">8</h3>
+                            <p>Districts Covered</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #ff9800;">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="avg-approval-time">0</h3>
+                            <p>Avg Approval Time (hrs)</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #9c27b0;">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-actions">0</h3>
+                            <p>Total Actions Logged</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-chart-pie"></i> District Distribution</h3>
+                    <div id="district-stats">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i> Loading statistics...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- View Details Modal -->
+    <div id="details-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-circle"></i> Admin Details</h2>
+                <button class="close-btn" onclick="closeModal('details-modal')">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-details-content">
+                <!-- Details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn-small btn-view" onclick="closeModal('details-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve Modal -->
+    <div id="approve-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-check-circle"></i> Approve Admin Request</h2>
+                <button class="close-btn" onclick="closeModal('approve-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to approve this admin request?</p>
+                <p><strong>Username:</strong> <span id="approve-username"></span></p>
+                <p><strong>District:</strong> <span id="approve-district"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn-small btn-view" onclick="closeModal('approve-modal')">Cancel</button>
+                <button class="action-btn-small btn-approve" onclick="confirmApprove()">Approve</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div id="reject-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-times-circle"></i> Reject Admin Request</h2>
+                <button class="close-btn" onclick="closeModal('reject-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reject this admin request?</p>
+                <p><strong>Username:</strong> <span id="reject-username"></span></p>
+                <div class="detail-group">
+                    <label>Rejection Reason</label>
+                    <textarea id="rejection-reason" rows="3" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn-small btn-view" onclick="closeModal('reject-modal')">Cancel</button>
+                <button class="action-btn-small btn-reject" onclick="confirmReject()">Reject</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/super-admin-dashboard.js"></script>
+</body>
+</html>

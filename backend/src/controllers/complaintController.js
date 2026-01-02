@@ -135,6 +135,183 @@ exports.notifyAdmin = async (req, res) => {
     }
 };
 
+// Serve Complaint Form
+exports.serveComplaintForm = async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
+        res.json({ success: true, authenticated: true });
+    } catch (err) {
+        console.error("Serve complaint form error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+// Get User Complaints
+exports.getUserComplaints = async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
+
+        const userId = req.session.userId;
+
+        const [complaints] = await pool.query(
+            `SELECT c.complaint_id, c.complaint_type, c.description, c.created_at, 
+                    c.status, c.location_address, c.admin_username
+             FROM complaint c
+             JOIN users u ON c.username = u.username
+             WHERE u.userid = ?
+             ORDER BY c.created_at DESC`,
+            [userId]
+        );
+
+        res.json({ success: true, complaints });
+    } catch (err) {
+        console.error("Get user complaints error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+// Get Complaint Notifications
+exports.getComplaintNotifications = async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
+
+        const complaintId = req.params.complaint_id;
+
+        const [notifications] = await pool.query(
+            `SELECT * FROM notifications 
+             WHERE complaint_id = ?
+             ORDER BY created_at DESC`,
+            [complaintId]
+        );
+
+        res.json({ success: true, notifications });
+    } catch (err) {
+        console.error("Get complaint notifications error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+// Mark Notifications as Read
+exports.markNotificationsRead = async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
+
+        const complaintId = req.params.complaint_id;
+
+        await pool.query(
+            `UPDATE notifications SET is_read = 1 WHERE complaint_id = ?`,
+            [complaintId]
+        );
+
+        res.json({ success: true, message: "Notifications marked as read" });
+    } catch (err) {
+        console.error("Mark notifications read error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+// Get Complaint Chat
+exports.getComplaintChat = async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
+
+        const complaintId = req.params.complaintId;
+
+        const [messages] = await pool.query(
+            `SELECT * FROM chat_messages 
+             WHERE complaint_id = ?
+             ORDER BY created_at ASC`,
+            [complaintId]
+        );
+
+        res.json({ success: true, messages });
+    } catch (err) {
+        console.error("Get complaint chat error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+// Send Chat Message
+exports.sendChatMessage = async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
+
+        const { complaintId, message } = req.body;
+        const username = req.session.username;
+
+        if (!complaintId || !message) {
+            return res.status(400).json({ success: false, message: "Complaint ID and message are required" });
+        }
+
+        await pool.query(
+            `INSERT INTO chat_messages (complaint_id, sender_username, message, created_at)
+             VALUES (?, ?, ?, NOW())`,
+            [complaintId, username, message]
+        );
+
+        res.json({ success: true, message: "Message sent successfully" });
+    } catch (err) {
+        console.error("Send chat message error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+// Get Dashboard Stats
+exports.getDashboardStats = async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
+
+        const userId = req.session.userId;
+
+        const [totalComplaints] = await pool.query(
+            `SELECT COUNT(*) as count FROM complaint c
+             JOIN users u ON c.username = u.username
+             WHERE u.userid = ?`,
+            [userId]
+        );
+
+        const [pendingComplaints] = await pool.query(
+            `SELECT COUNT(*) as count FROM complaint c
+             JOIN users u ON c.username = u.username
+             WHERE u.userid = ? AND c.status = 'pending'`,
+            [userId]
+        );
+
+        const [resolvedComplaints] = await pool.query(
+            `SELECT COUNT(*) as count FROM complaint c
+             JOIN users u ON c.username = u.username
+             WHERE u.userid = ? AND c.status = 'resolved'`,
+            [userId]
+        );
+
+        res.json({
+            success: true,
+            stats: {
+                total: totalComplaints[0].count,
+                pending: pendingComplaints[0].count,
+                resolved: resolvedComplaints[0].count
+            }
+        });
+    } catch (err) {
+        console.error("Get dashboard stats error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
 // Delete Complaint
 exports.deleteComplaint = async (req, res) => {
     try {

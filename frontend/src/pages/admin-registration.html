@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>District Admin Registration Request</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: "Poppins", sans-serif;
+            background: #D3D9D4;
+            min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            padding: 0;
+        }
+        
+        .main-container {
+            display: flex;
+            width: 100%;
+            max-width: none;
+            background: #fff;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+            min-height: 100vh;
+            max-height: none;
+        }
+        
+        .left-panel {
+            flex: 0 0 380px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            text-align: center;
+        }
+        
+        .left-panel img {
+            width: 180px;
+            margin-bottom: 30px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .left-panel h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .left-panel p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-bottom: 25px;
+        }
+        
+        .requirements-list {
+            text-align: left;
+            width: 100%;
+            max-width: 280px;
+        }
+        
+        .requirements-list h4 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: #a5b4fc;
+        }
+        
+        .requirements-list li {
+            font-size: 0.85rem;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0.85;
+        }
+        
+        .requirements-list li i {
+            color: #4ade80;
+            font-size: 0.8rem;
+        }
+        
+        .form-panel {
+            flex: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-height: 100vh;
+            position: relative;
+        }
+        
+        .back-arrow {
+            position: absolute;
+            top: 20px;
+            left: 25px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(26, 26, 46, 0.3);
+        }
+        
+        .back-arrow:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(26, 26, 46, 0.4);
+        }
+        
+        .back-arrow i {
+            font-size: 1rem;
+        }
+        
+        .form-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .form-panel::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .form-panel::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        .form-panel::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .form-header h2 {
+            font-size: 1.6rem;
+            color: #1a1a2e;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .form-header p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .input-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #444;
+            margin-bottom: 6px;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            color: #9ca3af;
+            font-size: 0.95rem;
+        }
+        
+        .input-wrapper input,
+        .input-wrapper select {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+        
+        .input-wrapper input:focus,
+        .input-wrapper select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+        
+        .input-wrapper select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,<svg fill="%239ca3af" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+        
+        .error-message {
+            font-size: 0.75rem;
+            color: #ef4444;
+            margin-top: 4px;
+            display: block;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid #0ea5e9;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h4 {
+            font-size: 0.9rem;
+            color: #0369a1;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .info-box li {
+            font-size: 0.8rem;
+            color: #475569;
+            padding: 5px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .info-box li::before {
+            content: "•";
+            color: #0ea5e9;
+            font-weight: bold;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 26, 46, 0.4);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .message-box {
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        
+        .message-box.success {
+            background: #dcfce7;
+            border-left: 4px solid #22c55e;
+            color: #166534;
+        }
+        
+        .message-box.error {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .login-link p {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .login-link a {
+            color: #667eea;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .login-link a:hover {
+            color: #764ba2;
+        }
+        
+        @media (max-width: 900px) {
+            .main-container {
+                flex-direction: column;
+                max-height: none;
+            }
+            
+            .left-panel {
+                flex: none;
+                padding: 30px 20px;
+            }
+            
+            .left-panel img {
+                width: 120px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-panel {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <!-- Left Panel -->
+    <div class="left-panel">
+        <a href="/">
+            <img src="../../images/auth/secureVOICE.png" alt="SecureVoice Logo">
+        </a>
+        <h3>Join SecureVoice</h3>
+        <p>Request administrative access for your district</p>
+        
+        <div class="requirements-list">
+            <h4><i class="fas fa-clipboard-list"></i> Requirements</h4>
+            <ul>
+                <li><i class="fas fa-check-circle"></i> Valid official credentials</li>
+                <li><i class="fas fa-check-circle"></i> District-level authority</li>
+                <li><i class="fas fa-check-circle"></i> Official email address</li>
+                <li><i class="fas fa-check-circle"></i> Super Admin approval</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Form Panel -->
+    <div class="form-panel">
+        <a href="adminLogin.html" class="back-arrow" title="Back to Login">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        
+        <div class="form-header">
+            <h2><i class="fas fa-user-shield"></i> District Admin Registration</h2>
+            <p>Submit your request for district-level administrative access</p>
+        </div>
+        
+        <form id="admin-registration-form">
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="username" name="username" placeholder="Enter username" required>
+                    </div>
+                    <span id="username-error" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="email">Official Email</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" name="email" placeholder="official@email.gov.bd" required>
+                    </div>
+                    <span id="email-error" class="error-message"></span>
+                </div>
+                
+                <div class="input-group full-width">
+                    <label for="fullName">Full Name</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" required>
+                    </div>
+                    <span id="fullName-error" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="phone">Phone Number</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="phone" name="phone" placeholder="+880 1XXX-XXXXXX" required>
+                    </div>
+                    <span id="phone-error" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="official_id">Official/Employee ID</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-id-badge"></i>
+                        <input type="text" id="official_id" name="official_id" placeholder="Employee ID" required>
+                    </div>
+                    <span id="official-id-error" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="designation">Designation</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-briefcase"></i>
+                        <input type="text" id="designation" name="designation" placeholder="e.g., District Police Chief" required>
+                    </div>
+                    <span id="designation-error" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="district_name">District</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-location-dot"></i>
+                        <select id="district_name" name="district_name" required>
+                            <option value="" disabled selected>Select District</option>
+                            <option value="Dhaka">Dhaka</option>
+                            <option value="Rajshahi">Rajshahi</option>
+                            <option value="Barishal">Barishal</option>
+                            <option value="Khulna">Khulna</option>
+                            <option value="Sylhet">Sylhet</option>
+                        </select>
+                    </div>
+                    <span id="district-error" class="error-message"></span>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <h4><i class="fas fa-info-circle"></i> Important Information</h4>
+                <ul>
+                    <li>Super Administrator will review your request within 2-3 business days</li>
+                    <li>You'll receive email updates at each step of the process</li>
+                    <li>After approval, you'll set your password and verify your email</li>
+                    <li>All information must be accurate and verifiable</li>
+                </ul>
+            </div>
+            
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-paper-plane"></i> Submit Registration Request
+            </button>
+            
+            <div class="message-box success" id="success-message">
+                <i class="fas fa-check-circle"></i>
+                <span id="success-text"></span>
+            </div>
+            
+            <div class="message-box error" id="error-display">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="error-text"></span>
+            </div>
+            
+            <div class="login-link">
+                <p>Already have an account? <a href="adminLogin.html">Sign in here</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('admin-registration-form');
+        const successMessage = document.getElementById('success-message');
+        const errorDisplay = document.getElementById('error-display');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Clear previous messages
+            successMessage.style.display = 'none';
+            errorDisplay.style.display = 'none';
+
+            // Get form data
+            const formData = {
+                username: document.getElementById('username').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                fullName: document.getElementById('fullName').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                designation: document.getElementById('designation').value.trim(),
+                official_id: document.getElementById('official_id').value.trim(),
+                district_name: document.getElementById('district_name').value
+            };
+
+            // Basic validation
+            if (!formData.username || !formData.email || !formData.fullName || 
+                !formData.phone || !formData.designation || !formData.official_id || 
+                !formData.district_name) {
+                showError('Please fill in all required fields');
+                return;
+            }
+
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email)) {
+                showError('Please enter a valid email address');
+                return;
+            }
+
+            // Phone validation
+            const phoneRegex = /^[0-9]{10,15}$/;
+            if (!phoneRegex.test(formData.phone.replace(/[-\s\+]/g, ''))) {
+                showError('Please enter a valid phone number');
+                return;
+            }
+
+            try {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                submitBtn.disabled = true;
+
+                const response = await fetch('/admin-registration-request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess(data.message || 'Registration request submitted successfully! You will receive an email once approved.');
+                    form.reset();
+                    
+                    // Redirect to login page after 5 seconds
+                    setTimeout(() => {
+                        window.location.href = 'adminLogin.html';
+                    }, 5000);
+                } else {
+                    showError(data.message || 'Failed to submit registration request. Please try again.');
+                }
+
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Registration Request';
+                submitBtn.disabled = false;
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError('An error occurred. Please try again later.');
+                const submitBtn = form.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Registration Request';
+                submitBtn.disabled = false;
+            }
+        });
+
+        function showSuccess(message) {
+            successMessage.style.display = 'flex';
+            document.getElementById('success-text').textContent = message;
+            successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function showError(message) {
+            errorDisplay.style.display = 'flex';
+            document.getElementById('error-text').textContent = message;
+            errorDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Real-time validation
+        document.getElementById('email').addEventListener('blur', function() {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const emailError = document.getElementById('email-error');
+            if (this.value && !emailRegex.test(this.value)) {
+                emailError.textContent = 'Invalid email format';
+            } else {
+                emailError.textContent = '';
+            }
+        });
+
+        document.getElementById('username').addEventListener('blur', function() {
+            const usernameError = document.getElementById('username-error');
+            if (this.value.length > 0 && this.value.length < 3) {
+                usernameError.textContent = 'Username must be at least 3 characters';
+            } else if (this.value.includes(' ')) {
+                usernameError.textContent = 'Username cannot contain spaces';
+            } else {
+                usernameError.textContent = '';
+            }
+        });
+        
+        document.getElementById('phone').addEventListener('blur', function() {
+            const phoneError = document.getElementById('phone-error');
+            const phoneRegex = /^[0-9]{10,15}$/;
+            if (this.value && !phoneRegex.test(this.value.replace(/[-\s\+]/g, ''))) {
+                phoneError.textContent = 'Enter a valid phone number';
+            } else {
+                phoneError.textContent = '';
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

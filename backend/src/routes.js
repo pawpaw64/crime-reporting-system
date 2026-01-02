@@ -4,36 +4,54 @@ const router = express.Router();
 // Import controllers
 const authController = require('./controllers/authController');
 const adminController = require('./controllers/adminController');
+const superAdminController = require('./controllers/superAdminController');
 const userController = require('./controllers/userController');
 const complaintController = require('./controllers/complaintController');
 const pageController = require('./controllers/pageController');
 
 // Import middleware
-const { requireUserAuth } = require('./middleware/authMiddleware');
+const { requireUser, requireAdmin } = require('./middleware/authMiddleware');
 const upload = require('./middleware/uploadMiddleware');
 
 // ========== PAGE ROUTES ==========
-router.get('/homepage', pageController.serveHomepage);
-router.get('/contact-us', pageController.serveContactUs);
-router.get('/adminLogin', pageController.serveAdminLogin);
-router.get('/signup', pageController.serveSignup);
-router.get('/login', pageController.serveLogin);
+router.get('/homepage', pageController.getHomepage);
+router.get('/contact-us', pageController.getContactUs);
+router.get('/adminLogin', pageController.getAdminLoginPage);
+router.get('/signup', pageController.getSignupPage);
+router.get('/login', pageController.getLoginPage);
 router.get('/test-email', pageController.testEmail);
 
 // ========== AUTH ROUTES ==========
-// Admin Auth
+// Admin Auth - New Secure System with OTP
+router.post('/admin-registration-request', authController.adminRegistrationRequest);
 router.post('/adminLogin', authController.adminLogin);
+router.post('/admin-verify-otp', authController.adminVerifyOTP);
+router.post('/setup-admin-password', authController.setupAdminPassword);
+router.get('/verify-admin-email', authController.verifyAdminEmail);
 router.post('/admin-logout', authController.adminLogout);
 router.get('/check-admin-auth', authController.checkAdminAuth);
 
 // User Auth
-router.post('/signup', authController.userSignup);
-router.post('/login', authController.userLogin);
+router.post('/signup', authController.signup);
+router.post('/login', authController.login);
 router.post('/logout', authController.userLogout);
+router.get('/check-auth', authController.checkAuth);
 
 // OTP Routes
 router.post('/send-otp', authController.sendOTP);
 router.post('/verify-otp', authController.verifyOTP);
+
+// ========== SUPER ADMIN ROUTES ==========
+router.post('/super-admin-login', superAdminController.superAdminLogin);
+router.post('/super-admin-logout', superAdminController.superAdminLogout);
+router.get('/super-admin-stats', superAdminController.getSuperAdminStats);
+router.get('/pending-admin-requests', superAdminController.getPendingAdminRequests);
+router.get('/all-admin-requests', superAdminController.getAllAdminRequests);
+router.post('/approve-admin', superAdminController.approveAdminRequest);
+router.post('/reject-admin', superAdminController.rejectAdminRequest);
+router.post('/suspend-admin', superAdminController.suspendAdminAccount);
+router.post('/reactivate-admin', superAdminController.reactivateAdminAccount);
+router.get('/admin-audit-logs', superAdminController.getAuditLogs);
 
 // ========== ADMIN ROUTES ==========
 router.get('/admin-dashboard', adminController.getAdminDashboard);
@@ -45,22 +63,23 @@ router.post('/admin-send-chat-message', adminController.sendAdminChatMessage);
 router.get('/get-complaint-evidence/:complaintId', adminController.getComplaintEvidence);
 router.get('/get-admin-cases', adminController.getAdminCases);
 router.post('/update-complaint-status', adminController.updateComplaintStatus);
+router.get('/get-admin-logs', adminController.getAdminLogs);
 
 // ========== USER ROUTES ==========
-router.get('/profile', requireUserAuth, userController.getUserProfile);
-router.post('/update-profile', requireUserAuth, userController.updateUserProfile);
-router.get('/get-user-data', requireUserAuth, userController.getUserData);
+router.get('/profile', requireUser, userController.getProfile);
+router.post('/update-profile', requireUser, userController.updateProfile);
+router.get('/get-user-data', requireUser, userController.getUserData);
 
 // ========== COMPLAINT ROUTES ==========
-router.get('/complain', requireUserAuth, complaintController.serveComplaintForm);
-router.post('/submit-complaint', requireUserAuth, upload.array('evidence', 10), complaintController.submitComplaint);
+router.get('/complain', requireUser, complaintController.serveComplaintForm);
+router.post('/submit-complaint', requireUser, upload.array('evidence', 10), complaintController.submitComplaint);
 router.post('/notify-admin', complaintController.notifyAdmin);
-router.get('/my-complaints', requireUserAuth, complaintController.getUserComplaints);
-router.get('/complaint-notifications/:complaint_id', requireUserAuth, complaintController.getComplaintNotifications);
-router.post('/mark-notifications-read/:complaint_id', requireUserAuth, complaintController.markNotificationsRead);
-router.get('/complaint-chat/:complaintId', requireUserAuth, complaintController.getComplaintChat);
-router.post('/send-chat-message', requireUserAuth, complaintController.sendChatMessage);
-router.delete('/delete-complaint/:id', requireUserAuth, complaintController.deleteComplaint);
-router.get('/dashboard-stats', requireUserAuth, complaintController.getDashboardStats);
+router.get('/my-complaints', requireUser, complaintController.getUserComplaints);
+router.get('/complaint-notifications/:complaint_id', requireUser, complaintController.getComplaintNotifications);
+router.post('/mark-notifications-read/:complaint_id', requireUser, complaintController.markNotificationsRead);
+router.get('/complaint-chat/:complaintId', requireUser, complaintController.getComplaintChat);
+router.post('/send-chat-message', requireUser, complaintController.sendChatMessage);
+router.delete('/delete-complaint/:id', requireUser, complaintController.deleteComplaint);
+router.get('/dashboard-stats', requireUser, complaintController.getDashboardStats);
 
 module.exports = router;
