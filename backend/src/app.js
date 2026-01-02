@@ -78,6 +78,10 @@ app.use(session({
     }
 }));
 
+// Set up EJS view engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
 // Serve static files from frontend
 app.use(express.static(path.join(__dirname, '../../frontend')));
 app.use('/src', express.static(path.join(__dirname, '../../frontend/src')));
@@ -330,9 +334,7 @@ app.get('/contact', (req, res) => {
     res.sendFile(path.join(__dirname, '../../frontend/src/pages/contact-us.html'));
 });
 
-app.get('/profile', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/src/pages/profile.html'));
-});
+// Profile route is handled in routes.js with auth middleware
 
 app.get('/complain', (req, res) => {
     res.sendFile(path.join(__dirname, '../../frontend/src/pages/complain.html'));
