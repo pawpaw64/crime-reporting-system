@@ -2,11 +2,23 @@ class CrimeMap {
     constructor() {
         this.map = null;
         this.markersLayer = L.layerGroup();
+        this.divisionMarkers = L.layerGroup();
         this.heatmapLayer = null;
 
         this.isHeatmapVisible = false;
         this.isMarkersVisible = true;
+        this.isDivisionMarkersVisible = true;
 
+        this.divisions = [
+            { name: "Dhaka", lat: 23.8103, lng: 90.4125 },
+            { name: "Chattogram", lat: 22.3569, lng: 91.7832 },
+            { name: "Rajshahi", lat: 24.3745, lng: 88.6042 },
+            { name: "Khulna", lat: 22.8456, lng: 89.5403 },
+            { name: "Sylhet", lat: 24.8949, lng: 91.8687 },
+            { name: "Barishal", lat: 22.7010, lng: 90.3535 },
+            { name: "Rangpur", lat: 25.7439, lng: 89.2752 },
+            { name: "Mymensingh", lat: 24.7471, lng: 90.4203 }
+        ];
         this.heatmapData = [];
         this.heatmapMeta = [];
         this.dataLoaded = false;
@@ -20,11 +32,24 @@ class CrimeMap {
         }).addTo(this.map);
 
         this.markersLayer.addTo(this.map);
+        this.divisionMarkers.addTo(this.map);
 
+        this.addDivisionMarkers();
         this.fetchHeatmapData();
         this.bindUI();
 
         console.log("CrimeMap initialized");
+    }
+
+    addDivisionMarkers() {
+        this.divisionMarkers.clearLayers();
+
+        this.divisions.forEach(div => {
+            const marker = L.marker([div.lat, div.lng]).bindPopup(`
+                <strong>${div.name} Division</strong>
+            `);
+            this.divisionMarkers.addLayer(marker);
+        });
     }
 
     async fetchHeatmapData() {
@@ -38,6 +63,9 @@ class CrimeMap {
             const points = payload.heatmapData || [];
             if (!points.length) {
                 console.warn("Heatmap: no data returned");
+                this.heatmapData = [];
+                this.heatmapMeta = [];
+                this.dataLoaded = true;
                 return;
             }
 
@@ -59,6 +87,10 @@ class CrimeMap {
             this.toggleHeatmap(true);
         } catch (err) {
             console.error("Heatmap load error:", err);
+            // Allow UI toggling even if data failed to load
+            this.dataLoaded = true;
+            this.heatmapData = [];
+            this.heatmapMeta = [];
         }
     }
 
@@ -81,9 +113,9 @@ class CrimeMap {
     }
 
     toggleHeatmap(forceOn = false) {
+        // Allow toggle even if data is empty; warn but don't block
         if (!this.dataLoaded) {
-            alert("Heatmap data is still loading or unavailable.");
-            return;
+            console.warn("Heatmap data is still loading; toggling anyway.");
         }
 
         if (!this.heatmapLayer) {
@@ -110,13 +142,13 @@ class CrimeMap {
     }
 
     toggleMarkers() {
-        if (this.isMarkersVisible) {
-            this.map.removeLayer(this.markersLayer);
+        if (this.isDivisionMarkersVisible) {
+            this.map.removeLayer(this.divisionMarkers);
         } else {
-            this.map.addLayer(this.markersLayer);
+            this.map.addLayer(this.divisionMarkers);
         }
 
-        this.isMarkersVisible = !this.isMarkersVisible;
+        this.isDivisionMarkersVisible = !this.isDivisionMarkersVisible;
     }
 
     locateMe() {
