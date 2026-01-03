@@ -6,11 +6,13 @@ let cameraStream = null;
 let capturedImageData = null;
 let registrationSessionId = null; // Track registration session
 
-// API Base URL - Try common backend ports
-const API_BASE_URL = (() => {
+// API Base URL - Uses centralized config from config.js
+// Make sure config.js is loaded before this script
+const API_BASE_URL = typeof Config !== 'undefined' ? Config.API_BASE_URL : (() => {
     const hostname = window.location.hostname;
-    // If already running from backend server, use same origin
-    if (window.location.port === '3000' || window.location.port === '30001' || window.location.port === '5000') {
+    const port = window.location.port;
+    // If running from backend server, use same origin
+    if (['3000', '3001', '5000'].includes(port)) {
         return window.location.origin + '/api';
     }
     // Default to port 3000 for development

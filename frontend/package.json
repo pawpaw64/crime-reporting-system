@@ -2,7 +2,7 @@
   "name": "crime-reporting-frontend",
   "version": "1.0.0",
   "scripts": {
-    "dev": "live-server --port=3000",
+    "dev": "live-server --port=5500",
     "build:css": "tailwindcss -i ./src/css/input.css -o ./src/css/output.css --watch",
     "build": "tailwindcss -i ./src/css/input.css -o ./src/css/output.css --minify"
   },

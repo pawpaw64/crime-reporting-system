@@ -40,10 +40,12 @@ app.use(helmet({
 // CORS configuration - allow multiple origins for development
 const allowedOrigins = [
     'http://localhost:3000',
+    'http://localhost:3001',   // Fallback port if 3000 is busy
     'http://localhost:5500',
     'http://127.0.0.1:5500',
     'http://localhost:8080',
     'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',   // Fallback port
     process.env.FRONTEND_URL
 ].filter(Boolean);
 
