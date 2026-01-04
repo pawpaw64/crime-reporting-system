@@ -234,10 +234,7 @@ function renderAllComplaints() {
             <div class="empty-state">
                 <i class="fas fa-file-alt"></i>
                 <h3>No complaints found</h3>
-                <p>You haven't filed any complaints yet</p>
-                <button class="submit-btn" data-action="switchTab" data-tab="new-report" style="margin-top: 20px;">
-                    <i class="fas fa-plus"></i> File New Report
-                </button>
+                <p>You haven't filed any complaints yet. Use the "New Report" button above to file your first complaint.</p>
             </div>
         `;
         return;
@@ -411,10 +408,27 @@ function initModals() {
 
     closeComplaintBtn?.addEventListener('click', () => complaintModal.style.display = 'none');
 
+    // Settings Modal
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettingsBtn = document.getElementById('close-settings');
+
+    settingsBtn?.addEventListener('click', () => {
+        settingsModal.classList.add('active');
+    });
+
+    closeSettingsBtn?.addEventListener('click', () => {
+        settingsModal.classList.remove('active');
+    });
+
+    // Initialize Settings
+    initSettings();
+
     // Close modals on outside click
     window.addEventListener('click', (e) => {
         if (e.target === editModal) editModal.style.display = 'none';
         if (e.target === complaintModal) complaintModal.style.display = 'none';
+        if (e.target === settingsModal) settingsModal.classList.remove('active');
     });
 
     // Logout
@@ -558,11 +572,20 @@ async function deleteComplaint(id) {
 }
 
 // ===== REPORT FORM =====
+let locationMap = null;
+let locationMarker = null;
+let selectedLocationData = {
+    latitude: null,
+    longitude: null,
+    address: ''
+};
+
 function initReportForm() {
     const form = document.getElementById('report-form');
     const fileUploadArea = document.getElementById('file-upload-area');
     const fileInput = document.getElementById('evidence-files');
     const locationBtn = document.getElementById('get-location');
+    const openMapBtn = document.getElementById('open-map');
 
     form?.addEventListener('submit', handleReportSubmit);
 
@@ -588,12 +611,16 @@ function initReportForm() {
     });
 
     locationBtn?.addEventListener('click', getCurrentLocation);
+    openMapBtn?.addEventListener('click', openLocationMap);
 
     // Set max date for incident date
     const incidentDate = document.getElementById('incident-date');
     if (incidentDate) {
         incidentDate.max = new Date().toISOString().split('T')[0];
     }
+
+    // Initialize map modal controls
+    initMapModal();
 }
 
 function handleFiles(files) {
@@ -648,23 +675,10 @@ function getCurrentLocation() {
             const { latitude, longitude } = position.coords;
             
             try {
-                // Try OpenCage first, then fallback to Nominatim
                 let address = null;
                 
+                // Try Nominatim first (free, reliable, no API key needed)
                 try {
-                    const response = await fetch(
-                        `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=2caa6cd327404e8a8881300f50f2d21c`
-                    );
-                    const data = await response.json();
-                    if (data.results?.length > 0) {
-                        address = data.results[0].formatted;
-                    }
-                } catch (e) {
-                    console.log('OpenCage failed, trying Nominatim');
-                }
-                
-                // Fallback to Nominatim (free, no API key)
-                if (!address) {
                     const nominatimResponse = await fetch(
                         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
                         {
@@ -674,16 +688,48 @@ function getCurrentLocation() {
                             }
                         }
                     );
-                    const nominatimData = await nominatimResponse.json();
-                    if (nominatimData?.display_name) {
-                        address = nominatimData.display_name;
+                    
+                    if (nominatimResponse.ok) {
+                        const nominatimData = await nominatimResponse.json();
+                        if (nominatimData?.display_name) {
+                            address = nominatimData.display_name;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Nominatim failed, trying OpenCage:', e);
+                }
+                
+                // Try OpenCage as fallback
+                if (!address) {
+                    try {
+                        const response = await fetch(
+                            `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=2caa6cd327404e8a8881300f50f2d21c`
+                        );
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.results?.length > 0) {
+                                address = data.results[0].formatted;
+                            }
+                        }
+                    } catch (e) {
+                        console.log('OpenCage also failed:', e);
                     }
                 }
                 
-                locationInput.value = address || `${latitude}, ${longitude}`;
+                if (address) {
+                    locationInput.value = address;
+                    console.log('Successfully geocoded location:', address);
+                } else {
+                    // If both services fail, show error and let user enter manually
+                    locationInput.value = '';
+                    alert('Could not get address for your location. Please enter the location manually.');
+                    console.error('All geocoding services failed for coordinates:', latitude, longitude);
+                }
             } catch (error) {
                 console.error('Geocoding error:', error);
-                locationInput.value = `${latitude}, ${longitude}`;
+                locationInput.value = '';
+                alert('Error getting location address. Please enter the location manually.');
             } finally {
                 locationInput.disabled = false;
             }
@@ -714,6 +760,193 @@ function getCurrentLocation() {
             maximumAge: 0
         }
     );
+}
+
+// ===== MAP MODAL FUNCTIONS =====
+function initMapModal() {
+    const closeMapBtn = document.getElementById('close-map-modal');
+    const cancelMapBtn = document.getElementById('cancel-map-selection');
+    const confirmMapBtn = document.getElementById('confirm-map-location');
+    const useCurrentBtn = document.getElementById('use-current-location');
+
+    closeMapBtn?.addEventListener('click', closeLocationMap);
+    cancelMapBtn?.addEventListener('click', closeLocationMap);
+    confirmMapBtn?.addEventListener('click', confirmLocationSelection);
+    useCurrentBtn?.addEventListener('click', useCurrentLocationOnMap);
+}
+
+function openLocationMap() {
+    const modal = document.getElementById('location-map-modal');
+    modal.style.display = 'flex';
+    
+    // Initialize map if not already initialized
+    setTimeout(() => {
+        if (!locationMap) {
+            initializeLocationMap();
+        } else {
+            locationMap.invalidateSize();
+        }
+    }, 100);
+}
+
+function closeLocationMap() {
+    const modal = document.getElementById('location-map-modal');
+    modal.style.display = 'none';
+}
+
+function initializeLocationMap() {
+    const mapElement = document.getElementById('location-map');
+    
+    if (!mapElement) return;
+    
+    // Default to Dhaka, Bangladesh
+    locationMap = L.map('location-map').setView([23.8103, 90.4125], 12);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(locationMap);
+
+    // Create draggable marker
+    locationMarker = L.marker([23.8103, 90.4125], { 
+        draggable: true 
+    }).addTo(locationMap);
+    
+    locationMarker.bindPopup('📍 Drag me to your location!').openPopup();
+    
+    // Update location when marker is dragged
+    locationMarker.on('dragend', function(e) {
+        const position = e.target.getLatLng();
+        updateMapLocation(position.lat, position.lng);
+    });
+    
+    // Update location when map is clicked
+    locationMap.on('click', function(e) {
+        const { lat, lng } = e.latlng;
+        locationMarker.setLatLng([lat, lng]);
+        updateMapLocation(lat, lng);
+    });
+}
+
+async function updateMapLocation(lat, lng) {
+    selectedLocationData.latitude = lat;
+    selectedLocationData.longitude = lng;
+    
+    // Show coordinates immediately
+    const coordsElement = document.getElementById('map-selected-coords');
+    const addressElement = document.getElementById('map-selected-address');
+    const infoElement = document.getElementById('selected-location-info');
+    
+    coordsElement.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    addressElement.textContent = 'Getting address...';
+    infoElement.style.display = 'block';
+    
+    // Geocode to get address
+    try {
+        let address = null;
+        
+        // Try Nominatim
+        try {
+            const nominatimResponse = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+                {
+                    headers: {
+                        'Accept-Language': 'en',
+                        'User-Agent': 'SecureVoice Crime Reporting System'
+                    }
+                }
+            );
+            
+            if (nominatimResponse.ok) {
+                const nominatimData = await nominatimResponse.json();
+                if (nominatimData?.display_name) {
+                    address = nominatimData.display_name;
+                }
+            }
+        } catch (e) {
+            console.log('Nominatim failed:', e);
+        }
+        
+        // Fallback to OpenCage
+        if (!address) {
+            try {
+                const response = await fetch(
+                    `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=2caa6cd327404e8a8881300f50f2d21c`
+                );
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.results?.length > 0) {
+                        address = data.results[0].formatted;
+                    }
+                }
+            } catch (e) {
+                console.log('OpenCage failed:', e);
+            }
+        }
+        
+        if (address) {
+            selectedLocationData.address = address;
+            addressElement.textContent = address;
+            locationMarker.bindPopup(`📍 ${address}`).openPopup();
+        } else {
+            selectedLocationData.address = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            addressElement.textContent = 'Could not get address';
+        }
+    } catch (error) {
+        console.error('Geocoding error:', error);
+        selectedLocationData.address = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        addressElement.textContent = 'Error getting address';
+    }
+}
+
+function useCurrentLocationOnMap() {
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser');
+        return;
+    }
+
+    const btn = document.getElementById('use-current-location');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting location...';
+    btn.disabled = true;
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const { latitude, longitude } = position.coords;
+            
+            if (locationMap && locationMarker) {
+                locationMap.setView([latitude, longitude], 16);
+                locationMarker.setLatLng([latitude, longitude]);
+                updateMapLocation(latitude, longitude);
+            }
+            
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        },
+        (error) => {
+            alert('Unable to get your location. Please select manually on the map.');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+}
+
+function confirmLocationSelection() {
+    if (!selectedLocationData.latitude || !selectedLocationData.longitude) {
+        alert('Please select a location on the map first');
+        return;
+    }
+    
+    const locationInput = document.getElementById('incident-location');
+    locationInput.value = selectedLocationData.address;
+    
+    closeLocationMap();
 }
 
 async function handleReportSubmit(e) {
@@ -1047,9 +1280,82 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ===== SETTINGS FUNCTIONALITY =====
+function initSettings() {
+    // Load saved settings from localStorage
+    const darkMode = localStorage.getItem('darkMode') === 'true';
+    const emailNotifications = localStorage.getItem('emailNotifications') !== 'false';
+    const pushNotifications = localStorage.getItem('pushNotifications') !== 'false';
+    const profileVisibility = localStorage.getItem('profileVisibility') !== 'false';
+    const anonymousReporting = localStorage.getItem('anonymousReporting') === 'true';
+    const language = localStorage.getItem('language') || 'en';
+
+    // Apply saved settings
+    if (darkMode) {
+        document.body.classList.add('dark-mode');
+        document.getElementById('dark-mode-toggle').checked = true;
+    }
+
+    document.getElementById('email-notifications-toggle').checked = emailNotifications;
+    document.getElementById('push-notifications-toggle').checked = pushNotifications;
+    document.getElementById('profile-visibility-toggle').checked = profileVisibility;
+    document.getElementById('anonymous-reporting-toggle').checked = anonymousReporting;
+    document.getElementById('language-select').value = language;
+
+    // Dark Mode Toggle
+    document.getElementById('dark-mode-toggle')?.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('darkMode', 'true');
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('darkMode', 'false');
+        }
+    });
+
+    // Email Notifications Toggle
+    document.getElementById('email-notifications-toggle')?.addEventListener('change', (e) => {
+        localStorage.setItem('emailNotifications', e.target.checked);
+        console.log('Email notifications:', e.target.checked ? 'enabled' : 'disabled');
+    });
+
+    // Push Notifications Toggle
+    document.getElementById('push-notifications-toggle')?.addEventListener('change', (e) => {
+        localStorage.setItem('pushNotifications', e.target.checked);
+        if (e.target.checked && 'Notification' in window) {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    console.log('Push notifications enabled');
+                }
+            });
+        }
+    });
+
+    // Profile Visibility Toggle
+    document.getElementById('profile-visibility-toggle')?.addEventListener('change', (e) => {
+        localStorage.setItem('profileVisibility', e.target.checked);
+        console.log('Profile visibility:', e.target.checked ? 'public' : 'private');
+    });
+
+    // Anonymous Reporting Toggle
+    document.getElementById('anonymous-reporting-toggle')?.addEventListener('change', (e) => {
+        localStorage.setItem('anonymousReporting', e.target.checked);
+        console.log('Anonymous reporting:', e.target.checked ? 'enabled' : 'disabled');
+    });
+
+    // Language Select
+    document.getElementById('language-select')?.addEventListener('change', (e) => {
+        localStorage.setItem('language', e.target.value);
+        console.log('Language changed to:', e.target.value);
+        // You can add actual language switching logic here
+        alert('Language preference saved. Feature will be implemented soon.');
+    });
+}
+
 // Make functions globally available
 window.switchTab = switchTab;
 window.viewComplaint = viewComplaint;
 window.deleteComplaint = deleteComplaint;
 window.openChatModal = openChatModal;
 window.closeChatModal = closeChatModal;
+

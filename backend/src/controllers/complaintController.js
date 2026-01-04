@@ -681,7 +681,8 @@ exports.getComplaintHeatmapData = async (req, res) => {
                              AND COALESCE(c.longitude, l.longitude) IS NOT NULL
                              AND COALESCE(c.latitude, l.latitude) != 0
                              AND COALESCE(c.longitude, l.longitude) != 0
-                         GROUP BY c.location_id, COALESCE(c.latitude, l.latitude), COALESCE(c.longitude, l.longitude), c.complaint_type, cat.name
+                         GROUP BY c.location_id, COALESCE(c.latitude, l.latitude), COALESCE(c.longitude, l.longitude), 
+                                  c.complaint_type, c.status, c.created_at, cat.name, l.location_name, l.district_name
                          ORDER BY c.created_at DESC`
                 );
 

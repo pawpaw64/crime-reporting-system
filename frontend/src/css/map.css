@@ -1,8 +1,9 @@
 /* Map Styles */
 .map-section {
-    background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     padding: 0;
     position: relative;
+    box-shadow: inset 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
 .map-section::before {
@@ -12,8 +13,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
+    background: rgba(18, 78, 102, 0.02);
+    pointer-events: none;
 }
 
 .map-container {
@@ -27,40 +28,41 @@
 
 .map-wrapper {
     background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    border-radius: 0;
+    box-shadow: none;
     overflow: hidden;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 
 .map-header {
     text-align: center;
-    padding: 30px 30px 20px;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 40px 30px 30px;
+    background: linear-gradient(135deg, #212A31 0%, #2E3944 100%);
+    border-bottom: 3px solid #124E66;
 }
 
 .map-header h2 {
     margin: 0;
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 800;
-    color: #1a202c;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 8px;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    margin-bottom: 12px;
+    font-family: "Montserrat", sans-serif;
+    letter-spacing: 1px;
 }
 
 .map-header h2 i {
-    color: #667eea;
-    margin-right: 10px;
+    color: #748D92;
+    margin-right: 12px;
 }
 
 .map-header p {
     margin: 0;
     font-size: 16px;
-    color: #64748b;
-    font-weight: 500;
+    color: #D3D9D4;
+    font-weight: 400;
+    font-family: "Poppins", sans-serif;
 }
 
 
@@ -69,54 +71,67 @@
     width: 100%;
     position: relative;
     z-index: 1;
+    border-top: 4px solid #124E66;
+    border-bottom: 4px solid #124E66;
 }
 
 /* Leaflet container enhancements */
 .leaflet-container {
-    background: #e3f2fd;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #e9ecef;
+    font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .leaflet-control-zoom {
-    border: none !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    border: 2px solid #124E66 !important;
+    box-shadow: 0 4px 12px rgba(18, 78, 102, 0.2) !important;
+    border-radius: 8px !important;
 }
 
 .leaflet-control-zoom a {
-    background: #ffffff !important;
-    color: #333 !important;
+    background: #212A31 !important;
+    color: #D3D9D4 !important;
     border: none !important;
     border-radius: 6px !important;
     margin: 2px !important;
+    transition: all 0.3s ease !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background: #124E66 !important;
+    color: #ffffff !important;
 }
 
 
 .map-controls {
     display: flex;
     justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 16px;
-    padding: 25px 30px;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 30px;
+    background: linear-gradient(135deg, #212A31 0%, #2E3944 100%);
+    border-top: 3px solid #124E66;
+    box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .map-btn {
-    padding: 12px 24px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 30px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #124E66 0%, #2E3944 100%);
+    color: #D3D9D4;
+    border: 2px solid #748D92;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
+    font-family: "Poppins", sans-serif;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    backdrop-filter: blur(10px);
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     position: relative;
     overflow: hidden;
+    letter-spacing: 0.5px;
 }
 
 .map-btn::before {
@@ -126,8 +141,8 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
+    background: linear-gradient(90deg, transparent, rgba(211, 217, 212, 0.15), transparent);
+    transition: left 0.6s;
 }
 
 .map-btn:hover::before {
@@ -135,42 +150,55 @@
 }
 
 .map-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(18, 78, 102, 0.4);
+    background: linear-gradient(135deg, #2E3944 0%, #124E66 100%);
+    border-color: #D3D9D4;
+    color: #ffffff;
+}
+
+.map-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .map-btn i {
     font-size: 16px;
+    transition: transform 0.3s ease;
+}
+
+.map-btn:hover i {
+    transform: scale(1.1);
 }
 
 /* Report Crime Button */
 .report-crime-btn-container {
     display: flex;
     justify-content: center;
-    margin-top: 20px;
-    padding: 0 30px;
+    padding: 30px;
+    background: transparent;
+    border-top: none;
 }
 
 .report-crime-btn {
-    padding: 15px 30px;
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-    color: white;
-    border: none;
-    border-radius: 30px;
+    padding: 16px 36px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: #ffffff;
+    border: 2px solid rgba(255, 107, 107, 0.3);
+    border-radius: 50px;
     cursor: pointer;
     font-size: 16px;
     font-weight: 700;
+    font-family: "Montserrat", sans-serif;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
-    gap: 10px;
-    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
-    backdrop-filter: blur(10px);
+    gap: 12px;
+    box-shadow: 0 6px 25px rgba(255, 107, 107, 0.35);
     position: relative;
     overflow: hidden;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
 }
 
 .report-crime-btn::before {
@@ -180,8 +208,8 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s;
 }
 
 .report-crime-btn:hover::before {
@@ -189,14 +217,25 @@
 }
 
 .report-crime-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(220, 53, 69, 0.5);
-    background: linear-gradient(135deg, #bd2130 0%, #a71e2a 100%);
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 35px rgba(255, 107, 107, 0.5);
+    background: linear-gradient(135deg, #ff5252 0%, #f44336 100%);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.report-crime-btn:active {
+    transform: translateY(-1px) scale(1);
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
 }
 
 .report-crime-btn i {
     font-size: 18px;
-    color: #fff;
+    color: #ffffff;
+    transition: transform 0.3s ease;
+}
+
+.report-crime-btn:hover i {
+    transform: rotate(15deg) scale(1.1);
 }
 
 .map-info {
@@ -364,15 +403,15 @@
     position: absolute;
     top: 20px;
     right: 20px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+    background: linear-gradient(135deg, #212A31 0%, #2E3944 100%);
+    backdrop-filter: blur(15px);
     border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    border: 2px solid #124E66;
     z-index: 1000;
-    min-width: 250px;
-    animation: slideInRight 0.3s ease-out;
+    min-width: 280px;
+    animation: slideInRight 0.4s ease-out;
 }
 
 @keyframes slideInRight {
@@ -387,39 +426,46 @@
 }
 
 .heatmap-legend h4 {
-    margin: 0 0 15px 0;
-    color: #2d3748;
-    font-size: 18px;
-    font-weight: 600;
+    margin: 0 0 18px 0;
+    color: #D3D9D4;
+    font-size: 20px;
+    font-weight: 700;
+    font-family: "Montserrat", sans-serif;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    letter-spacing: 0.5px;
 }
 
 .heatmap-legend h4 i {
-    color: #e53e3e;
+    color: #748D92;
 }
 
 .legend-items {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     margin-bottom: 20px;
+    padding: 15px 0;
+    border-bottom: 2px solid rgba(116, 141, 146, 0.3);
 }
 
 .legend-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     font-size: 14px;
-    color: #4a5568;
+    color: #D3D9D4;
+    font-family: "Poppins", sans-serif;
+    font-weight: 500;
 }
 
 .legend-color {
-    width: 20px;
-    height: 12px;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 30px;
+    height: 14px;
+    border-radius: 7px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(211, 217, 212, 0.2);
 }
 
 .legend-color.high {
@@ -435,24 +481,27 @@
 }
 
 .heatmap-stats {
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    padding-top: 15px;
+    border-top: 2px solid rgba(116, 141, 146, 0.3);
+    padding-top: 18px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
 }
 
 .stat-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 14px;
-    color: #4a5568;
+    font-size: 15px;
+    color: #D3D9D4;
+    font-family: "Poppins", sans-serif;
+    font-weight: 500;
 }
 
 .stat-item strong {
-    color: #2d3748;
-    font-weight: 600;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 16px;
 }
 
 /* Enhanced Map Controls */
@@ -466,9 +515,10 @@
 }
 
 .map-btn.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #2E3944 0%, #124E66 100%);
+    color: #ffffff;
+    border-color: #D3D9D4;
+    box-shadow: 0 6px 20px rgba(18, 78, 102, 0.5);
 }
 
 .map-btn.active::before {
@@ -478,7 +528,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    background: linear-gradient(90deg, transparent, rgba(211, 217, 212, 0.2), transparent);
     transition: left 0.5s;
 }
 
@@ -488,13 +538,15 @@
 
 /* Heatmap specific button */
 #toggleHeatmap.active {
-    background: linear-gradient(135deg, #e53e3e 0%, #ff6b6b 100%);
-    box-shadow: 0 4px 15px rgba(229, 62, 62, 0.4);
+    background: linear-gradient(135deg, #124E66 0%, #2E3944 100%);
+    border-color: #748D92;
+    box-shadow: 0 6px 20px rgba(18, 78, 102, 0.6);
 }
 
 #toggleMarkers.active {
-    background: linear-gradient(135deg, #38a169 0%, #68d391 100%);
-    box-shadow: 0 4px 15px rgba(56, 161, 105, 0.4);
+    background: linear-gradient(135deg, #2E3944 0%, #212A31 100%);
+    border-color: #748D92;
+    box-shadow: 0 6px 20px rgba(46, 57, 68, 0.6);
 }
 
 @media (max-width: 768px) {

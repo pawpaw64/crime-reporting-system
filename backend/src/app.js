@@ -17,13 +17,15 @@ app.use(helmet({
                 "'self'", 
                 "'unsafe-inline'",  // Allow inline scripts
                 "https://cdn.tailwindcss.com",
-                "https://cdnjs.cloudflare.com"
+                "https://cdnjs.cloudflare.com",
+                "https://unpkg.com"  // For Leaflet map library
             ],
             styleSrc: [
                 "'self'", 
                 "'unsafe-inline'",
                 "https://cdnjs.cloudflare.com",
-                "https://fonts.googleapis.com"
+                "https://fonts.googleapis.com",
+                "https://unpkg.com"  // For Leaflet CSS
             ],
             fontSrc: [
                 "'self'",
@@ -31,7 +33,12 @@ app.use(helmet({
                 "https://fonts.gstatic.com"
             ],
             imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'"]
+            connectSrc: [
+                "'self'",
+                "https://nominatim.openstreetmap.org",  // For geocoding addresses
+                "https://api.opencagedata.com",          // Fallback geocoding API
+                "https://unpkg.com"                      // For Leaflet source maps
+            ]
         }
     },
     crossOriginResourcePolicy: { policy: "cross-origin" }
@@ -315,10 +322,11 @@ app.get('/api/admin/dashboard', authMiddleware.requireAdmin, (req, res) => {
     res.json({ success: true, message: "Admin dashboard placeholder" });
 });
 
-// Serve main pages
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/index.html'));
-});
+// Import page controller for homepage
+const pageController = require('./controllers/pageController');
+
+// Serve main pages - homepage through controller for auth handling
+app.get('/', pageController.getHomepage);
 
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, '../../frontend/src/pages/login.html'));

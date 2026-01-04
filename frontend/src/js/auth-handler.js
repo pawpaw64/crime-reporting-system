@@ -41,7 +41,8 @@ document.addEventListener('DOMContentLoaded', function() {
         userAuthContainer.innerHTML = `
             <div class="user-welcome" onclick="goToProfile()" style="cursor: pointer;">
                 <div class="user-avatar">
-                    <i class="fa-solid fa-user"></i>
+                    <img id="header-profile-pic" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; display: none;" alt="Profile">
+                    <i class="fa-solid fa-user" id="header-profile-icon"></i>
                 </div>
                 <span class="username">${window.currentUser}</span>
             </div>
@@ -53,6 +54,27 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add to header
         headerIcons.appendChild(userAuthContainer);
+        
+        // Fetch and display user profile picture
+        fetch('/get-user-data', {
+            credentials: 'same-origin'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.user && data.user.face_image) {
+                    const profilePic = document.getElementById('header-profile-pic');
+                    const profileIcon = document.getElementById('header-profile-icon');
+                    if (profilePic && profileIcon) {
+                        profilePic.src = data.user.face_image;
+                        profilePic.style.display = 'block';
+                        profileIcon.style.display = 'none';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching profile picture:', error);
+                // Keep showing the default icon if fetch fails
+            });
         
         // Also hide from mobile menu
         const mobileNavItems = document.querySelectorAll('.nav-user-admin');

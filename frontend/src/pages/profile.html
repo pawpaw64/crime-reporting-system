@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
     <link rel="stylesheet" href="/src/css/userDashboard.css">
+    <link rel="stylesheet" href="/src/css/profile.css">
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
     <div class="container">
@@ -63,6 +66,11 @@
 
         <!-- Main Content -->
         <main class="main">
+            <!-- Back to Home Button -->
+            <a href="/" class="back-to-home">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+
             <!-- Dashboard Tab -->
             <div class="tab-content active" id="dashboard">
                 <div class="header">
@@ -353,9 +361,12 @@
                         <div class="form-group">
                             <label for="incident-location"><i class="fas fa-map-marker-alt"></i> Location *</label>
                             <div class="location-input-wrapper">
-                                <input type="text" id="incident-location" placeholder="Enter incident location" required>
+                                <input type="text" id="incident-location" placeholder="Enter incident location or use map" required readonly>
                                 <button type="button" class="location-btn" id="get-location" title="Get Current Location">
                                     <i class="fas fa-crosshairs"></i>
+                                </button>
+                                <button type="button" class="location-btn" id="open-map" title="Select on Map">
+                                    <i class="fas fa-map"></i>
                                 </button>
                             </div>
                         </div>
@@ -486,6 +497,132 @@
         </div>
     </div>
 
+    <!-- Location Map Modal -->
+    <div class="modal-overlay" id="location-map-modal" style="display: none;">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2><i class="fas fa-map-marker-alt"></i> Select Location on Map</h2>
+                <button class="modal-close" id="close-map-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 15px;">
+                    <button type="button" class="primary-btn" id="use-current-location" style="margin-right: 10px;">
+                        <i class="fas fa-crosshairs"></i> Use My Current Location
+                    </button>
+                    <p style="color: #666; font-size: 0.9rem; margin-top: 10px;">
+                        <i class="fas fa-info-circle"></i> Click on the map or drag the marker to select location
+                    </p>
+                </div>
+                <div id="location-map" style="height: 400px; width: 100%; border-radius: 8px; overflow: hidden;"></div>
+                <div id="selected-location-info" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none;">
+                    <p style="margin: 5px 0;"><strong>Address:</strong> <span id="map-selected-address">-</span></p>
+                    <p style="margin: 5px 0;"><strong>Coordinates:</strong> <span id="map-selected-coords">-</span></p>
+                </div>
+                <div class="modal-actions" style="margin-top: 20px;">
+                    <button type="button" class="outline-btn" id="cancel-map-selection">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="button" class="primary-btn" id="confirm-map-location">
+                        <i class="fas fa-check"></i> Confirm Location
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="settings-modal" id="settings-modal">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <h2><i class="fas fa-cog"></i> Settings</h2>
+                <button class="settings-close-btn" id="close-settings">&times;</button>
+            </div>
+            <div class="settings-modal-body">
+                <!-- Appearance Section -->
+                <div class="settings-section">
+                    <h3><i class="fas fa-palette"></i> Appearance</h3>
+                    <div class="settings-item">
+                        <div class="settings-item-info">
+                            <h4>Dark Mode</h4>
+                            <p>Switch between light and dark theme</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="dark-mode-toggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Notifications Section -->
+                <div class="settings-section">
+                    <h3><i class="fas fa-bell"></i> Notifications</h3>
+                    <div class="settings-item">
+                        <div class="settings-item-info">
+                            <h4>Email Notifications</h4>
+                            <p>Receive updates via email</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="email-notifications-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-info">
+                            <h4>Push Notifications</h4>
+                            <p>Get browser notifications for updates</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="push-notifications-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Privacy Section -->
+                <div class="settings-section">
+                    <h3><i class="fas fa-shield-alt"></i> Privacy & Security</h3>
+                    <div class="settings-item">
+                        <div class="settings-item-info">
+                            <h4>Profile Visibility</h4>
+                            <p>Make profile visible to authorities</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="profile-visibility-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-info">
+                            <h4>Anonymous Reporting</h4>
+                            <p>Hide your identity in reports</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="anonymous-reporting-toggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Language Section -->
+                <div class="settings-section">
+                    <h3><i class="fas fa-language"></i> Language & Region</h3>
+                    <div class="settings-item">
+                        <div class="settings-item-info">
+                            <h4>Language</h4>
+                            <p>Current: English</p>
+                        </div>
+                        <select style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--medium-gray);" id="language-select">
+                            <option value="en">English</option>
+                            <option value="bn">বাংলা (Bengali)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/src/js/profile.js"></script>
 </body>
 </html>

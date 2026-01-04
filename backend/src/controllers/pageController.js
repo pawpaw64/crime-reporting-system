@@ -8,7 +8,7 @@ exports.getHomepage = (req, res) => {
     const username = req.session && req.session.username ? req.session.username : null;
     const adminUsername = req.session && req.session.adminUsername ? req.session.adminUsername : null;
 
-    const homepagePath = path.join(__dirname, '../../../frontend/src/pages/homepage.html');
+    const homepagePath = path.join(__dirname, '../../../frontend/index.html');
 
     if (!fs.existsSync(homepagePath)) {
         return res.status(404).send("Homepage file not found");
@@ -33,12 +33,12 @@ exports.getHomepage = (req, res) => {
         if (isAdminAuthenticated) {
             modifiedData = modifiedData.replace(
                 '</head>',
-                '<link rel="stylesheet" href="../css/adminAuth-header.css">\n<script src="../js/adminAuth-handler.js"></script>\n</head>'
+                '<link rel="stylesheet" href="src/css/adminAuth-header.css">\n<script src="src/js/adminAuth-handler.js"></script>\n</head>'
             );
         } else if (isUserAuthenticated) {
             modifiedData = modifiedData.replace(
                 '</head>',
-                '<script src="../js/auth-handler.js"></script>\n</head>'
+                '<script src="src/js/auth-handler.js"></script>\n</head>'
             );
         }
 
