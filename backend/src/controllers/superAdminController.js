@@ -78,7 +78,7 @@ exports.getPendingAdminRequests = async (req, res) => {
 
         const [requests] = await pool.query(
             `SELECT 
-                a.adminid, a.username, a.email, a.fullName, a.phone, a.designation, 
+                a.adminid as admin_id, a.username, a.email, a.fullName as full_name, a.phone, a.designation, 
                 a.official_id, a.district_name, 
                 aw.status, aw.request_date, aw.approval_date, aw.approved_by, aw.rejection_reason
             FROM admins a
@@ -114,9 +114,9 @@ exports.getAllAdminRequests = async (req, res) => {
         const { status, district } = req.query;
         
         let query = `SELECT 
-            a.adminid, a.username, a.email, a.fullName, a.phone, a.designation, 
+            a.adminid as admin_id, a.username, a.email, a.fullName as full_name, a.phone, a.designation, 
             a.official_id, a.district_name, a.is_active, a.last_login,
-            aw.status, aw.request_date, aw.approval_date, aw.approved_by, aw.rejection_reason
+            aw.status as approval_status, aw.request_date, aw.approval_date, aw.approved_by, aw.rejection_reason
         FROM admins a
         JOIN admin_approval_workflow aw ON a.username = aw.admin_username
         WHERE 1=1`;
@@ -139,7 +139,7 @@ exports.getAllAdminRequests = async (req, res) => {
 
         res.json({
             success: true,
-            requests: requests
+            admins: requests
         });
 
     } catch (err) {
@@ -161,19 +161,19 @@ exports.approveAdminRequest = async (req, res) => {
             });
         }
 
-        const { username } = req.body;
+        const { adminId } = req.body;
 
-        if (!username) {
+        if (!adminId) {
             return res.status(400).json({
                 success: false,
-                message: "Admin username is required"
+                message: "Admin ID is required"
             });
         }
 
-        // Get admin details
+        // Get admin details by ID
         const [adminResults] = await pool.query(
-            'SELECT * FROM admins WHERE username = ?',
-            [username]
+            'SELECT * FROM admins WHERE adminid = ?',
+            [adminId]
         );
 
         if (adminResults.length === 0) {
@@ -188,7 +188,7 @@ exports.approveAdminRequest = async (req, res) => {
         // Check workflow status
         const [workflowResults] = await pool.query(
             'SELECT status FROM admin_approval_workflow WHERE admin_username = ?',
-            [username]
+            [admin.username]
         );
 
         if (workflowResults.length === 0) {
@@ -219,7 +219,7 @@ exports.approveAdminRequest = async (req, res) => {
                 approval_date = NOW(),
                 approved_by = ?
             WHERE admin_username = ?`,
-            [req.session.superAdminUsername, username]
+            [req.session.superAdminUsername, admin.username]
         );
 
         // Insert password setup token
@@ -227,7 +227,7 @@ exports.approveAdminRequest = async (req, res) => {
             `INSERT INTO admin_verification_tokens 
             (admin_username, token_type, token_value, expires_at, is_used)
             VALUES (?, 'password_setup', ?, ?, 0)`,
-            [username, passwordToken, tokenExpiry]
+            [admin.username, passwordToken, tokenExpiry]
         );
 
         // Insert email verification token
@@ -235,7 +235,7 @@ exports.approveAdminRequest = async (req, res) => {
             `INSERT INTO admin_verification_tokens 
             (admin_username, token_type, token_value, expires_at, is_used)
             VALUES (?, 'email_verification', ?, DATE_ADD(NOW(), INTERVAL 7 DAY), 0)`,
-            [username, emailToken]
+            [admin.username, emailToken]
         );
 
         // Send approval email with password setup link
@@ -292,7 +292,7 @@ exports.approveAdminRequest = async (req, res) => {
 
         res.json({
             success: true,
-            message: `Admin ${username} has been approved. Password setup email sent.`
+            message: `Admin ${admin.username} has been approved. Password setup email sent.`
         });
 
     } catch (err) {
@@ -314,19 +314,19 @@ exports.rejectAdminRequest = async (req, res) => {
             });
         }
 
-        const { username, reason } = req.body;
+        const { adminId, rejectionReason } = req.body;
 
-        if (!username || !reason) {
+        if (!adminId || !rejectionReason) {
             return res.status(400).json({
                 success: false,
-                message: "Username and rejection reason are required"
+                message: "Admin ID and rejection reason are required"
             });
         }
 
-        // Get admin details
+        // Get admin details by ID
         const [adminResults] = await pool.query(
-            'SELECT * FROM admins WHERE username = ?',
-            [username]
+            'SELECT * FROM admins WHERE adminid = ?',
+            [adminId]
         );
 
         if (adminResults.length === 0) {
@@ -346,7 +346,7 @@ exports.rejectAdminRequest = async (req, res) => {
                 approval_date = NOW(),
                 approved_by = ?
             WHERE admin_username = ?`,
-            [reason, req.session.superAdminUsername, username]
+            [rejectionReason, req.session.superAdminUsername, admin.username]
         );
 
         // Send rejection email
@@ -361,7 +361,7 @@ exports.rejectAdminRequest = async (req, res) => {
                 
                 <h3>Reason for Rejection:</h3>
                 <p style="background-color: #f5f5f5; padding: 15px; border-left: 4px solid #f44336;">
-                    ${reason}
+                    ${rejectionReason}
                 </p>
                 
                 <p>If you believe this is an error or have additional documentation to support your request, 
@@ -379,7 +379,7 @@ exports.rejectAdminRequest = async (req, res) => {
 
         res.json({
             success: true,
-            message: `Admin ${username} has been rejected.`
+            message: `Admin has been rejected.`
         });
 
     } catch (err) {
@@ -401,14 +401,29 @@ exports.suspendAdminAccount = async (req, res) => {
             });
         }
 
-        const { username, reason } = req.body;
+        const { adminId, reason } = req.body;
 
-        if (!username) {
+        if (!adminId) {
             return res.status(400).json({
                 success: false,
-                message: "Admin username is required"
+                message: "Admin ID is required"
             });
         }
+
+        // Get admin username
+        const [adminResults] = await pool.query(
+            'SELECT username FROM admins WHERE adminid = ?',
+            [adminId]
+        );
+
+        if (adminResults.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Admin not found"
+            });
+        }
+
+        const username = adminResults[0].username;
 
         // Update workflow status
         await pool.query(
@@ -429,7 +444,7 @@ exports.suspendAdminAccount = async (req, res) => {
 
         res.json({
             success: true,
-            message: `Admin ${username} has been suspended.`
+            message: `Admin has been suspended.`
         });
 
     } catch (err) {
@@ -451,14 +466,29 @@ exports.reactivateAdminAccount = async (req, res) => {
             });
         }
 
-        const { username } = req.body;
+        const { adminId } = req.body;
 
-        if (!username) {
+        if (!adminId) {
             return res.status(400).json({
                 success: false,
-                message: "Admin username is required"
+                message: "Admin ID is required"
             });
         }
+
+        // Get admin username
+        const [adminResults] = await pool.query(
+            'SELECT username FROM admins WHERE adminid = ?',
+            [adminId]
+        );
+
+        if (adminResults.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Admin not found"
+            });
+        }
+
+        const username = adminResults[0].username;
 
         // Update workflow status
         await pool.query(
@@ -479,7 +509,7 @@ exports.reactivateAdminAccount = async (req, res) => {
 
         res.json({
             success: true,
-            message: `Admin ${username} has been reactivated.`
+            message: `Admin has been reactivated.`
         });
 
     } catch (err) {
@@ -501,17 +531,36 @@ exports.getAuditLogs = async (req, res) => {
             });
         }
 
-        const { adminUsername, action, startDate, endDate, limit } = req.query;
+        const { username, dateFrom, dateTo, limit } = req.query;
 
-        const filters = {
-            adminUsername,
-            action,
-            startDate,
-            endDate,
-            limit: parseInt(limit) || 500
-        };
+        let query = 'SELECT * FROM admin_audit_logs WHERE 1=1';
+        const params = [];
 
-        const logs = await getAllAuditLogs(filters);
+        if (username) {
+            query += ' AND admin_username = ?';
+            params.push(username);
+        }
+
+        if (dateFrom) {
+            query += ' AND DATE(timestamp) >= ?';
+            params.push(dateFrom);
+        }
+
+        if (dateTo) {
+            query += ' AND DATE(timestamp) <= ?';
+            params.push(dateTo);
+        }
+
+        query += ' ORDER BY timestamp DESC';
+
+        if (limit) {
+            query += ' LIMIT ?';
+            params.push(parseInt(limit));
+        } else {
+            query += ' LIMIT 500';
+        }
+
+        const [logs] = await pool.query(query, params);
 
         res.json({
             success: true,
@@ -544,25 +593,111 @@ exports.getSuperAdminStats = async (req, res) => {
         const [suspendedCount] = await pool.query('SELECT COUNT(*) as count FROM admin_approval_workflow WHERE status = "suspended"');
         const [activeCount] = await pool.query('SELECT COUNT(*) as count FROM admins WHERE is_active = 1');
 
-        // Get recent activity
-        const [recentActivity] = await pool.query(
-            'SELECT * FROM admin_audit_logs ORDER BY timestamp DESC LIMIT 20'
-        );
+        // Get average approval time (in hours)
+        const [avgApprovalTime] = await pool.query(`
+            SELECT AVG(TIMESTAMPDIFF(HOUR, request_date, approval_date)) as avg_hours
+            FROM admin_approval_workflow
+            WHERE approval_date IS NOT NULL AND status = 'approved'
+        `);
+
+        // Get total actions from audit logs
+        const [totalActions] = await pool.query('SELECT COUNT(*) as count FROM admin_audit_logs');
+
+        // Get district distribution
+        const [districtStats] = await pool.query(`
+            SELECT 
+                a.district_name as district,
+                SUM(CASE WHEN aw.status = 'approved' AND a.is_active = 1 THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN aw.status = 'suspended' THEN 1 ELSE 0 END) as suspended,
+                COUNT(*) as total
+            FROM admins a
+            JOIN admin_approval_workflow aw ON a.username = aw.admin_username
+            WHERE aw.status IN ('approved', 'active', 'suspended')
+            GROUP BY a.district_name
+            ORDER BY a.district_name
+        `);
 
         res.json({
             success: true,
-            stats: {
-                pending: pendingCount[0].count,
-                approved: approvedCount[0].count,
-                rejected: rejectedCount[0].count,
-                suspended: suspendedCount[0].count,
-                active: activeCount[0].count
-            },
-            recentActivity: recentActivity
+            pendingRequests: pendingCount[0].count,
+            approvedAdmins: approvedCount[0].count,
+            activeAdmins: activeCount[0].count,
+            suspendedAdmins: suspendedCount[0].count,
+            rejectedAdmins: rejectedCount[0].count,
+            avgApprovalTime: Math.round(avgApprovalTime[0].avg_hours || 0),
+            totalActions: totalActions[0].count,
+            districtStats: districtStats
         });
 
     } catch (err) {
         console.error("Error fetching super admin stats:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// ========== GET ADMIN DETAILS ==========
+exports.getAdminDetails = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        const { adminId } = req.params;
+
+        if (!adminId) {
+            return res.status(400).json({
+                success: false,
+                message: "Admin ID is required"
+            });
+        }
+
+        // Get admin details with workflow information
+        const [adminResults] = await pool.query(`
+            SELECT 
+                a.adminid as admin_id,
+                a.username,
+                a.email,
+                a.fullName as full_name,
+                a.phone,
+                a.designation,
+                a.official_id,
+                a.district_name,
+                a.dob,
+                a.is_active,
+                a.created_at,
+                a.last_login,
+                aw.status as approval_status,
+                aw.request_date,
+                aw.approval_date as approved_at,
+                aw.approved_by,
+                aw.rejection_reason,
+                sa.username as approved_by_username
+            FROM admins a
+            JOIN admin_approval_workflow aw ON a.username = aw.admin_username
+            LEFT JOIN super_admins sa ON aw.approved_by = sa.username
+            WHERE a.adminid = ?
+        `, [adminId]);
+
+        if (adminResults.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Admin not found"
+            });
+        }
+
+        res.json({
+            success: true,
+            admin: adminResults[0]
+        });
+
+    } catch (err) {
+        console.error("Error fetching admin details:", err);
         res.status(500).json({
             success: false,
             message: "Server error"
@@ -615,6 +750,70 @@ exports.superAdminLogout = async (req, res) => {
         });
     } catch (err) {
         console.error("Logout error:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// ========== GET SUPER ADMIN SETTINGS ==========
+exports.getSuperAdminSettings = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        // Get settings from session or database (for now using session)
+        const settings = req.session.superAdminSettings || {
+            notifyNewRegistration: true,
+            notifyEmail: true,
+            notifyBrowser: false,
+            autoLogout: true
+        };
+
+        res.json({
+            success: true,
+            settings: settings
+        });
+    } catch (err) {
+        console.error("Error fetching settings:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// ========== SAVE SUPER ADMIN SETTINGS ==========
+exports.saveSuperAdminSettings = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        const { notifyNewRegistration, notifyEmail, notifyBrowser, autoLogout } = req.body;
+
+        // Save to session (could be extended to save to database)
+        req.session.superAdminSettings = {
+            notifyNewRegistration: notifyNewRegistration !== false,
+            notifyEmail: notifyEmail !== false,
+            notifyBrowser: notifyBrowser === true,
+            autoLogout: autoLogout !== false
+        };
+
+        res.json({
+            success: true,
+            message: "Settings saved successfully"
+        });
+    } catch (err) {
+        console.error("Error saving settings:", err);
         res.status(500).json({
             success: false,
             message: "Server error"

@@ -189,8 +189,10 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0,0,0,0.6);
             animation: fadeIn 0.3s;
+            overflow-y: auto;
+            backdrop-filter: blur(3px);
         }
 
         @keyframes fadeIn {
@@ -199,76 +201,198 @@
         }
 
         .modal-content {
-            background-color: white;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
             margin: 5% auto;
-            padding: 30px;
-            border-radius: 15px;
+            padding: 0;
+            border-radius: 20px;
             width: 90%;
-            max-width: 600px;
-            animation: slideDown 0.3s;
+            max-width: 650px;
+            animation: slideDown 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
         }
 
         @keyframes slideDown {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from { 
+                transform: translateY(-100px) scale(0.8); 
+                opacity: 0; 
+            }
+            to { 
+                transform: translateY(0) scale(1); 
+                opacity: 1; 
+            }
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
+            padding: 25px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom: none;
         }
 
         .modal-header h2 {
             margin: 0;
-            color: #333;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-header h2 i {
+            font-size: 24px;
+            opacity: 0.9;
         }
 
         .close-btn {
-            font-size: 28px;
-            font-weight: bold;
-            color: #999;
+            font-size: 32px;
+            font-weight: 300;
+            color: white;
             cursor: pointer;
             border: none;
-            background: none;
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            line-height: 1;
         }
 
         .close-btn:hover {
-            color: #333;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
         }
 
         .modal-body {
-            margin: 20px 0;
+            padding: 30px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
 
         .detail-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .detail-group:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateX(5px);
         }
 
         .detail-group label {
-            font-weight: 600;
-            color: #666;
+            font-weight: 700;
+            color: #495057;
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .detail-group p {
-            color: #333;
-            padding: 8px;
-            background: #f5f5f5;
-            border-radius: 5px;
+            color: #212529;
+            padding: 10px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 0;
+            font-size: 15px;
+            font-weight: 500;
         }
 
         .modal-footer {
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 2px solid #f0f0f0;
+            gap: 12px;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        /* Approve Modal Specific */
+        #approve-modal .modal-header {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+
+        #approve-modal .detail-group {
+            border-left-color: #4caf50;
+        }
+
+        #approve-modal .modal-body p {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        #approve-modal .modal-body strong {
+            color: #4caf50;
+            font-weight: 700;
+        }
+
+        /* Reject Modal Specific */
+        #reject-modal .modal-header {
+            background: linear-gradient(135deg, #f44336 0%, #da190b 100%);
+        }
+
+        #reject-modal .detail-group {
+            border-left-color: #f44336;
+        }
+
+        #reject-modal textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s;
+        }
+
+        #reject-modal textarea:focus {
+            outline: none;
+            border-color: #f44336;
+            box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+        }
+
+        /* Details Modal Specific */
+        #details-modal .modal-content {
+            max-width: 750px;
+        }
+
+        #details-modal .detail-group {
+            border-left-color: #667eea;
         }
 
         .filter-section {
@@ -333,6 +457,56 @@
             font-size: 13px;
             color: #666;
         }
+
+        /* Toggle Switch Styles */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #4CAF50;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .setting-item h4 {
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -346,12 +520,11 @@
             </div>
 
             <div class="profile">
-                <img src="../../public/images/icons/default-avatar.png" alt="Super Admin" class="avatar">
-                <h2 id="super-admin-name">Super Admin</h2>
+                <h2 id="super-admin-name">Admin</h2>
                 <p class="email" id="super-admin-email">admin@securevoice.gov</p>
                 <div class="verification-badges">
                     <span class="super-admin-badge">
-                        <i class="fas fa-crown"></i> SUPER ADMIN
+                        <i class="fas fa-crown"></i>ADMIN
                     </span>
                 </div>
             </div>
@@ -373,12 +546,12 @@
                 <button class="tab-btn" data-tab="statistics">
                     <i class="fas fa-chart-bar"></i> Statistics
                 </button>
+                <button class="tab-btn" data-tab="settings">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
             </nav>
 
             <div class="bottom-nav">
-                <button class="outline-btn2" id="settings-btn">
-                    <i class="fas fa-cog"></i> Settings
-                </button>
                 <button class="logout-btn" id="logout-btn">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
@@ -390,9 +563,9 @@
             <!-- Dashboard Tab -->
             <div class="tab-content active" id="dashboard">
                 <div class="header">
-                    <h1><i class="fas fa-tachometer-alt"></i> Super Admin Dashboard</h1>
+                    <h1><i class="fas fa-tachometer-alt"></i>Admin Dashboard</h1>
                     <div class="header-actions">
-                        <span class="welcome-text">Welcome, <span id="welcome-name">Super Administrator</span>!</span>
+                        <span class="welcome-text">Welcome, <span id="welcome-name">Administrator</span>!</span>
                     </div>
                 </div>
 
@@ -440,7 +613,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h3><i class="fas fa-history"></i> Recent Activity</h3>
-                        <button class="outline-btn" onclick="switchTab('audit-logs')">View All Logs</button>
+                        <button class="outline-btn" id="view-all-logs-btn">View All Logs</button>
                     </div>
                     <div id="recent-activity">
                         <div class="loading-spinner">
@@ -454,7 +627,7 @@
             <div class="tab-content" id="pending-requests">
                 <div class="header">
                     <h1><i class="fas fa-user-clock"></i> Pending Admin Requests</h1>
-                    <button class="edit-btn" onclick="loadPendingRequests()">
+                    <button class="edit-btn" id="refresh-pending-btn">
                         <i class="fas fa-sync"></i> Refresh
                     </button>
                 </div>
@@ -472,7 +645,7 @@
             <div class="tab-content" id="all-admins">
                 <div class="header">
                     <h1><i class="fas fa-users-cog"></i> All District Admins</h1>
-                    <button class="edit-btn" onclick="loadAllAdmins()">
+                    <button class="edit-btn" id="refresh-admins-btn">
                         <i class="fas fa-sync"></i> Refresh
                     </button>
                 </div>
@@ -481,7 +654,7 @@
                     <div class="filter-section">
                         <div class="filter-group">
                             <label>Filter by Status</label>
-                            <select id="filter-status" onchange="filterAdmins()">
+                            <select id="filter-status">
                                 <option value="">All Statuses</option>
                                 <option value="approved">Approved</option>
                                 <option value="active">Active</option>
@@ -491,7 +664,7 @@
                         </div>
                         <div class="filter-group">
                             <label>Filter by District</label>
-                            <select id="filter-district" onchange="filterAdmins()">
+                            <select id="filter-district">
                                 <option value="">All Districts</option>
                                 <option value="Dhaka">Dhaka</option>
                                 <option value="Rajshahi">Rajshahi</option>
@@ -505,7 +678,7 @@
                         </div>
                         <div class="filter-group">
                             <label>Search</label>
-                            <input type="text" id="search-admin" placeholder="Search by name or username..." oninput="filterAdmins()">
+                            <input type="text" id="search-admin" placeholder="Search by name or username...">
                         </div>
                     </div>
 
@@ -521,7 +694,7 @@
             <div class="tab-content" id="audit-logs">
                 <div class="header">
                     <h1><i class="fas fa-history"></i> Audit Logs</h1>
-                    <button class="edit-btn" onclick="loadAuditLogs()">
+                    <button class="edit-btn" id="refresh-logs-btn">
                         <i class="fas fa-sync"></i> Refresh
                     </button>
                 </div>
@@ -530,17 +703,17 @@
                     <div class="filter-section">
                         <div class="filter-group">
                             <label>Filter by Admin</label>
-                            <select id="filter-audit-admin" onchange="loadAuditLogs()">
+                            <select id="filter-audit-admin">
                                 <option value="">All Admins</option>
                             </select>
                         </div>
                         <div class="filter-group">
                             <label>Date From</label>
-                            <input type="date" id="filter-date-from" onchange="loadAuditLogs()">
+                            <input type="date" id="filter-date-from">
                         </div>
                         <div class="filter-group">
                             <label>Date To</label>
-                            <input type="date" id="filter-date-to" onchange="loadAuditLogs()">
+                            <input type="date" id="filter-date-to">
                         </div>
                     </div>
 
@@ -606,21 +779,150 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-content" id="settings">
+                <div class="header">
+                    <h1><i class="fas fa-cog"></i> Super Admin Settings</h1>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-bell"></i> Notification Preferences</h3>
+                    <div style="padding: 20px 0;">
+                        <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 15px;">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; color: #333;">New Admin Registration Notifications</h4>
+                                <p style="margin: 0; color: #666; font-size: 13px;">Get notified when a district admin submits a registration request</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="notify-new-registration" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 15px;">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; color: #333;">Email Notifications</h4>
+                                <p style="margin: 0; color: #666; font-size: 13px;">Receive email alerts for new registration requests</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="notify-email" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 15px;">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; color: #333;">Browser Notifications</h4>
+                                <p style="margin: 0; color: #666; font-size: 13px;">Show browser notifications when logged into dashboard</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="notify-browser">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <button class="edit-btn" id="save-settings-btn">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <h3><i class="fas fa-shield-alt"></i> Security Settings</h3>
+                    <div style="padding: 20px 0;">
+                        <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 15px;">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; color: #333;">Auto-logout After Inactivity</h4>
+                                <p style="margin: 0; color: #666; font-size: 13px;">Automatically log out after 30 minutes of inactivity</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="auto-logout" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item" style="padding: 15px; background: #f9f9f9; border-radius: 8px;">
+                            <h4 style="margin: 0 0 10px 0; color: #333;">Change Password</h4>
+                            <button class="action-btn-small btn-view" id="change-password-btn">
+                                <i class="fas fa-key"></i> Change Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <h3><i class="fas fa-info-circle"></i> System Information</h3>
+                    <div style="padding: 20px 0;">
+                        <div class="detail-group">
+                            <label>System Version</label>
+                            <p>SecureVoice v1.0.0</p>
+                        </div>
+                        <div class="detail-group">
+                            <label>Last Updated</label>
+                            <p>January 2, 2026</p>
+                        </div>
+                        <div class="detail-group">
+                            <label>Super Admin ID</label>
+                            <p id="system-admin-id">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
     <!-- View Details Modal -->
     <div id="details-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-user-circle"></i> Admin Details</h2>
-                <button class="close-btn" onclick="closeModal('details-modal')">&times;</button>
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">
+                <h2><i class="fas fa-id-card"></i> Admin Profile Details</h2>
+                <button class="close-btn" data-modal="details-modal">&times;</button>
             </div>
             <div class="modal-body" id="modal-details-content">
-                <!-- Details will be loaded here -->
+                <!-- Details will be loaded here dynamically by JavaScript -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div class="detail-group" style="border-left-color: #2196f3;">
+                        <label><i class="fas fa-user"></i> Username</label>
+                        <p id="detail-username" style="font-weight: 600; color: #212529; font-size: 16px;"></p>
+                    </div>
+                    <div class="detail-group" style="border-left-color: #2196f3;">
+                        <label><i class="fas fa-envelope"></i> Email</label>
+                        <p id="detail-email" style="font-weight: 600; color: #212529; font-size: 15px; word-break: break-all;"></p>
+                    </div>
+                    <div class="detail-group" style="border-left-color: #2196f3;">
+                        <label><i class="fas fa-address-card"></i> Full Name</label>
+                        <p id="detail-full-name" style="font-weight: 600; color: #212529; font-size: 16px;"></p>
+                    </div>
+                    <div class="detail-group" style="border-left-color: #2196f3;">
+                        <label><i class="fas fa-map-marker-alt"></i> District</label>
+                        <p id="detail-district" style="font-weight: 600; color: #212529; font-size: 16px;"></p>
+                    </div>
+                    <div class="detail-group" style="border-left-color: #2196f3;">
+                        <label><i class="fas fa-shield-alt"></i> Badge Number</label>
+                        <p id="detail-badge" style="font-weight: 600; color: #212529; font-size: 16px;"></p>
+                    </div>
+                    <div class="detail-group" style="border-left-color: #2196f3;">
+                        <label><i class="fas fa-phone"></i> Contact Number</label>
+                        <p id="detail-contact" style="font-weight: 600; color: #212529; font-size: 16px;"></p>
+                    </div>
+                </div>
+                <div class="detail-group" style="margin-top: 20px; border-left-color: #2196f3; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 15px; border-radius: 10px;">
+                    <label><i class="fas fa-check-circle"></i> Status</label>
+                    <p id="detail-status" style="font-weight: 700; font-size: 18px;"></p>
+                </div>
+                <div style="background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%); padding: 15px; border-radius: 10px; margin-top: 20px; text-align: center;">
+                    <p style="margin: 0; color: #666; font-size: 13px;">
+                        <i class="fas fa-info-circle"></i> This information is sourced from the admin registration database
+                    </p>
+                </div>
             </div>
             <div class="modal-footer">
-                <button class="action-btn-small btn-view" onclick="closeModal('details-modal')">Close</button>
+                <button class="action-btn-small btn-view" data-modal="details-modal">
+                    <i class="fas fa-times"></i> Close
+                </button>
             </div>
         </div>
     </div>
@@ -630,16 +932,39 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2><i class="fas fa-check-circle"></i> Approve Admin Request</h2>
-                <button class="close-btn" onclick="closeModal('approve-modal')">&times;</button>
+                <button class="close-btn" data-modal="approve-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to approve this admin request?</p>
-                <p><strong>Username:</strong> <span id="approve-username"></span></p>
-                <p><strong>District:</strong> <span id="approve-district"></span></p>
+                <p style="font-size: 16px; color: #333; margin-bottom: 20px; line-height: 1.6;">
+                    Are you sure you want to <strong style="color: #4caf50;">approve</strong> this admin registration request?
+                </p>
+                <div class="detail-group">
+                    <label><i class="fas fa-user"></i> Username</label>
+                    <p id="approve-username" style="font-weight: 600; color: #212529;"></p>
+                </div>
+                <div class="detail-group">
+                    <label><i class="fas fa-map-marker-alt"></i> District</label>
+                    <p id="approve-district" style="font-weight: 600; color: #212529;"></p>
+                </div>
+                <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 20px; border-radius: 12px; margin-top: 20px; border-left: 4px solid #4caf50;">
+                    <h4 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 15px;">
+                        <i class="fas fa-info-circle"></i> What happens next?
+                    </h4>
+                    <ul style="margin: 0; padding-left: 20px; color: #2e7d32; font-size: 14px; line-height: 1.8;">
+                        <li>Admin will receive an approval email</li>
+                        <li>Password setup link will be sent (24-hour validity)</li>
+                        <li>Email verification link will be provided</li>
+                        <li>Admin can login after completing setup</li>
+                    </ul>
+                </div>
             </div>
             <div class="modal-footer">
-                <button class="action-btn-small btn-view" onclick="closeModal('approve-modal')">Cancel</button>
-                <button class="action-btn-small btn-approve" onclick="confirmApprove()">Approve</button>
+                <button class="action-btn-small btn-view" data-modal="approve-modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="action-btn-small btn-approve" id="confirm-approve-btn">
+                    <i class="fas fa-check"></i> Approve & Send Email
+                </button>
             </div>
         </div>
     </div>
@@ -649,19 +974,39 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2><i class="fas fa-times-circle"></i> Reject Admin Request</h2>
-                <button class="close-btn" onclick="closeModal('reject-modal')">&times;</button>
+                <button class="close-btn" data-modal="reject-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to reject this admin request?</p>
-                <p><strong>Username:</strong> <span id="reject-username"></span></p>
+                <p style="font-size: 16px; color: #333; margin-bottom: 20px; line-height: 1.6;">
+                    You are about to <strong style="color: #f44336;">reject</strong> this admin registration request.
+                </p>
                 <div class="detail-group">
-                    <label>Rejection Reason</label>
-                    <textarea id="rejection-reason" rows="3" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;"></textarea>
+                    <label><i class="fas fa-user"></i> Username</label>
+                    <p id="reject-username" style="font-weight: 600; color: #212529;"></p>
+                </div>
+                <div class="detail-group" style="border-left-color: #f44336;">
+                    <label style="color: #d32f2f;"><i class="fas fa-exclamation-triangle"></i> Rejection Reason <span style="color: #f44336;">*</span></label>
+                    <textarea id="rejection-reason" rows="4" placeholder="Please provide a clear reason for rejection (e.g., Invalid credentials, Missing documentation, etc.)" style="margin-top: 8px;"></textarea>
+                </div>
+                <div style="background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); padding: 20px; border-radius: 12px; margin-top: 20px; border-left: 4px solid #f44336;">
+                    <h4 style="margin: 0 0 10px 0; color: #c62828; font-size: 15px;">
+                        <i class="fas fa-info-circle"></i> What happens next?
+                    </h4>
+                    <ul style="margin: 0; padding-left: 20px; color: #c62828; font-size: 14px; line-height: 1.8;">
+                        <li>Admin will receive a rejection notification email</li>
+                        <li>Your reason will be included in the email</li>
+                        <li>Admin account will remain in rejected status</li>
+                        <li>Admin can contact you for clarification</li>
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="action-btn-small btn-view" onclick="closeModal('reject-modal')">Cancel</button>
-                <button class="action-btn-small btn-reject" onclick="confirmReject()">Reject</button>
+                <button class="action-btn-small btn-view" data-modal="reject-modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="action-btn-small btn-reject" id="confirm-reject-btn">
+                    <i class="fas fa-ban"></i> Reject & Notify
+                </button>
             </div>
         </div>
     </div>
