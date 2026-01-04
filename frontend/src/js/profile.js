@@ -15,7 +15,46 @@ document.addEventListener('DOMContentLoaded', () => {
     initModals();
     initReportForm();
     initFilters();
+    initEventDelegation();
 });
+
+// ===== EVENT DELEGATION =====
+function initEventDelegation() {
+    // Handle all click events via delegation for CSP compliance
+    document.addEventListener('click', (e) => {
+        const target = e.target.closest('[data-action]');
+        if (!target) return;
+        
+        const action = target.dataset.action;
+        const id = target.dataset.id ? parseInt(target.dataset.id) : null;
+        const tab = target.dataset.tab;
+        const href = target.dataset.href;
+        
+        switch (action) {
+            case 'viewComplaint':
+                if (id) viewComplaint(id);
+                break;
+            case 'deleteComplaint':
+                if (id) deleteComplaint(id);
+                break;
+            case 'deleteComplaintAndClose':
+                if (id) {
+                    deleteComplaint(id);
+                    document.getElementById('complaint-detail-modal').style.display = 'none';
+                }
+                break;
+            case 'openChat':
+                if (id) openChatModal(id);
+                break;
+            case 'switchTab':
+                if (tab) switchTab(tab);
+                break;
+            case 'navigate':
+                if (href) window.location.href = href;
+                break;
+        }
+    });
+}
 
 // ===== AUTHENTICATION =====
 async function checkAuth() {
@@ -177,7 +216,7 @@ function renderRecentComplaints() {
 
     const recent = complaints.slice(0, 5);
     container.innerHTML = recent.map(c => `
-        <div class="recent-item" onclick="viewComplaint(${c.complaint_id})">
+        <div class="recent-item" data-action="viewComplaint" data-id="${c.complaint_id}" style="cursor: pointer;">
             <div class="recent-info">
                 <h4>${c.complaint_type || 'Unknown Type'}</h4>
                 <p>${formatDate(c.created_at)} - ${truncateText(c.description, 50)}</p>
@@ -196,7 +235,7 @@ function renderAllComplaints() {
                 <i class="fas fa-file-alt"></i>
                 <h3>No complaints found</h3>
                 <p>You haven't filed any complaints yet</p>
-                <button class="submit-btn" onclick="switchTab('new-report')" style="margin-top: 20px;">
+                <button class="submit-btn" data-action="switchTab" data-tab="new-report" style="margin-top: 20px;">
                     <i class="fas fa-plus"></i> File New Report
                 </button>
             </div>
@@ -218,11 +257,14 @@ function renderAllComplaints() {
             </div>
             <p style="margin: 15px 0; color: var(--dark-blue);">${truncateText(c.description, 150)}</p>
             <div class="complaint-actions">
-                <button class="outline-btn" onclick="viewComplaint(${c.complaint_id})">
+                <button class="outline-btn" data-action="viewComplaint" data-id="${c.complaint_id}">
                     <i class="fas fa-eye"></i> View Details
                 </button>
+                <button class="chat-btn-small" data-action="openChat" data-id="${c.complaint_id}">
+                    <i class="fas fa-comments"></i> Message
+                </button>
                 ${c.status === 'pending' ? `
-                    <button class="danger-btn" onclick="deleteComplaint(${c.complaint_id})">
+                    <button class="danger-btn" data-action="deleteComplaint" data-id="${c.complaint_id}">
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 ` : ''}
@@ -474,9 +516,12 @@ function viewComplaint(id) {
                 </div>
             </div>
             
-            <div class="detail-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--light-grey);">
+            <div class="detail-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--light-grey); display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="primary-btn" data-action="openChat" data-id="${complaint.complaint_id}">
+                    <i class="fas fa-comments"></i> Message Admin
+                </button>
                 ${complaint.status === 'pending' ? `
-                    <button class="danger-btn" onclick="deleteComplaint(${complaint.complaint_id}); document.getElementById('complaint-detail-modal').style.display='none';">
+                    <button class="danger-btn" data-action="deleteComplaintAndClose" data-id="${complaint.complaint_id}">
                         <i class="fas fa-trash"></i> Delete Report
                     </button>
                 ` : ''}
@@ -565,10 +610,16 @@ function handleFiles(files) {
         fileEl.innerHTML = `
             <i class="fas fa-${getFileIcon(file.type)}"></i>
             <span>${truncateText(file.name, 20)}</span>
-            <button type="button" onclick="this.parentElement.remove()">
+            <button type="button" class="remove-file-btn">
                 <i class="fas fa-times"></i>
             </button>
         `;
+        
+        // Add event listener for remove button
+        fileEl.querySelector('.remove-file-btn').addEventListener('click', () => {
+            fileEl.remove();
+        });
+        
         container.appendChild(fileEl);
     });
 }
@@ -584,31 +635,83 @@ function getCurrentLocation() {
     const locationInput = document.getElementById('incident-location');
     
     if (!navigator.geolocation) {
-        alert('Geolocation is not supported by your browser');
+        alert('Geolocation is not supported by your browser. Please enter the location manually.');
         return;
     }
+
+    // Show loading state
+    locationInput.value = 'Getting your location...';
+    locationInput.disabled = true;
 
     navigator.geolocation.getCurrentPosition(
         async (position) => {
             const { latitude, longitude } = position.coords;
             
             try {
-                const response = await fetch(
-                    `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=2caa6cd327404e8a8881300f50f2d21c`
-                );
-                const data = await response.json();
+                // Try OpenCage first, then fallback to Nominatim
+                let address = null;
                 
-                if (data.results?.length > 0) {
-                    locationInput.value = data.results[0].formatted;
-                } else {
-                    locationInput.value = `${latitude}, ${longitude}`;
+                try {
+                    const response = await fetch(
+                        `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=2caa6cd327404e8a8881300f50f2d21c`
+                    );
+                    const data = await response.json();
+                    if (data.results?.length > 0) {
+                        address = data.results[0].formatted;
+                    }
+                } catch (e) {
+                    console.log('OpenCage failed, trying Nominatim');
                 }
+                
+                // Fallback to Nominatim (free, no API key)
+                if (!address) {
+                    const nominatimResponse = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+                        {
+                            headers: {
+                                'Accept-Language': 'en',
+                                'User-Agent': 'SecureVoice Crime Reporting System'
+                            }
+                        }
+                    );
+                    const nominatimData = await nominatimResponse.json();
+                    if (nominatimData?.display_name) {
+                        address = nominatimData.display_name;
+                    }
+                }
+                
+                locationInput.value = address || `${latitude}, ${longitude}`;
             } catch (error) {
+                console.error('Geocoding error:', error);
                 locationInput.value = `${latitude}, ${longitude}`;
+            } finally {
+                locationInput.disabled = false;
             }
         },
         (error) => {
-            alert('Unable to get your location. Please enter it manually.');
+            locationInput.value = '';
+            locationInput.disabled = false;
+            
+            let message = 'Unable to get your location. ';
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    message += 'Location access was denied. Please enable location permissions or enter the address manually.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message += 'Location information is unavailable. Please enter the address manually.';
+                    break;
+                case error.TIMEOUT:
+                    message += 'Location request timed out. Please try again or enter the address manually.';
+                    break;
+                default:
+                    message += 'Please enter the address manually.';
+            }
+            alert(message);
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
         }
     );
 }
@@ -721,7 +824,7 @@ function renderFilteredComplaints(filtered) {
             </div>
             <p style="margin: 15px 0; color: var(--dark-blue);">${truncateText(c.description, 150)}</p>
             <div class="complaint-actions">
-                <button class="outline-btn" onclick="viewComplaint(${c.complaint_id})">
+                <button class="outline-btn" data-action="viewComplaint" data-id="${c.complaint_id}">
                     <i class="fas fa-eye"></i> View Details
                 </button>
             </div>
@@ -769,7 +872,184 @@ function maskNID(nid) {
     return nid.substring(0, 4) + '****' + nid.substring(nid.length - 4);
 }
 
+// ===== CHAT SYSTEM =====
+let currentChatComplaintId = null;
+let chatRefreshInterval = null;
+
+function openChatModal(complaintId) {
+    currentChatComplaintId = complaintId;
+    const complaint = complaints.find(c => c.complaint_id === complaintId);
+    
+    const chatModal = document.getElementById('chat-modal');
+    if (!chatModal) {
+        createChatModal();
+    }
+    
+    document.getElementById('chat-complaint-id').textContent = `#${complaintId}`;
+    document.getElementById('chat-complaint-type').textContent = complaint ? complaint.complaint_type : 'Complaint';
+    document.getElementById('chat-modal').style.display = 'flex';
+    
+    loadChatMessages(complaintId);
+    
+    // Auto-refresh messages every 5 seconds
+    if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+    chatRefreshInterval = setInterval(() => loadChatMessages(complaintId), 5000);
+}
+
+function closeChatModal() {
+    document.getElementById('chat-modal').style.display = 'none';
+    currentChatComplaintId = null;
+    if (chatRefreshInterval) {
+        clearInterval(chatRefreshInterval);
+        chatRefreshInterval = null;
+    }
+}
+
+function createChatModal() {
+    const modalHTML = `
+        <div class="modal-overlay" id="chat-modal">
+            <div class="modal chat-modal-container">
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <h3><i class="fas fa-comments"></i> Chat with Admin</h3>
+                        <span class="chat-complaint-badge">
+                            <span id="chat-complaint-type">Complaint</span> 
+                            <span id="chat-complaint-id">#0</span>
+                        </span>
+                    </div>
+                    <button class="modal-close" id="close-chat-modal">&times;</button>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading messages...
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <form id="chat-form" class="chat-form">
+                        <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off" required>
+                        <button type="submit" class="chat-send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add event listeners
+    document.getElementById('close-chat-modal').addEventListener('click', closeChatModal);
+    document.getElementById('chat-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'chat-modal') closeChatModal();
+    });
+    document.getElementById('chat-form').addEventListener('submit', handleSendMessage);
+}
+
+async function loadChatMessages(complaintId) {
+    try {
+        const response = await fetch(`/complaint-chat/${complaintId}`, {
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            renderChatMessages(data.messages);
+        } else {
+            console.error('Failed to load messages:', data.message);
+        }
+    } catch (error) {
+        console.error('Error loading chat:', error);
+    }
+}
+
+function renderChatMessages(messages) {
+    const container = document.getElementById('chat-messages');
+    
+    if (!messages || messages.length === 0) {
+        container.innerHTML = `
+            <div class="chat-empty">
+                <i class="fas fa-comment-slash"></i>
+                <p>No messages yet</p>
+                <span>Start a conversation with the admin about your complaint</span>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = messages.map(msg => `
+        <div class="chat-message ${msg.sender_type === 'user' ? 'sent' : 'received'}">
+            <div class="message-bubble">
+                <p>${escapeHtml(msg.message)}</p>
+                <span class="message-time">${formatChatTime(msg.sent_at)}</span>
+            </div>
+            <span class="message-sender">${msg.sender_type === 'user' ? 'You' : 'Admin'}</span>
+        </div>
+    `).join('');
+    
+    // Scroll to bottom
+    container.scrollTop = container.scrollHeight;
+}
+
+async function handleSendMessage(e) {
+    e.preventDefault();
+    
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    
+    if (!message || !currentChatComplaintId) return;
+    
+    const sendBtn = document.querySelector('.chat-send-btn');
+    sendBtn.disabled = true;
+    
+    try {
+        const response = await fetch(`/send-chat-message`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                complaintId: currentChatComplaintId,
+                message: message
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            input.value = '';
+            loadChatMessages(currentChatComplaintId);
+        } else {
+            alert(data.message || 'Failed to send message');
+        }
+    } catch (error) {
+        console.error('Send message error:', error);
+        alert('Failed to send message. Please try again.');
+    } finally {
+        sendBtn.disabled = false;
+    }
+}
+
+function formatChatTime(dateStr) {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    
+    if (isToday) {
+        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Make functions globally available
 window.switchTab = switchTab;
 window.viewComplaint = viewComplaint;
 window.deleteComplaint = deleteComplaint;
+window.openChatModal = openChatModal;
+window.closeChatModal = closeChatModal;

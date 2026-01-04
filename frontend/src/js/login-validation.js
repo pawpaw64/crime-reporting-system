@@ -85,10 +85,10 @@ document.addEventListener("DOMContentLoaded", function() {
         const username = loginUsername.value.trim();
         const password = loginPassword.value.trim();
 
-        // API Base URL - Use same origin if running from backend server
-        const API_BASE_URL = (() => {
+        // API Base URL - Uses centralized config from config.js
+        const API_BASE_URL = typeof Config !== 'undefined' ? Config.API_BASE_URL : (() => {
             const port = window.location.port;
-            if (port === '3000' || port === '30001' || port === '5000') {
+            if (['3000', '3001', '5000', '5500'].includes(port)) {
                 return window.location.origin + '/api';
             }
             return `http://${window.location.hostname}:3000/api`;

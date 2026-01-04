@@ -1,9 +1,12 @@
 const app = require('./app');
 const pool = require('./db');
+const config = require('./config/config');
 const { exec } = require('child_process');
 const os = require('os');
+require('dotenv').config();
 
-const PORT = process.env.PORT || 3000;
+// Use centralized config for port (ensure it's a number)
+const PORT = parseInt(config.port, 10) || 3000;
 const HOST = process.env.HOST || 'localhost';
 const URL = `http://${HOST}:${PORT}`;
 
@@ -19,8 +22,8 @@ const server = app.listen(PORT, () => {
     }
 }).on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-        console.log(`\n⚠️  Port ${PORT} is busy. Trying ${PORT + 1}...\n`);
         const newPort = PORT + 1;
+        console.log(`\n⚠️  Port ${PORT} is busy. Trying ${newPort}...\n`);
         app.listen(newPort, () => {
             console.log(`✅ Server running on port ${newPort}`);
             console.log(`📍 Access: http://localhost:${newPort}`);

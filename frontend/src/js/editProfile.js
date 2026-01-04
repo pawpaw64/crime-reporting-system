@@ -25,9 +25,12 @@ function closeEditForm() {
 
 function fetchUserData() {
     console.log("Fetching user data");
-    fetch('/get-user-data')
+    fetch('/get-user-data', { credentials: 'include' })
         .then(response => {
             console.log("User data status:", response.status);
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
             return response.json();
         })
         .then(data => {

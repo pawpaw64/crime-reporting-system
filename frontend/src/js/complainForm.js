@@ -3,20 +3,111 @@ document.addEventListener("DOMContentLoaded", () => {
     const successModal = document.getElementById("successModal");
     const closeModalBtn = document.getElementById("closeModalBtn");
     const cancelBtn = document.getElementById("cancelBtn");
-    const mapBtn = document.querySelector(".map-btn");
+    
+    // Enhanced Location Picker Elements
+    const mapBtn = document.getElementById("mapBtn");
+    const mapContainer = document.getElementById("mapContainer");
     const locationInput = document.getElementById("location");
-    const mapContainer = document.querySelector(".map-placeholder");
+    const useCurrentLocationBtn = document.getElementById("useCurrentLocation");
+    const confirmLocationBtn = document.getElementById("confirmLocation");
+    const cancelLocationBtn = document.getElementById("cancelLocation");
+    const locationInfo = document.getElementById("locationInfo");
+    const selectedAddress = document.getElementById("selectedAddress");
+    const selectedCoords = document.getElementById("selectedCoords");
+    const accuracyInfo = document.getElementById("accuracyInfo");
+    const radiusNotice = document.getElementById("radiusNotice");
+    
+    // Location state
     let map;
     let marker;
+    let radiusCircle; // Circle to show approximate location radius
+    let locationData = {
+        latitude: null,
+        longitude: null,
+        address: '',
+        isAccurate: true,
+        accuracyRadius: null
+    };
+    
     let selectedFiles = {
         image: null,
         video: null,
         audio: null
     };
 
+    // Initialize accuracy option listeners
+    document.querySelectorAll('input[name="locationAccuracy"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            locationData.isAccurate = e.target.value === 'accurate';
+            updateAccuracyDisplay();
+        });
+    });
+
+
+
+    function updateAccuracyDisplay() {
+        if (locationData.isAccurate) {
+            locationData.accuracyRadius = null;
+            // Hide radius circle for accurate mode
+            if (radiusCircle && map) {
+                map.removeLayer(radiusCircle);
+                radiusCircle = null;
+            }
+        } else {
+            locationData.accuracyRadius = 100; // Fixed 100m radius
+            // Show radius circle for approximate mode
+            updateRadiusCircle();
+        }
+        updateLocationDisplay();
+    }
+
+    function updateRadiusCircle() {
+        if (!locationData.isAccurate && locationData.latitude && locationData.longitude && map) {
+            // Remove existing circle
+            if (radiusCircle) {
+                map.removeLayer(radiusCircle);
+            }
+            
+            // Create new radius circle with fixed 100m radius
+            radiusCircle = L.circle([locationData.latitude, locationData.longitude], {
+                color: '#ff7800',
+                fillColor: '#ff7800',
+                fillOpacity: 0.1,
+                weight: 2,
+                radius: 100
+            }).addTo(map);
+            
+            // Add popup to circle
+            radiusCircle.bindPopup(`🌐 Privacy Area<br>Radius: 100m`);
+            
+            // Show radius notice
+            if (radiusNotice) {
+                radiusNotice.classList.add('show');
+            }
+        } else {
+            // Hide radius notice for accurate mode
+            if (radiusNotice) {
+                radiusNotice.classList.remove('show');
+            }
+        }
+    }
+
+    function updateLocationDisplay() {
+        if (locationData.latitude && locationData.longitude) {
+            selectedCoords.textContent = `Coordinates: ${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)}`;
+            
+            if (locationData.isAccurate) {
+                accuracyInfo.classList.add('hidden');
+            } else {
+                accuracyInfo.classList.remove('hidden');
+                accuracyInfo.textContent = `Privacy radius: 100m`;
+            }
+            locationInfo.classList.remove('hidden');
+        }
+    }
+
     // Handle Cancel button click
     cancelBtn.addEventListener("click", () => {
-        // Optional: Show confirmation dialog
         if (confirm("Are you sure you want to cancel? Any unsaved data will be lost.")) {
             window.location.href = '/profile';
         }
@@ -63,105 +154,202 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
 
-    // Function to update location input and marker popup
-    function updateLocation(lat, lng) {
+    // Function to update location data
+    function updateLocationData(lat, lng) {
+        locationData.latitude = lat;
+        locationData.longitude = lng;
+        
         getAddressFromCoords(lat, lng)
             .then(formatted => {
-                locationInput.value = formatted;
+                locationData.address = formatted;
+                selectedAddress.textContent = formatted;
                 if (marker) {
                     marker.bindPopup(`📍 ${formatted}`).openPopup();
                 }
+                updateLocationDisplay();
+                updateRadiusCircle(); // Update radius circle when location changes
             })
             .catch(error => {
                 console.error("Error getting address:", error);
-                locationInput.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                locationData.address = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                selectedAddress.textContent = locationData.address;
+                updateLocationDisplay();
+                updateRadiusCircle(); // Update radius circle even with coordinate fallback
             });
     }
 
+    // Enhanced map functionality
     mapBtn.addEventListener("click", () => {
+        mapContainer.classList.remove('hidden');
+        initializeMap();
+    });
+
+    useCurrentLocationBtn.addEventListener("click", () => {
         if (!navigator.geolocation) {
             alert("Geolocation is not supported by your browser");
             return;
         }
 
-        navigator.geolocation.getCurrentPosition(success, error);
-
-        function success(position) {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-
-            // Initialize map container
-            mapContainer.innerHTML = `<div id="map" style="height: 300px;"></div>`;
-
-            // Initialize Leaflet map
-            if (!map) {
-                map = L.map('map').setView([lat, lng], 16);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap contributors'
-                }).addTo(map);
-            } else {
-                map.setView([lat, lng], 16);
-            }
-
-            // Create draggable marker
-            if (marker) {
-                marker.setLatLng([lat, lng]);
-            } else {
-                marker = L.marker([lat, lng], { 
-                    draggable: true  // Make marker draggable
-                }).addTo(map);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
                 
-                // Add drag event listener
-                marker.on('dragend', function(e) {
-                    const position = e.target.getLatLng();
-                    updateLocation(position.lat, position.lng);
-                });
-                
-                // Add click event listener to map for placing marker
-                map.on('click', function(e) {
-                    const { lat, lng } = e.latlng;
-                    marker.setLatLng([lat, lng]);
-                    updateLocation(lat, lng);
-                });
+                if (map) {
+                    map.setView([lat, lng], 16);
+                    if (marker) {
+                        marker.setLatLng([lat, lng]);
+                    }
+                    updateLocationData(lat, lng);
+                }
+            },
+            () => {
+                alert("Unable to retrieve your location.");
             }
+        );
+    });
 
-            // Set initial location
-            updateLocation(lat, lng);
-        }
-
-        function error() {
-            alert("Unable to retrieve your location.");
+    confirmLocationBtn.addEventListener("click", () => {
+        if (locationData.latitude && locationData.longitude) {
+            locationInput.value = locationData.address;
+            mapContainer.classList.add('hidden');
+        } else {
+            alert("Please select a location on the map first.");
         }
     });
 
-    // Update the submit form section in complainForm.js
+    cancelLocationBtn.addEventListener("click", () => {
+        mapContainer.classList.add('hidden');
+        // Clean up radius circle when canceling
+        if (radiusCircle && map) {
+            map.removeLayer(radiusCircle);
+            radiusCircle = null;
+        }
+        // Reset location data if needed
+    });
 
+    function initializeMap() {
+        const mapElement = document.getElementById('leafletMap');
+        
+        if (!map) {
+            // Default to Dhaka, Bangladesh if no location available
+            map = L.map('leafletMap').setView([23.8103, 90.4125], 10);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
 
+            // Create marker
+            marker = L.marker([23.8103, 90.4125], { 
+                draggable: true 
+            }).addTo(map);
+            
+            // Add drag event listener
+            marker.on('dragend', function(e) {
+                const position = e.target.getLatLng();
+                updateLocationData(position.lat, position.lng);
+            });
+            
+            // Add click event listener to map for placing marker
+            map.on('click', function(e) {
+                const { lat, lng } = e.latlng;
+                marker.setLatLng([lat, lng]);
+                updateLocationData(lat, lng);
+            });
+        } else {
+            // Map already exists, just invalidate size
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
+        }
+    }
+
+    // Enhanced form submission with better error handling
     form.addEventListener("submit", function (e) {
         e.preventDefault();
+
+        // Show loading state
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoading = submitBtn.querySelector('.btn-loading');
+        
+        btnText.classList.add('hidden');
+        btnLoading.classList.remove('hidden');
+        submitBtn.disabled = true;
 
         // Create FormData object
         const formData = new FormData();
 
-        // Add form fields
-        formData.append('complaintType', document.getElementById('complaintType').value);
-        formData.append('description', document.getElementById('description').value);
-        formData.append('incidentDate', document.getElementById('incidentDate').value);
-        formData.append('location', document.getElementById('location').value);
+        // Add form fields with validation
+        const complaintType = document.getElementById('complaintType').value;
+        const description = document.getElementById('description').value;
+        const incidentDate = document.getElementById('incidentDate').value;
+        const location = document.getElementById('location').value;
+
+        // Basic validation
+        if (!complaintType || !description || !incidentDate || !location) {
+            showError('Please fill in all required fields');
+            resetSubmitButton();
+            return;
+        }
+
+        formData.append('complaintType', complaintType);
+        formData.append('description', description);
+        formData.append('incidentDate', incidentDate);
+        formData.append('location', location);
+
+        // Add location data if available
+        if (locationData.latitude && locationData.longitude) {
+            formData.append('latitude', locationData.latitude);
+            formData.append('longitude', locationData.longitude);
+            
+            if (!locationData.isAccurate && locationData.accuracyRadius) {
+                formData.append('accuracyRadius', locationData.accuracyRadius);
+            }
+        }
 
         // Add files
         if (selectedFiles.image) formData.append('evidence', selectedFiles.image);
         if (selectedFiles.video) formData.append('evidence', selectedFiles.video);
         if (selectedFiles.audio) formData.append('evidence', selectedFiles.audio);
 
+        console.log('Submitting complaint with data:', {
+            complaintType,
+            description: description.substring(0, 50) + '...',
+            incidentDate,
+            location,
+            hasCoordinates: !!(locationData.latitude && locationData.longitude),
+            fileCount: Object.values(selectedFiles).filter(f => f).length
+        });
+
         // Submit form
         fetch('/submit-complaint', {
             method: 'POST',
-            body: formData
+            body: formData,
+            credentials: 'include' // Important for session cookies
         })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Please log in to submit a complaint');
+                    }
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Response data:', data);
                 if (data.success) {
+                    // Show complaint ID in the success modal
+                    const complaintIdDisplay = document.getElementById('complaintIdDisplay');
+                    if (complaintIdDisplay && data.complaintId) {
+                        complaintIdDisplay.innerHTML = `
+                            <strong>Complaint ID: #${data.complaintId}</strong>
+                            <p>Please save this ID for future reference.</p>
+                        `;
+                    }
+
                     // Notify admin about new complaint
                     if (data.complaint && data.complaint.id) {
                         fetch('/notify-admin', {
@@ -171,37 +359,66 @@ document.addEventListener("DOMContentLoaded", () => {
                             },
                             body: JSON.stringify({
                                 complaintId: data.complaint.id
-                            })
+                            }),
+                            credentials: 'include'
                         })
                             .then(notifyResponse => notifyResponse.json())
                             .then(notifyData => {
                                 console.log('Notification response:', notifyData);
                                 if (notifyData.success && notifyData.complaint && notifyData.adminEmail) {
                                     sendEmailToAdmin(notifyData.adminEmail, notifyData.complaint);
-                                } else {
-                                    console.error('Failed to get admin email or complaint data');
                                 }
                             })
                             .catch(error => {
                                 console.error('Error notifying admin:', error);
+                                // Don't show error to user as complaint was successful
                             });
                     }
 
                     successModal.classList.remove("hidden");
                     form.reset();
                     selectedFiles = { image: null, video: null, audio: null };
+                    locationData = {
+                        latitude: null,
+                        longitude: null,
+                        address: '',
+                        isAccurate: true,
+                        accuracyRadius: null
+                    };
                     resetUploadDisplays();
                 } else {
-                    alert(data.message || 'Error submitting complaint');
+                    showError(data.message || 'Error submitting complaint');
                 }
+                resetSubmitButton();
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Error submitting complaint');
+                console.error('Submission error:', error);
+                showError(error.message || 'Unable to submit complaint. Please check your connection and try again.');
+                resetSubmitButton();
             });
     });
 
+    function resetSubmitButton() {
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoading = submitBtn.querySelector('.btn-loading');
+        
+        btnText.classList.remove('hidden');
+        btnLoading.classList.add('hidden');
+        submitBtn.disabled = false;
+    }
 
+    function showError(message) {
+        const errorModal = document.getElementById('errorModal');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        if (errorModal && errorMessage) {
+            errorMessage.textContent = message;
+            errorModal.classList.remove('hidden');
+        } else {
+            alert(message);
+        }
+    }
 
     function resetUploadDisplays() {
         const uploadBoxes = document.querySelectorAll('.upload-box');
@@ -223,12 +440,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     closeModalBtn.addEventListener("click", () => {
         successModal.classList.add("hidden");
-        // Redirect to profile page
         window.location.href = '/profile';
     });
-
 });
-
 
 function sendEmailToAdmin(adminEmail, complaintData) {
     console.log('Sending email to:', adminEmail);
@@ -258,3 +472,37 @@ function sendEmailToAdmin(adminEmail, complaintData) {
         console.warn('EmailJS not loaded, skipping email notification');
     }
 }
+
+    // Modal event listeners
+    const errorModal = document.getElementById('errorModal');
+    const closeErrorBtn = document.getElementById('closeErrorBtn');
+    
+    if (closeErrorBtn) {
+        closeErrorBtn.addEventListener('click', () => {
+            errorModal.classList.add('hidden');
+        });
+    }
+
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', () => {
+            successModal.classList.add('hidden');
+        });
+    }
+
+    const viewComplaintsBtn = document.getElementById('viewComplaintsBtn');
+    if (viewComplaintsBtn) {
+        viewComplaintsBtn.addEventListener('click', () => {
+            window.location.href = '/profile';
+        });
+    }
+
+    // Cancel button event listener
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to cancel? Any unsaved data will be lost.')) {
+                window.location.href = '/profile';
+            }
+        });
+    }
+
+;

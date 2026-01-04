@@ -1,11 +1,12 @@
 const pool = require('../db');
+const path = require('path');
 const { calculateAge } = require('../utils/helperUtils');
 
-// Get User Profile
+// Get User Profile - Serve the HTML page
 exports.getProfile = async (req, res) => {
     try {
         if (!req.session.userId) {
-            return res.redirect('/signup');
+            return res.redirect('/login');
         }
 
         res.set({
@@ -14,22 +15,11 @@ exports.getProfile = async (req, res) => {
             'Expires': '0'
         });
 
-        const [results] = await pool.query(
-            'SELECT * FROM users WHERE userid = ?',
-            [req.session.userId]
-        );
-
-        if (results.length === 0) {
-            return res.status(404).send("User not found");
-        }
-
-        res.render('profile', {
-            user: results[0],
-            calculateAge: calculateAge
-        });
+        // Send the static HTML file - data will be loaded via API
+        res.sendFile(path.join(__dirname, '../../../frontend/src/pages/profile.html'));
     } catch (err) {
         console.error("Profile error:", err);
-        res.status(500).send("Error fetching user data");
+        res.status(500).send("Error loading profile page");
     }
 };
 

@@ -40,10 +40,12 @@ app.use(helmet({
 // CORS configuration - allow multiple origins for development
 const allowedOrigins = [
     'http://localhost:3000',
+    'http://localhost:3001',   // Fallback port if 3000 is busy
     'http://localhost:5500',
     'http://127.0.0.1:5500',
     'http://localhost:8080',
     'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',   // Fallback port
     process.env.FRONTEND_URL
 ].filter(Boolean);
 
@@ -77,6 +79,10 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
+
+// Set up EJS view engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 // Serve static files from frontend
 app.use(express.static(path.join(__dirname, '../../frontend')));
@@ -182,6 +188,124 @@ app.get('/api/my-complaints', authMiddleware.requireUser, async (req, res) => {
     }
 });
 
+// Get user complaints (alias for /api/complaints GET)
+app.get('/api/complaints', authMiddleware.requireUser, async (req, res) => {
+    try {
+        const db = require('./db');
+        const [complaints] = await db.query(
+            `SELECT c.*, 
+                (SELECT COUNT(*) FROM status_updates WHERE complaint_id = c.complaint_id AND is_read = 0) as unread_notifications
+             FROM complaint c 
+             WHERE c.username = ? 
+             ORDER BY c.created_at DESC`,
+            [req.session.username]
+        );
+        
+        res.json({ success: true, complaints });
+    } catch (error) {
+        console.error('Complaints fetch error:', error);
+        res.json({ success: true, complaints: [] });
+    }
+});
+
+// Submit a new complaint
+const upload = require('./middleware/uploadMiddleware');
+const helperUtils = require('./utils/helperUtils');
+
+app.post('/api/complaints', authMiddleware.requireUser, upload.array('evidence', 10), async (req, res) => {
+    try {
+        const db = require('./db');
+        const { complaint_type, incident_date, incident_time, location_address, description, witnesses, anonymous } = req.body;
+        const username = req.session.username;
+
+        if (!complaint_type || !description || !location_address) {
+            return res.status(400).json({ success: false, message: "Complaint type, description, and location are required" });
+        }
+
+        // Find admin for location
+        const adminData = await helperUtils.findAdminByLocation(location_address);
+        
+        let adminUsername = null;
+        let districtName = null;
+        
+        if (adminData) {
+            adminUsername = adminData.adminUsername;
+            districtName = adminData.districtName;
+        }
+
+        // Get or create location
+        let locationId = null;
+        if (districtName) {
+            locationId = await helperUtils.getOrCreateLocation(location_address, districtName);
+        }
+
+        // Get category ID
+        const categoryId = await helperUtils.getCategoryId(complaint_type);
+
+        // Combine date and time
+        let incidentDateTime = incident_date;
+        if (incident_time) {
+            incidentDateTime = `${incident_date} ${incident_time}`;
+        }
+        const formattedDate = new Date(incidentDateTime).toISOString().slice(0, 19).replace('T', ' ');
+        const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+        // Insert complaint
+        const [complaintResult] = await db.query(
+            `INSERT INTO complaint (
+                description, created_at, status, username, admin_username, 
+                location_id, complaint_type, location_address, category_id
+            ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?)`,
+            [description, formattedDate, username, adminUsername, locationId, complaint_type, location_address, categoryId]
+        );
+
+        const complaintId = complaintResult.insertId;
+
+        // Handle file uploads
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                let fileType;
+                if (file.mimetype.startsWith('image/')) fileType = 'image';
+                else if (file.mimetype.startsWith('video/')) fileType = 'video';
+                else if (file.mimetype.startsWith('audio/')) fileType = 'audio';
+
+                let relativePath;
+                if (file.mimetype.startsWith('image/')) {
+                    relativePath = `images/${file.filename}`;
+                } else if (file.mimetype.startsWith('video/')) {
+                    relativePath = `videos/${file.filename}`;
+                } else if (file.mimetype.startsWith('audio/')) {
+                    relativePath = `audio/${file.filename}`;
+                } else {
+                    relativePath = file.filename;
+                }
+
+                await db.query(
+                    `INSERT INTO evidence (uploaded_at, file_type, file_path, complaint_id)
+                     VALUES (?, ?, ?, ?)`,
+                    [createdAt, fileType, relativePath, complaintId]
+                );
+            }
+        }
+
+        res.json({
+            success: true,
+            message: "Complaint submitted successfully!",
+            complaintId: complaintId,
+            complaint: {
+                id: complaintId,
+                type: complaint_type,
+                status: 'pending',
+                location: location_address,
+                createdAt: createdAt
+            }
+        });
+    } catch (err) {
+        console.error("Submit complaint error:", err);
+        res.status(500).json({ success: false, message: "Error submitting complaint" });
+    }
+});
+
 // Admin routes (placeholder for now)
 app.post('/api/admin/login', (req, res) => {
     res.json({ success: false, message: "Admin login not implemented yet" });
@@ -212,9 +336,7 @@ app.get('/contact', (req, res) => {
     res.sendFile(path.join(__dirname, '../../frontend/src/pages/contact-us.html'));
 });
 
-app.get('/profile', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/src/pages/profile.html'));
-});
+// Profile route is handled in routes.js with auth middleware
 
 app.get('/complain', (req, res) => {
     res.sendFile(path.join(__dirname, '../../frontend/src/pages/complain.html'));

@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureVoice | User Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
-    <link rel="stylesheet" href="../css/userDashboard.css">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="stylesheet" href="/src/css/userDashboard.css">
 </head>
 <body>
     <div class="container">
@@ -14,12 +14,12 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <img src="../../images/auth/secureVOICE.png" alt="SecureVoice" class="logo-img">
+                    <img src="/images/auth/secureVOICE.png" alt="SecureVoice" class="logo-img">
                 </div>
             </div>
 
             <div class="profile">
-                <img id="user-avatar" src="../../public/images/icons/default-avatar.png" alt="User Avatar" class="avatar">
+                <img id="user-avatar" src="/public/images/icons/default-avatar.png" alt="User Avatar" class="avatar">
                 <h2 id="user-fullname">Loading...</h2>
                 <p class="email" id="user-email">loading@email.com</p>
                 <div class="verification-badges">
@@ -115,19 +115,19 @@
                 <div class="quick-actions">
                     <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
                     <div class="actions-grid">
-                        <button class="action-btn" onclick="switchTab('new-report')">
+                        <button class="action-btn" data-action="navigate" data-href="/complain">
                             <i class="fas fa-plus-circle"></i>
-                            <span>File New Complaint/span>
+                            <span>File New Complaint</span>
                         </button>
-                        <button class="action-btn" onclick="window.location.href='complain.html'">
+                        <button class="action-btn emergency-btn" data-action="navigate" data-href="/complain">
                             <i class="fas fa-exclamation-triangle"></i>
                             <span>Emergency Complaint</span>
                         </button>
-                        <button class="action-btn" onclick="switchTab('profile')">
+                        <button class="action-btn" data-action="switchTab" data-tab="profile">
                             <i class="fas fa-user-edit"></i>
                             <span>Update Profile</span>
                         </button>
-                        <button class="action-btn" onclick="window.location.href='contact-us.html'">
+                        <button class="action-btn" data-action="navigate" data-href="contact-us.html">
                             <i class="fas fa-headset"></i>
                             <span>Contact Support</span>
                         </button>
@@ -138,7 +138,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h3><i class="fas fa-history"></i> Recent Activity</h3>
-                        <button class="outline-btn" onclick="switchTab('complaints')">View All</button>
+                        <button class="outline-btn" data-action="switchTab" data-tab="complaints">View All</button>
                     </div>
                     <div class="recent-complaints" id="recent-complaints">
                         <div class="loading-spinner">
@@ -161,7 +161,7 @@
                 <div class="card profile-card">
                     <div class="profile-header">
                         <div class="profile-avatar-section">
-                            <img id="profile-avatar" src="../../public/images/icons/default-avatar.png" alt="Profile" class="avatar-large">
+                            <img id="profile-avatar" src="/public/images/icons/default-avatar.png" alt="Profile" class="avatar-large">
                             <div class="profile-badges">
                                 <span class="badge verified" id="profile-nid-badge" style="display: none;">
                                     <i class="fas fa-check-circle"></i> NID Verified
@@ -265,7 +265,7 @@
             <div class="tab-content" id="complaints">
                 <div class="header">
                     <h1><i class="fas fa-file-alt"></i> My Complaints</h1>
-                    <button class="edit-btn" onclick="switchTab('new-report')">
+                    <button class="edit-btn" data-action="switchTab" data-tab="new-report">
                         <i class="fas fa-plus"></i> New Report
                     </button>
                 </div>
@@ -396,7 +396,7 @@
 
                         <!-- Submit -->
                         <div class="form-actions">
-                            <button type="button" class="outline-btn" onclick="switchTab('dashboard')">
+                            <button type="button" class="outline-btn" data-action="switchTab" data-tab="dashboard">
                                 <i class="fas fa-times"></i> Cancel
                             </button>
                             <button type="submit" class="submit-btn">
@@ -486,6 +486,6 @@
         </div>
     </div>
 
-    <script src="../js/profile.js"></script>
+    <script src="/src/js/profile.js"></script>
 </body>
 </html>

@@ -14,7 +14,15 @@ exports.submitComplaint = async (req, res) => {
             return res.status(401).json({ success: false, message: "Not authenticated" });
         }
 
-        const { complaintType, description, incidentDate, location } = req.body;
+        const { 
+            complaintType, 
+            description, 
+            incidentDate, 
+            location, 
+            latitude, 
+            longitude, 
+            accuracyRadius 
+        } = req.body;
         const username = req.session.username;
 
         if (!complaintType || !description || !incidentDate || !location) {
@@ -42,13 +50,42 @@ exports.submitComplaint = async (req, res) => {
         const formattedDate = new Date(incidentDate).toISOString().slice(0, 19).replace('T', ' ');
         const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-        // Insert complaint
+        // Parse coordinates if provided
+        let lat = null, lng = null, radius = null;
+        
+        if (latitude && longitude) {
+            lat = parseFloat(latitude);
+            lng = parseFloat(longitude);
+            
+            // Validate coordinate ranges
+            if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid coordinate values"
+                });
+            }
+            
+            // Parse accuracy radius if provided (for approximate locations)
+            if (accuracyRadius) {
+                radius = parseInt(accuracyRadius);
+                if (radius <= 0) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid accuracy radius"
+                    });
+                }
+            }
+        }
+
+        // Insert complaint with location coordinates
         const [complaintResult] = await pool.query(
             `INSERT INTO complaint (
                 description, created_at, status, username, admin_username, 
-                location_id, complaint_type, location_address, category_id
-            ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?)`,
-            [description, formattedDate, username, adminUsername, locationId, complaintType, location, categoryId]
+                location_id, complaint_type, location_address, category_id,
+                latitude, longitude, location_accuracy_radius
+            ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [description, formattedDate, username, adminUsername, locationId, 
+             complaintType, location, categoryId, lat, lng, radius]
         );
 
         const complaintId = complaintResult.insertId;
@@ -83,7 +120,17 @@ exports.submitComplaint = async (req, res) => {
         res.json({
             success: true,
             message: "Complaint submitted successfully!",
-            complaintId: complaintId
+            complaintId: complaintId,
+            complaint: {
+                id: complaintId,
+                type: complaintType,
+                status: 'pending',
+                location: location,
+                latitude: latitude,
+                longitude: longitude,
+                accuracyRadius: accuracyRadius,
+                createdAt: formattedDate
+            }
         });
     } catch (err) {
         console.error("Submit complaint error:", err);
@@ -384,6 +431,313 @@ exports.deleteComplaint = async (req, res) => {
         }
     } catch (err) {
         console.error("Delete complaint error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+// Serve Complaint Form
+exports.serveComplaintForm = (req, res) => {
+    res.sendFile(path.join(__dirname, '../../../frontend/src/pages/complain.html'));
+};
+
+// Get User Complaints
+exports.getUserComplaints = async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
+
+        const username = req.session.username;
+
+        const [complaints] = await pool.query(
+            `SELECT c.*, 
+                    l.location_name, l.district_name,
+                    cat.name as category_name
+             FROM complaint c
+             LEFT JOIN location l ON c.location_id = l.location_id
+             LEFT JOIN category cat ON c.category_id = cat.category_id
+             WHERE c.username = ?
+             ORDER BY c.created_at DESC`,
+            [username]
+        );
+
+        // Get evidence for each complaint
+        for (let complaint of complaints) {
+            const [evidence] = await pool.query(
+                'SELECT * FROM evidence WHERE complaint_id = ?',
+                [complaint.complaint_id]
+            );
+            complaint.evidence = evidence;
+        }
+
+        res.json({
+            success: true,
+            complaints: complaints
+        });
+    } catch (err) {
+        console.error("Get user complaints error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+// Get Complaint Notifications
+exports.getComplaintNotifications = async (req, res) => {
+    try {
+        const { complaint_id } = req.params;
+        const username = req.session.username;
+
+        // Check if user owns this complaint
+        const [ownership] = await pool.query(
+            'SELECT complaint_id FROM complaint WHERE complaint_id = ? AND username = ?',
+            [complaint_id, username]
+        );
+
+        if (ownership.length === 0) {
+            return res.status(403).json({ success: false, message: "Access denied" });
+        }
+
+        // Get unread messages from admin
+        const [notifications] = await pool.query(
+            `SELECT * FROM complaint_chat 
+             WHERE complaint_id = ? AND sender_type = 'admin' AND is_read = 0
+             ORDER BY sent_at DESC`,
+            [complaint_id]
+        );
+
+        res.json({
+            success: true,
+            notifications: notifications,
+            unreadCount: notifications.length
+        });
+    } catch (err) {
+        console.error("Get complaint notifications error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+// Mark Notifications as Read
+exports.markNotificationsRead = async (req, res) => {
+    try {
+        const { complaint_id } = req.params;
+        const username = req.session.username;
+
+        // Check ownership
+        const [ownership] = await pool.query(
+            'SELECT complaint_id FROM complaint WHERE complaint_id = ? AND username = ?',
+            [complaint_id, username]
+        );
+
+        if (ownership.length === 0) {
+            return res.status(403).json({ success: false, message: "Access denied" });
+        }
+
+        await pool.query(
+            `UPDATE complaint_chat SET is_read = 1 
+             WHERE complaint_id = ? AND sender_type = 'admin'`,
+            [complaint_id]
+        );
+
+        res.json({ success: true, message: "Notifications marked as read" });
+    } catch (err) {
+        console.error("Mark notifications read error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+// Get Complaint Chat
+exports.getComplaintChat = async (req, res) => {
+    try {
+        const { complaintId } = req.params;
+        const username = req.session.username;
+
+        // Check ownership
+        const [ownership] = await pool.query(
+            'SELECT complaint_id FROM complaint WHERE complaint_id = ? AND username = ?',
+            [complaintId, username]
+        );
+
+        if (ownership.length === 0) {
+            return res.status(403).json({ success: false, message: "Access denied" });
+        }
+
+        const [messages] = await pool.query(
+            `SELECT * FROM complaint_chat 
+             WHERE complaint_id = ?
+             ORDER BY sent_at ASC`,
+            [complaintId]
+        );
+
+        res.json({
+            success: true,
+            messages: messages
+        });
+    } catch (err) {
+        console.error("Get complaint chat error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+// Send Chat Message
+exports.sendChatMessage = async (req, res) => {
+    try {
+        const { complaintId, message } = req.body;
+        const username = req.session.username;
+
+        // Check ownership
+        const [ownership] = await pool.query(
+            'SELECT complaint_id FROM complaint WHERE complaint_id = ? AND username = ?',
+            [complaintId, username]
+        );
+
+        if (ownership.length === 0) {
+            return res.status(403).json({ success: false, message: "Access denied" });
+        }
+
+        const [result] = await pool.query(
+            `INSERT INTO complaint_chat (complaint_id, sender_type, sender_username, message)
+             VALUES (?, 'user', ?, ?)`,
+            [complaintId, username, message]
+        );
+
+        res.json({
+            success: true,
+            message: "Message sent successfully",
+            chatId: result.insertId
+        });
+    } catch (err) {
+        console.error("Send chat message error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+// Get Dashboard Stats
+exports.getDashboardStats = async (req, res) => {
+    try {
+        const username = req.session.username;
+
+        // Get total complaints
+        const [totalResult] = await pool.query(
+            'SELECT COUNT(*) as total FROM complaint WHERE username = ?',
+            [username]
+        );
+
+        // Get complaints by status
+        const [statusResult] = await pool.query(
+            `SELECT status, COUNT(*) as count FROM complaint 
+             WHERE username = ? GROUP BY status`,
+            [username]
+        );
+
+        // Get recent complaints
+        const [recentComplaints] = await pool.query(
+            `SELECT complaint_id, complaint_type, status, created_at 
+             FROM complaint WHERE username = ? 
+             ORDER BY created_at DESC LIMIT 5`,
+            [username]
+        );
+
+        const stats = {
+            total: totalResult[0].total,
+            pending: 0,
+            verifying: 0,
+            investigating: 0,
+            resolved: 0
+        };
+
+        statusResult.forEach(row => {
+            stats[row.status] = row.count;
+        });
+
+        res.json({
+            success: true,
+            stats: stats,
+            recentComplaints: recentComplaints
+        });
+    } catch (err) {
+        console.error("Get dashboard stats error:", err);
+        res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+// Get Complaint Location Data for Heatmap
+exports.getComplaintHeatmapData = async (req, res) => {
+    try {
+                const [complaints] = await pool.query(
+                        `SELECT 
+                                COALESCE(c.latitude, l.latitude) AS latitude,
+                                COALESCE(c.longitude, l.longitude) AS longitude,
+                                c.complaint_type,
+                                c.status,
+                                c.created_at,
+                                cat.name AS category_name,
+                                l.location_name,
+                                l.district_name,
+                                c.location_id,
+                                COUNT(*) AS incident_count
+                         FROM complaint c
+                         LEFT JOIN category cat ON c.category_id = cat.category_id
+                         LEFT JOIN location l ON c.location_id = l.location_id
+                         WHERE COALESCE(c.latitude, l.latitude) IS NOT NULL
+                             AND COALESCE(c.longitude, l.longitude) IS NOT NULL
+                             AND COALESCE(c.latitude, l.latitude) != 0
+                             AND COALESCE(c.longitude, l.longitude) != 0
+                         GROUP BY c.location_id, COALESCE(c.latitude, l.latitude), COALESCE(c.longitude, l.longitude), c.complaint_type, cat.name
+                         ORDER BY c.created_at DESC`
+                );
+
+        // Transform data for heatmap
+        const heatmapData = complaints.map(complaint => ({
+            lat: parseFloat(complaint.latitude),
+            lng: parseFloat(complaint.longitude),
+            intensity: complaint.incident_count,
+            type: complaint.complaint_type,
+            category: complaint.category_name,
+            location: complaint.location_name,
+            district: complaint.district_name,
+            status: complaint.status,
+            created_at: complaint.created_at,
+            location_id: complaint.location_id
+        }));
+
+        // Get summary statistics
+        const [totalStats] = await pool.query(
+            `SELECT 
+                COUNT(*) as total_complaints,
+                COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_complaints,
+                COUNT(CASE WHEN status = 'resolved' THEN 1 END) as resolved_complaints,
+                COUNT(CASE WHEN status = 'investigating' THEN 1 END) as investigating_complaints
+                         FROM complaint 
+                         LEFT JOIN location l ON complaint.location_id = l.location_id
+                         WHERE COALESCE(complaint.latitude, l.latitude) IS NOT NULL 
+                             AND COALESCE(complaint.longitude, l.longitude) IS NOT NULL
+                             AND COALESCE(complaint.latitude, l.latitude) != 0
+                             AND COALESCE(complaint.longitude, l.longitude) != 0`
+        );
+
+        // Get complaints by category
+        const [categoryStats] = await pool.query(
+            `SELECT 
+                cat.name as category,
+                COUNT(*) as count
+                         FROM complaint c
+                         LEFT JOIN category cat ON c.category_id = cat.category_id
+                         LEFT JOIN location l ON c.location_id = l.location_id
+                         WHERE COALESCE(c.latitude, l.latitude) IS NOT NULL 
+                             AND COALESCE(c.longitude, l.longitude) IS NOT NULL
+                             AND COALESCE(c.latitude, l.latitude) != 0
+                             AND COALESCE(c.longitude, l.longitude) != 0
+             GROUP BY cat.name
+             ORDER BY count DESC`
+        );
+
+        res.json({
+            success: true,
+            heatmapData: heatmapData,
+            totalStats: totalStats[0],
+            categoryStats: categoryStats
+        });
+    } catch (err) {
+        console.error("Get complaint heatmap data error:", err);
         res.status(500).json({ success: false, message: "Database error" });
     }
 };

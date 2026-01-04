@@ -7,11 +7,14 @@ const bcrypt = require('bcrypt');
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
+// Get port from environment variable
+const PORT = process.env.PORT || 3000;
+
 // Database configuration
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASS || 'root',
+    password: process.env.DB_PASSWORD || 'no more hoimonty',
     database: process.env.DB_NAME || 'securevoice'
 };
 
@@ -77,7 +80,7 @@ async function createSuperAdmin() {
         console.log('🎉 SUPER ADMIN READY TO USE');
         console.log('═══════════════════════════════════════════');
         console.log('');
-        console.log('📍 Login URL: http://localhost:3000/super-admin-login.html');
+        console.log(`📍 Login URL: http://localhost:${PORT}/super-admin-login.html`);
         console.log('👤 Username:', username);
         console.log('🔑 Password:', password);
         console.log('📧 Email:', email);
