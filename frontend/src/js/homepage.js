@@ -23,6 +23,13 @@ if (!next || !previous || items.length === 0) {
         }
         sliderTurnedOn();
     };
+    next.onclick = function() {
+        itemActive = itemActive + 1;
+        if (itemActive >= countItem) {
+            itemActive = 0;
+        }
+        sliderTurnedOn();
+    };
 
     previous.onclick = function() {
         itemActive = itemActive - 1;

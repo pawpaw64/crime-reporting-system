@@ -777,7 +777,7 @@ exports.sendOTP = async (req, res) => {
         console.log('[DEBUG] Backend sendOTP: Generated OTP:', otp);
         
         const expires = Date.now() + 5 * 60 * 1000;
-        otpStore.set(identifier, { otp, expires, verified: false });
+        otpStore.set(identifier, { otp, expires, verified: false }); //need to modify
         console.log('[DEBUG] Backend sendOTP: OTP stored in otpStore, expires at:', new Date(expires).toISOString());
 
         // Create registration session

@@ -16,28 +16,33 @@ app.use(helmet({
             scriptSrc: [
                 "'self'", 
                 "'unsafe-inline'",  // Allow inline scripts
+                "'unsafe-eval'",    // Required for some map libraries
                 "https://cdn.tailwindcss.com",
                 "https://cdnjs.cloudflare.com",
-                "https://unpkg.com"  // For Leaflet map library
+                "https://unpkg.com",           // Leaflet CDN
+                "https://cdn.jsdelivr.net"     // Leaflet heat plugin
             ],
+            scriptSrcAttr: ["'unsafe-inline'"],  // Allow inline event handlers
             styleSrc: [
                 "'self'", 
                 "'unsafe-inline'",
                 "https://cdnjs.cloudflare.com",
                 "https://fonts.googleapis.com",
-                "https://unpkg.com"  // For Leaflet CSS
+                "https://unpkg.com",           // Leaflet CSS
+                "https://cdn.jsdelivr.net"     // Leaflet heat CSS
             ],
             fontSrc: [
                 "'self'",
                 "https://cdnjs.cloudflare.com",
                 "https://fonts.gstatic.com"
             ],
-            imgSrc: ["'self'", "data:", "https:"],
+            imgSrc: ["'self'", "data:", "https:", "blob:"],
             connectSrc: [
-                "'self'",
-                "https://nominatim.openstreetmap.org",  // For geocoding addresses
-                "https://api.opencagedata.com",          // Fallback geocoding API
-                "https://unpkg.com"                      // For Leaflet source maps
+                "'self'", 
+                "https://api.opencagedata.com", 
+                "https://nominatim.openstreetmap.org",
+                "https://*.tile.openstreetmap.org",  // Map tiles
+                "https://tile.openstreetmap.org"     // Map tiles
             ]
         }
     },
