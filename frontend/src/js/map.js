@@ -180,16 +180,37 @@ class CrimeMap {
 
 /* ---------- INIT ---------- */
 document.addEventListener("DOMContentLoaded", () => {
-    if (!document.getElementById("map")) {
-        console.error("Map container missing");
+    const mapContainer = document.getElementById("map");
+    
+    if (!mapContainer) {
+        // Map container not on this page - this is normal for non-map pages
         return;
     }
 
     if (typeof L === "undefined") {
-        console.error("Leaflet not loaded");
+        console.warn("Leaflet library not loaded. Map features will be unavailable.");
+        // Show user-friendly message in map container
+        mapContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #f5f5f5; color: #666; text-align: center; padding: 20px;">
+                <i class="fas fa-map-marked-alt" style="font-size: 48px; margin-bottom: 15px; color: #ccc;"></i>
+                <p style="margin: 0; font-size: 16px;">Map is currently unavailable</p>
+                <p style="margin: 5px 0 0; font-size: 12px;">Please refresh the page or try again later</p>
+            </div>
+        `;
         return;
     }
 
-    window.crimeMap = new CrimeMap();
-    crimeMap.init();
+    try {
+        window.crimeMap = new CrimeMap();
+        crimeMap.init();
+    } catch (error) {
+        console.error("Failed to initialize map:", error);
+        mapContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #fff3f3; color: #c00; text-align: center; padding: 20px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 15px;"></i>
+                <p style="margin: 0; font-size: 16px;">Error loading map</p>
+                <p style="margin: 5px 0 0; font-size: 12px;">${error.message}</p>
+            </div>
+        `;
+    }
 });

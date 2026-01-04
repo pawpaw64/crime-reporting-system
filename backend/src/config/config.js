@@ -1,5 +1,5 @@
-// Lines 8-14: Environment variables
-// Lines 94-126: Session & Email config
+// Environment variables
+//  Session & Email config
 
 const path = require('path');
 require('dotenv').config();
