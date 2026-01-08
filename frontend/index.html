@@ -160,7 +160,7 @@
                 <div class="icon-circle">
                     <i class="fas fa-file-alt"></i>
                 </div>
-                <a href="src/pages/complain.html">Submit a Complaint</a> <!-- Fixed path -->
+                <a href="/profile?tab=new-report">Submit a Complaint</a>
                 <p>Provide details about the incident, including location, time, and any evidence you may have.</p>
             </div>
             <div class="card">
@@ -412,8 +412,8 @@
 <script>
     // Handle Report a Crime button click
     function handleReportCrime() {
-        // Directly open the complaint form page
-        window.location.href = 'src/pages/complain.html';
+        // Redirect to the unified complaint form in profile page
+        window.location.href = '/profile?tab=new-report';
     }
 </script>
 </body>

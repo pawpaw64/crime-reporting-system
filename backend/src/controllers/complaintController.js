@@ -435,9 +435,9 @@ exports.deleteComplaint = async (req, res) => {
     }
 };
 
-// Serve Complaint Form
+// Serve Complaint Form - Redirect to profile page
 exports.serveComplaintForm = (req, res) => {
-    res.sendFile(path.join(__dirname, '../../../frontend/src/pages/complain.html'));
+    res.redirect('/profile?tab=new-report');
 };
 
 // Get User Complaints

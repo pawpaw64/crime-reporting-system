@@ -102,33 +102,13 @@ exports.getSignupPage = (req, res) => {
     res.sendFile(signupPath);
 };
 
-// Get Complain Page
+// Get Complain Page - Redirect to unified profile page
 exports.getComplainPage = (req, res) => {
     if (!req.session.userId) {
-        return res.redirect('/signup');
+        return res.redirect('/login');
     }
-
-    const complainPath = path.join(__dirname, '../../../frontend/src/pages/complain.html');
-
-    if (!fs.existsSync(complainPath)) {
-        return res.status(404).send("Complaint form not found");
-    }
-
-    fs.readFile(complainPath, 'utf8', (err, data) => {
-        if (err) {
-            return res.status(500).send("Error loading complaint form");
-        }
-
-        const authScript = `
-        <script>
-            window.currentUser = ${JSON.stringify(req.session.username)};
-            window.isAuthenticated = true;
-        </script>
-        `;
-
-        const modifiedData = data.replace('</head>', authScript + '</head>');
-        res.send(modifiedData);
-    });
+    // Redirect to the unified complaint form in profile page
+    res.redirect('/profile?tab=new-report');
 };
 
 // Test Email

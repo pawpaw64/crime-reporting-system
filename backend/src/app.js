@@ -351,8 +351,9 @@ app.get('/contact', (req, res) => {
 
 // Profile route is handled in routes.js with auth middleware
 
+// Redirect /complain to profile page with new-report tab
 app.get('/complain', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/src/pages/complain.html'));
+    res.redirect('/profile?tab=new-report');
 });
 
 app.get('/dashboard', (req, res) => {

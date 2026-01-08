@@ -572,46 +572,28 @@ async function deleteComplaint(id) {
 }
 
 // ===== REPORT FORM =====
-let locationMap = null;
-let locationMarker = null;
+let reportMap = null;
+let reportMarker = null;
+let radiusCircle = null;
 let selectedLocationData = {
     latitude: null,
     longitude: null,
-    address: ''
+    address: '',
+    isAccurate: true,
+    accuracyRadius: null
+};
+let selectedFiles = {
+    image: [],
+    video: null,
+    audio: null
 };
 
 function initReportForm() {
     const form = document.getElementById('report-form');
-    const fileUploadArea = document.getElementById('file-upload-area');
-    const fileInput = document.getElementById('evidence-files');
-    const locationBtn = document.getElementById('get-location');
     const openMapBtn = document.getElementById('open-map');
 
     form?.addEventListener('submit', handleReportSubmit);
-
-    fileUploadArea?.addEventListener('click', () => fileInput?.click());
-    
-    fileUploadArea?.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        fileUploadArea.classList.add('dragover');
-    });
-
-    fileUploadArea?.addEventListener('dragleave', () => {
-        fileUploadArea.classList.remove('dragover');
-    });
-
-    fileUploadArea?.addEventListener('drop', (e) => {
-        e.preventDefault();
-        fileUploadArea.classList.remove('dragover');
-        handleFiles(e.dataTransfer.files);
-    });
-
-    fileInput?.addEventListener('change', (e) => {
-        handleFiles(e.target.files);
-    });
-
-    locationBtn?.addEventListener('click', getCurrentLocation);
-    openMapBtn?.addEventListener('click', openLocationMap);
+    openMapBtn?.addEventListener('click', openReportMap);
 
     // Set max date for incident date
     const incidentDate = document.getElementById('incident-date');
@@ -619,315 +601,317 @@ function initReportForm() {
         incidentDate.max = new Date().toISOString().split('T')[0];
     }
 
-    // Initialize map modal controls
-    initMapModal();
+    // Initialize map controls
+    initReportMapControls();
+    
+    // Initialize file upload handlers
+    initFileUploads();
+    
+    // Initialize accuracy options
+    initAccuracyOptions();
+
+    // Check for tab parameter in URL
+    checkUrlForTab();
 }
 
-function handleFiles(files) {
-    const container = document.getElementById('uploaded-files');
-    
-    Array.from(files).forEach(file => {
-        if (file.size > 10 * 1024 * 1024) {
-            alert(`File ${file.name} is too large. Maximum size is 10MB.`);
-            return;
-        }
+function checkUrlForTab() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab) {
+        switchTab(tab);
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+}
 
-        const fileEl = document.createElement('div');
-        fileEl.className = 'uploaded-file';
-        fileEl.innerHTML = `
-            <i class="fas fa-${getFileIcon(file.type)}"></i>
-            <span>${truncateText(file.name, 20)}</span>
-            <button type="button" class="remove-file-btn">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-        
-        // Add event listener for remove button
-        fileEl.querySelector('.remove-file-btn').addEventListener('click', () => {
-            fileEl.remove();
+function initAccuracyOptions() {
+    document.querySelectorAll('input[name="locationAccuracy"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            selectedLocationData.isAccurate = e.target.value === 'accurate';
+            updateAccuracyDisplay();
         });
-        
-        container.appendChild(fileEl);
     });
 }
 
-function getFileIcon(mimeType) {
-    if (mimeType.startsWith('image/')) return 'image';
-    if (mimeType.startsWith('video/')) return 'video';
-    if (mimeType.includes('pdf')) return 'file-pdf';
-    return 'file';
-}
-
-function getCurrentLocation() {
-    const locationInput = document.getElementById('incident-location');
+function updateAccuracyDisplay() {
+    const radiusNotice = document.getElementById('radius-notice');
+    const accuracyInfo = document.getElementById('report-accuracy-info');
     
-    if (!navigator.geolocation) {
-        alert('Geolocation is not supported by your browser. Please enter the location manually.');
-        return;
-    }
-
-    // Show loading state
-    locationInput.value = 'Getting your location...';
-    locationInput.disabled = true;
-
-    navigator.geolocation.getCurrentPosition(
-        async (position) => {
-            const { latitude, longitude } = position.coords;
-            
-            try {
-                let address = null;
-                
-                // Try Nominatim first (free, reliable, no API key needed)
-                try {
-                    const nominatimResponse = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
-                        {
-                            headers: {
-                                'Accept-Language': 'en',
-                                'User-Agent': 'SecureVoice Crime Reporting System'
-                            }
-                        }
-                    );
-                    
-                    if (nominatimResponse.ok) {
-                        const nominatimData = await nominatimResponse.json();
-                        if (nominatimData?.display_name) {
-                            address = nominatimData.display_name;
-                        }
-                    }
-                } catch (e) {
-                    console.log('Nominatim failed, trying OpenCage:', e);
-                }
-                
-                // Try OpenCage as fallback
-                if (!address) {
-                    try {
-                        const response = await fetch(
-                            `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=2caa6cd327404e8a8881300f50f2d21c`
-                        );
-                        
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.results?.length > 0) {
-                                address = data.results[0].formatted;
-                            }
-                        }
-                    } catch (e) {
-                        console.log('OpenCage also failed:', e);
-                    }
-                }
-                
-                if (address) {
-                    locationInput.value = address;
-                    console.log('Successfully geocoded location:', address);
-                } else {
-                    // If both services fail, show error and let user enter manually
-                    locationInput.value = '';
-                    alert('Could not get address for your location. Please enter the location manually.');
-                    console.error('All geocoding services failed for coordinates:', latitude, longitude);
-                }
-            } catch (error) {
-                console.error('Geocoding error:', error);
-                locationInput.value = '';
-                alert('Error getting location address. Please enter the location manually.');
-            } finally {
-                locationInput.disabled = false;
-            }
-        },
-        (error) => {
-            locationInput.value = '';
-            locationInput.disabled = false;
-            
-            let message = 'Unable to get your location. ';
-            switch (error.code) {
-                case error.PERMISSION_DENIED:
-                    message += 'Location access was denied. Please enable location permissions or enter the address manually.';
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    message += 'Location information is unavailable. Please enter the address manually.';
-                    break;
-                case error.TIMEOUT:
-                    message += 'Location request timed out. Please try again or enter the address manually.';
-                    break;
-                default:
-                    message += 'Please enter the address manually.';
-            }
-            alert(message);
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
+    if (selectedLocationData.isAccurate) {
+        selectedLocationData.accuracyRadius = null;
+        // Hide radius circle for accurate mode
+        if (radiusCircle && reportMap) {
+            reportMap.removeLayer(radiusCircle);
+            radiusCircle = null;
         }
-    );
+        radiusNotice?.classList.add('hidden');
+        accuracyInfo?.classList.add('hidden');
+    } else {
+        selectedLocationData.accuracyRadius = 100; // Fixed 100m radius
+        // Show radius circle for approximate mode
+        updateRadiusCircle();
+        radiusNotice?.classList.remove('hidden');
+        if (selectedLocationData.latitude) {
+            accuracyInfo?.classList.remove('hidden');
+            if (accuracyInfo) accuracyInfo.textContent = 'Privacy radius: 100m';
+        }
+    }
 }
 
-// ===== MAP MODAL FUNCTIONS =====
-function initMapModal() {
-    const closeMapBtn = document.getElementById('close-map-modal');
-    const cancelMapBtn = document.getElementById('cancel-map-selection');
-    const confirmMapBtn = document.getElementById('confirm-map-location');
-    const useCurrentBtn = document.getElementById('use-current-location');
-
-    closeMapBtn?.addEventListener('click', closeLocationMap);
-    cancelMapBtn?.addEventListener('click', closeLocationMap);
-    confirmMapBtn?.addEventListener('click', confirmLocationSelection);
-    useCurrentBtn?.addEventListener('click', useCurrentLocationOnMap);
+function updateRadiusCircle() {
+    if (!selectedLocationData.isAccurate && selectedLocationData.latitude && selectedLocationData.longitude && reportMap) {
+        // Remove existing circle
+        if (radiusCircle) {
+            reportMap.removeLayer(radiusCircle);
+        }
+        
+        // Create new radius circle with fixed 100m radius
+        radiusCircle = L.circle([selectedLocationData.latitude, selectedLocationData.longitude], {
+            color: '#ff7800',
+            fillColor: '#ff7800',
+            fillOpacity: 0.1,
+            weight: 2,
+            radius: 100
+        }).addTo(reportMap);
+        
+        // Add popup to circle
+        radiusCircle.bindPopup('🌐 Privacy Area<br>Radius: 100m');
+    }
 }
 
-function openLocationMap() {
-    const modal = document.getElementById('location-map-modal');
-    modal.style.display = 'flex';
+function initFileUploads() {
+    // Image upload
+    const imageUpload = document.getElementById('image-upload');
+    imageUpload?.addEventListener('change', (e) => {
+        selectedFiles.image = Array.from(e.target.files);
+        updateUploadDisplay('image', selectedFiles.image);
+    });
+
+    // Video upload
+    const videoUpload = document.getElementById('video-upload');
+    videoUpload?.addEventListener('change', (e) => {
+        selectedFiles.video = e.target.files[0];
+        updateUploadDisplay('video', selectedFiles.video);
+    });
+
+    // Audio upload
+    const audioUpload = document.getElementById('audio-upload');
+    audioUpload?.addEventListener('change', (e) => {
+        selectedFiles.audio = e.target.files[0];
+        updateUploadDisplay('audio', selectedFiles.audio);
+    });
+}
+
+function updateUploadDisplay(type, files) {
+    const box = document.getElementById(`${type}-upload-box`);
+    if (!box) return;
+    
+    if (files && (Array.isArray(files) ? files.length > 0 : files)) {
+        box.classList.add('file-selected');
+        const label = box.querySelector('label span');
+        if (label) {
+            if (Array.isArray(files)) {
+                label.innerHTML = `✓ ${files.length} file(s)<br><small>Selected</small>`;
+            } else {
+                label.innerHTML = `✓ ${files.name.substring(0, 15)}...<br><small>Selected</small>`;
+            }
+        }
+    } else {
+        box.classList.remove('file-selected');
+    }
+}
+
+function initReportMapControls() {
+    const useCurrentBtn = document.getElementById('use-current-location-report');
+    const confirmBtn = document.getElementById('confirm-location-report');
+    const cancelBtn = document.getElementById('cancel-location-report');
+
+    useCurrentBtn?.addEventListener('click', useCurrentLocationOnReportMap);
+    confirmBtn?.addEventListener('click', confirmReportLocation);
+    cancelBtn?.addEventListener('click', closeReportMap);
+}
+
+function openReportMap() {
+    const mapContainer = document.getElementById('report-map-container');
+    const placeholder = document.getElementById('map-placeholder');
+    
+    mapContainer?.classList.remove('hidden');
+    placeholder?.classList.add('hidden');
     
     // Initialize map if not already initialized
     setTimeout(() => {
-        if (!locationMap) {
-            initializeLocationMap();
+        if (!reportMap) {
+            initializeReportMap();
         } else {
-            locationMap.invalidateSize();
+            reportMap.invalidateSize();
         }
     }, 100);
 }
 
-function closeLocationMap() {
-    const modal = document.getElementById('location-map-modal');
-    modal.style.display = 'none';
+function closeReportMap() {
+    const mapContainer = document.getElementById('report-map-container');
+    const placeholder = document.getElementById('map-placeholder');
+    
+    mapContainer?.classList.add('hidden');
+    placeholder?.classList.remove('hidden');
+    
+    // Clean up radius circle when closing
+    if (radiusCircle && reportMap) {
+        reportMap.removeLayer(radiusCircle);
+        radiusCircle = null;
+    }
 }
 
-function initializeLocationMap() {
-    const mapElement = document.getElementById('location-map');
+function initializeReportMap() {
+    const mapElement = document.getElementById('report-leaflet-map');
     
     if (!mapElement) return;
     
     // Default to Dhaka, Bangladesh
-    locationMap = L.map('location-map').setView([23.8103, 90.4125], 12);
+    reportMap = L.map('report-leaflet-map').setView([23.8103, 90.4125], 12);
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19
-    }).addTo(locationMap);
+    }).addTo(reportMap);
 
     // Create draggable marker
-    locationMarker = L.marker([23.8103, 90.4125], { 
+    reportMarker = L.marker([23.8103, 90.4125], { 
         draggable: true 
-    }).addTo(locationMap);
+    }).addTo(reportMap);
     
-    locationMarker.bindPopup('📍 Drag me to your location!').openPopup();
+    reportMarker.bindPopup('📍 Drag me to your location!').openPopup();
     
     // Update location when marker is dragged
-    locationMarker.on('dragend', function(e) {
+    reportMarker.on('dragend', function(e) {
         const position = e.target.getLatLng();
-        updateMapLocation(position.lat, position.lng);
+        updateReportMapLocation(position.lat, position.lng);
     });
     
     // Update location when map is clicked
-    locationMap.on('click', function(e) {
+    reportMap.on('click', function(e) {
         const { lat, lng } = e.latlng;
-        locationMarker.setLatLng([lat, lng]);
-        updateMapLocation(lat, lng);
+        reportMarker.setLatLng([lat, lng]);
+        updateReportMapLocation(lat, lng);
     });
 }
 
-async function updateMapLocation(lat, lng) {
+async function updateReportMapLocation(lat, lng) {
     selectedLocationData.latitude = lat;
     selectedLocationData.longitude = lng;
     
     // Show coordinates immediately
-    const coordsElement = document.getElementById('map-selected-coords');
-    const addressElement = document.getElementById('map-selected-address');
-    const infoElement = document.getElementById('selected-location-info');
+    const coordsElement = document.getElementById('report-selected-coords');
+    const addressElement = document.getElementById('report-selected-address');
+    const infoElement = document.getElementById('report-location-info');
     
-    coordsElement.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-    addressElement.textContent = 'Getting address...';
-    infoElement.style.display = 'block';
+    if (coordsElement) coordsElement.textContent = `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    if (addressElement) addressElement.textContent = 'Getting address...';
+    infoElement?.classList.remove('hidden');
+    
+    // Update radius circle if in approximate mode
+    updateRadiusCircle();
+    updateAccuracyDisplay();
     
     // Geocode to get address
     try {
-        let address = null;
-        
-        // Try Nominatim
-        try {
-            const nominatimResponse = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-                {
-                    headers: {
-                        'Accept-Language': 'en',
-                        'User-Agent': 'SecureVoice Crime Reporting System'
-                    }
-                }
-            );
-            
-            if (nominatimResponse.ok) {
-                const nominatimData = await nominatimResponse.json();
-                if (nominatimData?.display_name) {
-                    address = nominatimData.display_name;
-                }
-            }
-        } catch (e) {
-            console.log('Nominatim failed:', e);
-        }
-        
-        // Fallback to OpenCage
-        if (!address) {
-            try {
-                const response = await fetch(
-                    `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=2caa6cd327404e8a8881300f50f2d21c`
-                );
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.results?.length > 0) {
-                        address = data.results[0].formatted;
-                    }
-                }
-            } catch (e) {
-                console.log('OpenCage failed:', e);
-            }
-        }
+        let address = await geocodeCoordinates(lat, lng);
         
         if (address) {
             selectedLocationData.address = address;
-            addressElement.textContent = address;
-            locationMarker.bindPopup(`📍 ${address}`).openPopup();
+            if (addressElement) addressElement.textContent = address;
+            reportMarker?.bindPopup(`📍 ${address}`).openPopup();
         } else {
             selectedLocationData.address = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-            addressElement.textContent = 'Could not get address';
+            if (addressElement) addressElement.textContent = 'Could not get address';
         }
     } catch (error) {
         console.error('Geocoding error:', error);
         selectedLocationData.address = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        addressElement.textContent = 'Error getting address';
+        if (addressElement) addressElement.textContent = 'Error getting address';
     }
 }
 
-function useCurrentLocationOnMap() {
+async function geocodeCoordinates(lat, lng) {
+    let address = null;
+    
+    // Try Nominatim first
+    try {
+        const nominatimResponse = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+            {
+                headers: {
+                    'Accept-Language': 'en',
+                    'User-Agent': 'SecureVoice Crime Reporting System'
+                }
+            }
+        );
+        
+        if (nominatimResponse.ok) {
+            const nominatimData = await nominatimResponse.json();
+            if (nominatimData?.display_name) {
+                address = nominatimData.display_name;
+            }
+        }
+    } catch (e) {
+        console.log('Nominatim failed:', e);
+    }
+    
+    // Fallback to OpenCage
+    if (!address) {
+        try {
+            const response = await fetch(
+                `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=2caa6cd327404e8a8881300f50f2d21c`
+            );
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.results?.length > 0) {
+                    address = data.results[0].formatted;
+                }
+            }
+        } catch (e) {
+            console.log('OpenCage failed:', e);
+        }
+    }
+    
+    return address;
+}
+
+function useCurrentLocationOnReportMap() {
     if (!navigator.geolocation) {
         alert('Geolocation is not supported by your browser');
         return;
     }
 
-    const btn = document.getElementById('use-current-location');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting location...';
-    btn.disabled = true;
+    const btn = document.getElementById('use-current-location-report');
+    const originalHTML = btn?.innerHTML;
+    if (btn) {
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting location...';
+        btn.disabled = true;
+    }
 
     navigator.geolocation.getCurrentPosition(
         (position) => {
             const { latitude, longitude } = position.coords;
             
-            if (locationMap && locationMarker) {
-                locationMap.setView([latitude, longitude], 16);
-                locationMarker.setLatLng([latitude, longitude]);
-                updateMapLocation(latitude, longitude);
+            if (reportMap && reportMarker) {
+                reportMap.setView([latitude, longitude], 16);
+                reportMarker.setLatLng([latitude, longitude]);
+                updateReportMapLocation(latitude, longitude);
             }
             
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+            if (btn) {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
         },
         (error) => {
             alert('Unable to get your location. Please select manually on the map.');
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+            if (btn) {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
         },
         {
             enableHighAccuracy: true,
@@ -937,60 +921,222 @@ function useCurrentLocationOnMap() {
     );
 }
 
-function confirmLocationSelection() {
+function confirmReportLocation() {
     if (!selectedLocationData.latitude || !selectedLocationData.longitude) {
         alert('Please select a location on the map first');
         return;
     }
     
     const locationInput = document.getElementById('incident-location');
-    locationInput.value = selectedLocationData.address;
+    const latInput = document.getElementById('incident-latitude');
+    const lngInput = document.getElementById('incident-longitude');
+    const radiusInput = document.getElementById('incident-accuracy-radius');
     
-    closeLocationMap();
+    if (locationInput) locationInput.value = selectedLocationData.address;
+    if (latInput) latInput.value = selectedLocationData.latitude;
+    if (lngInput) lngInput.value = selectedLocationData.longitude;
+    if (radiusInput && !selectedLocationData.isAccurate) {
+        radiusInput.value = selectedLocationData.accuracyRadius;
+    }
+    
+    closeReportMap();
 }
 
 async function handleReportSubmit(e) {
     e.preventDefault();
 
+    const submitBtn = document.getElementById('submit-report-btn');
+    const btnText = submitBtn?.querySelector('.btn-text');
+    const btnLoading = submitBtn?.querySelector('.btn-loading');
+
+    // Show loading state
+    if (btnText) btnText.classList.add('hidden');
+    if (btnLoading) btnLoading.classList.remove('hidden');
+    if (submitBtn) submitBtn.disabled = true;
+
     const formData = new FormData();
-    formData.append('complaint_type', document.getElementById('crime-type').value);
-    formData.append('incident_date', document.getElementById('incident-date').value);
-    formData.append('incident_time', document.getElementById('incident-time').value || '');
-    formData.append('location_address', document.getElementById('incident-location').value);
-    formData.append('description', document.getElementById('incident-description').value);
-    formData.append('witnesses', document.getElementById('witnesses').value || '');
-    formData.append('anonymous', document.getElementById('anonymous-report').checked);
+    
+    // Get form values
+    const complaintType = document.getElementById('crime-type').value;
+    const incidentDate = document.getElementById('incident-date').value;
+    const incidentTime = document.getElementById('incident-time').value;
+    const location = document.getElementById('incident-location').value;
+    const description = document.getElementById('incident-description').value;
+    const witnesses = document.getElementById('witnesses').value;
+    const anonymous = document.getElementById('anonymous-report').checked;
+
+    // Validation
+    if (!complaintType || !incidentDate || !location || !description) {
+        showReportError('Please fill in all required fields');
+        resetSubmitButton();
+        return;
+    }
+
+    // Combine date and time
+    let incidentDateTime = incidentDate;
+    if (incidentTime) {
+        incidentDateTime = `${incidentDate}T${incidentTime}`;
+    }
+
+    formData.append('complaintType', complaintType);
+    formData.append('incidentDate', incidentDateTime);
+    formData.append('location', location);
+    formData.append('description', description);
+    formData.append('witnesses', witnesses || '');
+    formData.append('anonymous', anonymous);
+
+    // Add location coordinates if available
+    const latInput = document.getElementById('incident-latitude');
+    const lngInput = document.getElementById('incident-longitude');
+    const radiusInput = document.getElementById('incident-accuracy-radius');
+    
+    if (latInput?.value && lngInput?.value) {
+        formData.append('latitude', latInput.value);
+        formData.append('longitude', lngInput.value);
+        
+        if (radiusInput?.value) {
+            formData.append('accuracyRadius', radiusInput.value);
+        }
+    }
 
     // Add files
-    const fileInput = document.getElementById('evidence-files');
-    if (fileInput?.files) {
-        Array.from(fileInput.files).forEach(file => {
+    if (selectedFiles.image && selectedFiles.image.length > 0) {
+        selectedFiles.image.forEach(file => {
             formData.append('evidence', file);
         });
     }
+    if (selectedFiles.video) {
+        formData.append('evidence', selectedFiles.video);
+    }
+    if (selectedFiles.audio) {
+        formData.append('evidence', selectedFiles.audio);
+    }
+
+    console.log('Submitting complaint with data:', {
+        complaintType,
+        incidentDate: incidentDateTime,
+        location,
+        hasCoordinates: !!(latInput?.value && lngInput?.value),
+        fileCount: (selectedFiles.image?.length || 0) + (selectedFiles.video ? 1 : 0) + (selectedFiles.audio ? 1 : 0)
+    });
 
     try {
-        const response = await fetch(`${API_BASE}/complaints`, {
+        const response = await fetch('/submit-complaint', {
             method: 'POST',
-            credentials: 'include',
-            body: formData
+            body: formData,
+            credentials: 'include'
         });
 
-        const result = await response.json();
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error('Please log in to submit a complaint');
+            }
+            throw new Error(`Server error: ${response.status}`);
+        }
 
-        if (result.success) {
-            alert('Report submitted successfully!');
+        const data = await response.json();
+        console.log('Response data:', data);
+
+        if (data.success) {
+            // Show success modal
+            showReportSuccess(data.complaintId);
+            
+            // Reset form
             document.getElementById('report-form').reset();
-            document.getElementById('uploaded-files').innerHTML = '';
-            switchTab('complaints');
+            selectedFiles = { image: [], video: null, audio: null };
+            selectedLocationData = {
+                latitude: null,
+                longitude: null,
+                address: '',
+                isAccurate: true,
+                accuracyRadius: null
+            };
+            resetUploadDisplays();
+            
+            // Reload complaints
             loadComplaints();
         } else {
-            alert(result.message || 'Failed to submit report');
+            showReportError(data.message || 'Error submitting complaint');
         }
     } catch (error) {
-        console.error('Submit error:', error);
-        alert('Failed to submit report. Please try again.');
+        console.error('Submission error:', error);
+        showReportError(error.message || 'Unable to submit complaint. Please check your connection and try again.');
+    } finally {
+        resetSubmitButton();
     }
+}
+
+function resetSubmitButton() {
+    const submitBtn = document.getElementById('submit-report-btn');
+    const btnText = submitBtn?.querySelector('.btn-text');
+    const btnLoading = submitBtn?.querySelector('.btn-loading');
+    
+    if (btnText) btnText.classList.remove('hidden');
+    if (btnLoading) btnLoading.classList.add('hidden');
+    if (submitBtn) submitBtn.disabled = false;
+}
+
+function showReportSuccess(complaintId) {
+    const modal = document.getElementById('report-success-modal');
+    const idDisplay = document.getElementById('complaint-id-display');
+    
+    if (idDisplay && complaintId) {
+        idDisplay.innerHTML = `
+            <strong>Complaint ID: #${complaintId}</strong>
+            <p>Please save this ID for future reference.</p>
+        `;
+    }
+    
+    modal?.classList.remove('hidden');
+    
+    // Close modal handlers
+    document.getElementById('close-success-modal')?.addEventListener('click', () => {
+        modal?.classList.add('hidden');
+        switchTab('dashboard');
+    });
+    
+    document.getElementById('view-complaints-btn')?.addEventListener('click', () => {
+        modal?.classList.add('hidden');
+        switchTab('complaints');
+    });
+}
+
+function showReportError(message) {
+    const modal = document.getElementById('report-error-modal');
+    const errorMessage = document.getElementById('error-message');
+    
+    if (errorMessage) errorMessage.textContent = message;
+    modal?.classList.remove('hidden');
+    
+    // Close modal handler
+    document.getElementById('close-error-modal')?.addEventListener('click', () => {
+        modal?.classList.add('hidden');
+    });
+}
+
+function resetUploadDisplays() {
+    const types = ['image', 'video', 'audio'];
+    types.forEach(type => {
+        const box = document.getElementById(`${type}-upload-box`);
+        if (box) {
+            box.classList.remove('file-selected');
+            const label = box.querySelector('label span');
+            if (label) {
+                const labels = {
+                    image: 'Upload Images<br><small>JPG, PNG, GIF</small>',
+                    video: 'Upload Video<br><small>MP4, MOV, AVI</small>',
+                    audio: 'Upload Audio<br><small>MP3, WAV, OGG</small>'
+                };
+                label.innerHTML = labels[type];
+            }
+        }
+    });
+    
+    // Clear uploaded files display
+    const uploadedFiles = document.getElementById('uploaded-files');
+    if (uploadedFiles) uploadedFiles.innerHTML = '';
 }
 
 // ===== FILTERS =====

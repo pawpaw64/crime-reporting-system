@@ -75,7 +75,10 @@ router.post('/update-profile', requireUser, userController.updateProfile);
 router.get('/get-user-data', requireUser, userController.getUserData);
 
 // ========== COMPLAINT ROUTES ==========
-router.get('/complain', requireUser, complaintController.serveComplaintForm);
+// Redirect /complain to profile page with new-report tab (requires authentication)
+router.get('/complain', requireUser, (req, res) => {
+    res.redirect('/profile?tab=new-report');
+});
 router.post('/submit-complaint', requireUser, upload.array('evidence', 10), complaintController.submitComplaint);
 router.post('/notify-admin', complaintController.notifyAdmin);
 router.get('/my-complaints', requireUser, complaintController.getUserComplaints);

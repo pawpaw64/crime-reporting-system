@@ -66,10 +66,10 @@
 
         <!-- Main Content -->
         <main class="main">
-            <!-- Back to Home Button -->
-            <a href="/" class="back-to-home">
-                <i class="fas fa-arrow-left"></i> Back to Home
-            </a>
+            <!-- Back to Dashboard Button -->
+            <button class="back-to-home" data-action="switchTab" data-tab="dashboard">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </button>
 
             <!-- Dashboard Tab -->
             <div class="tab-content active" id="dashboard">
@@ -123,11 +123,11 @@
                 <div class="quick-actions">
                     <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
                     <div class="actions-grid">
-                        <button class="action-btn" data-action="navigate" data-href="/complain">
+                        <button class="action-btn" data-action="switchTab" data-tab="new-report">
                             <i class="fas fa-plus-circle"></i>
                             <span>File New Complaint</span>
                         </button>
-                        <button class="action-btn emergency-btn" data-action="navigate" data-href="/complain">
+                        <button class="action-btn emergency-btn" data-action="switchTab" data-tab="new-report">
                             <i class="fas fa-exclamation-triangle"></i>
                             <span>Emergency Complaint</span>
                         </button>
@@ -324,35 +324,37 @@
             <!-- New Report Tab -->
             <div class="tab-content" id="new-report">
                 <div class="header">
-                    <h1><i class="fas fa-plus-circle"></i> File New Report</h1>
+                    <h1><i class="fas fa-plus-circle"></i> File New Complaint</h1>
+                    <p class="subtitle">Please provide details about the incident you wish to report.</p>
                 </div>
 
                 <div class="card report-form-card">
-                    <form id="report-form">
+                    <form id="report-form" enctype="multipart/form-data">
                         <!-- Crime Type -->
                         <div class="form-group">
-                            <label for="crime-type"><i class="fas fa-exclamation-triangle"></i> Crime Type *</label>
+                            <label for="crime-type"><i class="fas fa-exclamation-triangle"></i> Complaint Type *</label>
                             <select id="crime-type" required>
-                                <option value="">Select Crime Type</option>
-                                <option value="theft">Theft / Robbery</option>
-                                <option value="assault">Assault / Violence</option>
-                                <option value="fraud">Fraud / Scam</option>
-                                <option value="harassment">Harassment</option>
-                                <option value="cybercrime">Cybercrime</option>
-                                <option value="domestic">Domestic Violence</option>
-                                <option value="missing">Missing Person</option>
-                                <option value="other">Other</option>
+                                <option value="" disabled selected>Select complaint type</option>
+                                <option value="Theft">Theft</option>
+                                <option value="Harassment">Harassment</option>
+                                <option value="Threat">Threat</option>
+                                <option value="Assault">Assault</option>
+                                <option value="Fraud">Fraud</option>
+                                <option value="Cybercrime">Cybercrime</option>
+                                <option value="Domestic Violence">Domestic Violence</option>
+                                <option value="Missing Person">Missing Person</option>
+                                <option value="Other">Other</option>
                             </select>
                         </div>
 
                         <!-- Incident Date & Time -->
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="incident-date"><i class="fas fa-calendar"></i> Incident Date *</label>
+                                <label for="incident-date"><i class="fas fa-calendar"></i> Date of Incident *</label>
                                 <input type="date" id="incident-date" required>
                             </div>
                             <div class="form-group">
-                                <label for="incident-time"><i class="fas fa-clock"></i> Incident Time</label>
+                                <label for="incident-time"><i class="fas fa-clock"></i> Time of Incident</label>
                                 <input type="time" id="incident-time">
                             </div>
                         </div>
@@ -361,30 +363,112 @@
                         <div class="form-group">
                             <label for="incident-location"><i class="fas fa-map-marker-alt"></i> Location *</label>
                             <div class="location-input-wrapper">
-                                <input type="text" id="incident-location" placeholder="Enter incident location or use map" required readonly>
-                                <button type="button" class="location-btn" id="get-location" title="Get Current Location">
-                                    <i class="fas fa-crosshairs"></i>
+                                <input type="text" id="incident-location" placeholder="Enter address or location details" required>
+                                <button type="button" class="location-btn map-btn" id="open-map" title="Use Map">
+                                    <i class="fas fa-map-marker-alt"></i> Use Map
                                 </button>
-                                <button type="button" class="location-btn" id="open-map" title="Select on Map">
-                                    <i class="fas fa-map"></i>
+                            </div>
+                            <input type="hidden" id="incident-latitude" name="latitude" />
+                            <input type="hidden" id="incident-longitude" name="longitude" />
+                            <input type="hidden" id="incident-accuracy-radius" name="accuracyRadius" />
+                        </div>
+
+                        <!-- Enhanced Map Container -->
+                        <div id="report-map-container" class="map-container hidden">
+                            <div class="location-accuracy">
+                                <h4><i class="fas fa-crosshairs"></i> Select Location Accuracy</h4>
+                                <div class="accuracy-options">
+                                    <label class="accuracy-option">
+                                        <input type="radio" name="locationAccuracy" value="accurate" checked>
+                                        <span class="accuracy-label">
+                                            <strong><i class="fas fa-crosshairs"></i> Accurate Location</strong>
+                                            <small>Exact incident location</small>
+                                        </span>
+                                    </label>
+                                    <label class="accuracy-option">
+                                        <input type="radio" name="locationAccuracy" value="approximate">
+                                        <span class="accuracy-label">
+                                            <strong><i class="fas fa-globe"></i> Approximate Location</strong>
+                                            <small>General area (privacy protection)</small>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Map Display -->
+                            <div class="map-display">
+                                <div class="map-instructions">
+                                    <p><i class="fas fa-info-circle"></i> Click on the map or drag the marker to select the incident location</p>
+                                    <button type="button" id="use-current-location-report" class="current-location-btn">
+                                        <i class="fas fa-location-arrow"></i> Use My Current Location
+                                    </button>
+                                </div>
+                                <div id="report-leaflet-map" class="leaflet-map" style="height: 350px; border-radius: 8px;"></div>
+                                
+                                <!-- Radius visualization notice -->
+                                <div id="radius-notice" class="radius-notice hidden">
+                                    <i class="fas fa-shield-alt"></i> <strong>Privacy Area Shown:</strong> The orange circle shows the 100m approximate area that will be associated with your report. Your exact location remains private.
+                                </div>
+                            </div>
+                            
+                            <!-- Selected Location Info -->
+                            <div id="report-location-info" class="location-info hidden">
+                                <h5><i class="fas fa-map-pin"></i> Selected Location:</h5>
+                                <p id="report-selected-address">No location selected</p>
+                                <p id="report-selected-coords" class="coordinates">Coordinates: Not set</p>
+                                <p id="report-accuracy-info" class="accuracy-info hidden">Privacy radius: 100m</p>
+                            </div>
+                            
+                            <div class="map-actions">
+                                <button type="button" id="confirm-location-report" class="confirm-btn">
+                                    <i class="fas fa-check"></i> Confirm Location
                                 </button>
+                                <button type="button" id="cancel-location-report" class="cancel-btn">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Map Placeholder -->
+                        <div class="map-placeholder" id="map-placeholder">
+                            <div class="map-placeholder-content">
+                                <i class="fas fa-map-marked-alt"></i>
+                                <p>Click "Use Map" to open the map and pin your location</p>
+                                <small>You can drag the marker or click anywhere on the map to set the location</small>
                             </div>
                         </div>
 
                         <!-- Description -->
                         <div class="form-group">
                             <label for="incident-description"><i class="fas fa-align-left"></i> Description *</label>
-                            <textarea id="incident-description" rows="5" placeholder="Provide detailed description of the incident..." required></textarea>
+                            <textarea id="incident-description" rows="5" placeholder="Please describe the incident in detail..." required></textarea>
                         </div>
 
                         <!-- Evidence Upload -->
                         <div class="form-group">
                             <label><i class="fas fa-paperclip"></i> Evidence (Optional)</label>
-                            <div class="file-upload-area" id="file-upload-area">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <p>Drag & drop files here or click to browse</p>
-                                <span>Supports: Images, Videos, Documents (Max 10MB each)</span>
-                                <input type="file" id="evidence-files" multiple accept="image/*,video/*,.pdf,.doc,.docx" hidden>
+                            <div class="evidence-upload-grid">
+                                <div class="upload-box" id="image-upload-box">
+                                    <input type="file" accept="image/*" hidden id="image-upload" multiple />
+                                    <label for="image-upload">
+                                        <i class="fas fa-image"></i>
+                                        <span>Upload Images<br><small>JPG, PNG, GIF</small></span>
+                                    </label>
+                                </div>
+                                <div class="upload-box" id="video-upload-box">
+                                    <input type="file" accept="video/*" hidden id="video-upload" />
+                                    <label for="video-upload">
+                                        <i class="fas fa-video"></i>
+                                        <span>Upload Video<br><small>MP4, MOV, AVI</small></span>
+                                    </label>
+                                </div>
+                                <div class="upload-box" id="audio-upload-box">
+                                    <input type="file" accept="audio/*" hidden id="audio-upload" />
+                                    <label for="audio-upload">
+                                        <i class="fas fa-microphone"></i>
+                                        <span>Upload Audio<br><small>MP3, WAV, OGG</small></span>
+                                    </label>
+                                </div>
                             </div>
                             <div class="uploaded-files" id="uploaded-files"></div>
                         </div>
@@ -407,14 +491,46 @@
 
                         <!-- Submit -->
                         <div class="form-actions">
-                            <button type="button" class="outline-btn" data-action="switchTab" data-tab="dashboard">
+                            <button type="button" class="outline-btn cancel-report-btn" data-action="switchTab" data-tab="dashboard">
                                 <i class="fas fa-times"></i> Cancel
                             </button>
-                            <button type="submit" class="submit-btn">
-                                <i class="fas fa-paper-plane"></i> Submit Report
+                            <button type="submit" class="submit-btn" id="submit-report-btn">
+                                <span class="btn-text"><i class="fas fa-paper-plane"></i> Submit Report</span>
+                                <span class="btn-loading hidden"><i class="fas fa-spinner fa-spin"></i> Submitting...</span>
                             </button>
                         </div>
                     </form>
+                </div>
+
+                <!-- Success Modal -->
+                <div id="report-success-modal" class="report-modal hidden">
+                    <div class="report-modal-content">
+                        <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+                        <h3>Complaint Submitted Successfully!</h3>
+                        <p>Your complaint has been registered in our system.</p>
+                        <div id="complaint-id-display" class="complaint-id-display"></div>
+                        <p class="status-note">You can track the status of your complaint from your dashboard.</p>
+                        <div class="modal-buttons">
+                            <button id="view-complaints-btn" class="view-btn" data-action="switchTab" data-tab="complaints">
+                                <i class="fas fa-list"></i> View My Complaints
+                            </button>
+                            <button id="close-success-modal" class="close-modal-btn">
+                                <i class="fas fa-times"></i> Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Modal -->
+                <div id="report-error-modal" class="report-modal hidden">
+                    <div class="report-modal-content error-modal">
+                        <div class="error-icon"><i class="fas fa-exclamation-circle"></i></div>
+                        <h3>Submission Failed</h3>
+                        <p id="error-message">An error occurred while submitting your complaint.</p>
+                        <button id="close-error-modal" class="close-modal-btn">
+                            <i class="fas fa-redo"></i> Try Again
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -497,38 +613,7 @@
         </div>
     </div>
 
-    <!-- Location Map Modal -->
-    <div class="modal-overlay" id="location-map-modal" style="display: none;">
-        <div class="modal modal-large">
-            <div class="modal-header">
-                <h2><i class="fas fa-map-marker-alt"></i> Select Location on Map</h2>
-                <button class="modal-close" id="close-map-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div style="margin-bottom: 15px;">
-                    <button type="button" class="primary-btn" id="use-current-location" style="margin-right: 10px;">
-                        <i class="fas fa-crosshairs"></i> Use My Current Location
-                    </button>
-                    <p style="color: #666; font-size: 0.9rem; margin-top: 10px;">
-                        <i class="fas fa-info-circle"></i> Click on the map or drag the marker to select location
-                    </p>
-                </div>
-                <div id="location-map" style="height: 400px; width: 100%; border-radius: 8px; overflow: hidden;"></div>
-                <div id="selected-location-info" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none;">
-                    <p style="margin: 5px 0;"><strong>Address:</strong> <span id="map-selected-address">-</span></p>
-                    <p style="margin: 5px 0;"><strong>Coordinates:</strong> <span id="map-selected-coords">-</span></p>
-                </div>
-                <div class="modal-actions" style="margin-top: 20px;">
-                    <button type="button" class="outline-btn" id="cancel-map-selection">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                    <button type="button" class="primary-btn" id="confirm-map-location">
-                        <i class="fas fa-check"></i> Confirm Location
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Settings Modal -->
     <div class="settings-modal" id="settings-modal">
