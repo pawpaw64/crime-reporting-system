@@ -2083,3 +2083,27 @@ button:hover, .edit-btn:hover, .outline-btn:hover, .outline-btn2:hover {
         flex-direction: column;
     }
 }
+
+/* Notifications Header with Mark All Read */
+.notifications-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--light-grey);
+}
+
+.notifications-header .btn-sm {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+}
+
+/* Clickable notification cards */
+.notification-card[data-complaint-id] {
+    cursor: pointer;
+}
+
+.notification-card[data-complaint-id]:hover {
+    transform: translateX(5px);
+    border-left: 4px solid var(--deep-teal);
+}

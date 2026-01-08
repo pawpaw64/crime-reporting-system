@@ -289,3 +289,101 @@ exports.getDashboardStats = async (req, res) => {
         res.status(500).json({ success: false, message: "Error fetching stats" });
     }
 };
+
+// Get All User Notifications (from all complaints)
+exports.getAllUserNotifications = async (req, res) => {
+    try {
+        if (!req.session.username) {
+            return res.status(401).json({ success: false, message: "Please log in" });
+        }
+
+        const username = req.session.username;
+
+        // Get status change notifications from complaint_notifications table
+        const [statusNotifications] = await pool.query(
+            `SELECT 
+                cn.notification_id as id,
+                cn.complaint_id,
+                cn.message,
+                cn.type,
+                cn.is_read,
+                cn.created_at,
+                c.complaint_type
+             FROM complaint_notifications cn
+             JOIN complaint c ON cn.complaint_id = c.complaint_id
+             WHERE c.username = ?
+             ORDER BY cn.created_at DESC
+             LIMIT 20`,
+            [username]
+        );
+
+        // Get unread chat messages from admins
+        const [chatNotifications] = await pool.query(
+            `SELECT 
+                cc.chat_id as id,
+                cc.complaint_id,
+                CONCAT('New message from admin: ', SUBSTRING(cc.message, 1, 50), '...') as message,
+                'admin_message' as type,
+                cc.is_read,
+                cc.sent_at as created_at,
+                c.complaint_type
+             FROM complaint_chat cc
+             JOIN complaint c ON cc.complaint_id = c.complaint_id
+             WHERE c.username = ? AND cc.sender_type = 'admin'
+             ORDER BY cc.sent_at DESC
+             LIMIT 10`,
+            [username]
+        );
+
+        // Combine and sort all notifications
+        const allNotifications = [...statusNotifications, ...chatNotifications]
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 25);
+
+        // Get unread count
+        const unreadCount = allNotifications.filter(n => !n.is_read).length;
+
+        res.json({
+            success: true,
+            notifications: allNotifications,
+            unreadCount: unreadCount
+        });
+    } catch (err) {
+        console.error("Get all notifications error:", err);
+        res.status(500).json({ success: false, message: "Error fetching notifications" });
+    }
+};
+
+// Mark All User Notifications as Read
+exports.markAllUserNotificationsRead = async (req, res) => {
+    try {
+        if (!req.session.username) {
+            return res.status(401).json({ success: false, message: "Please log in" });
+        }
+
+        const username = req.session.username;
+
+        // Mark status notifications as read
+        await pool.query(
+            `UPDATE complaint_notifications cn
+             JOIN complaint c ON cn.complaint_id = c.complaint_id
+             SET cn.is_read = 1
+             WHERE c.username = ? AND cn.is_read = 0`,
+            [username]
+        );
+
+        // Mark chat messages as read
+        await pool.query(
+            `UPDATE complaint_chat cc
+             JOIN complaint c ON cc.complaint_id = c.complaint_id
+             SET cc.is_read = 1
+             WHERE c.username = ? AND cc.sender_type = 'admin' AND cc.is_read = 0`,
+            [username]
+        );
+
+        res.json({ success: true, message: "All notifications marked as read" });
+    } catch (err) {
+        console.error("Mark all notifications error:", err);
+        res.status(500).json({ success: false, message: "Error updating notifications" });
+    }
+};

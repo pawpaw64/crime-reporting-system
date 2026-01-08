@@ -1,7 +1,22 @@
 // SecureVoice User Dashboard JavaScript
 // Handles all dashboard functionality including profile, complaints, and notifications
 
-const API_BASE = '/api';
+// Determine API base URL dynamically
+function getApiBase() {
+    const hostname = window.location.hostname;
+    const currentPort = window.location.port;
+    const backendPorts = ['3000', '3001', '5000'];
+    
+    // If running from backend server, use relative path
+    if (backendPorts.includes(currentPort)) {
+        return '/api';
+    }
+    
+    // If running from Live Server or other dev servers, connect to backend on port 3000
+    return `http://${hostname}:3000/api`;
+}
+
+const API_BASE = getApiBase();
 
 // Global state
 let currentUser = null;
@@ -288,35 +303,75 @@ function renderEmptyComplaints() {
 
 // ===== NOTIFICATIONS =====
 async function loadNotifications() {
-    // For now, show placeholder notifications
-    // This can be connected to a real notifications API later
     const container = document.getElementById('notifications-list');
     
-    notifications = [
-        {
-            id: 1,
+    try {
+        const response = await fetch(`${API_BASE}/user-notifications`, {
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch notifications');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            notifications = data.notifications.map(n => ({
+                id: n.id,
+                type: getNotificationType(n.type),
+                title: getNotificationTitle(n.type, n.complaint_type, n.complaint_id),
+                message: n.message,
+                time: new Date(n.created_at),
+                read: Boolean(n.is_read),
+                complaintId: n.complaint_id
+            }));
+        } else {
+            notifications = [];
+        }
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        // Add default welcome notification if no notifications exist
+        notifications = [{
+            id: 0,
             type: 'info',
             title: 'Welcome to SecureVoice',
-            message: 'Thank you for registering. You can now file crime reports securely.',
+            message: 'Thank you for using our platform. File reports securely and track their status here.',
             time: new Date(),
-            read: false
-        }
-    ];
-
-    if (complaints.length > 0) {
-        const latestComplaint = complaints[0];
-        notifications.unshift({
-            id: 2,
-            type: latestComplaint.status === 'resolved' ? 'success' : 'info',
-            title: `Report Status: ${capitalizeFirst(latestComplaint.status)}`,
-            message: `Your ${latestComplaint.complaint_type} report is currently ${latestComplaint.status}.`,
-            time: new Date(latestComplaint.created_at),
             read: true
-        });
+        }];
     }
 
     renderNotifications();
     updateNotificationCount();
+}
+
+function getNotificationType(type) {
+    switch (type) {
+        case 'status_change':
+            return 'info';
+        case 'admin_message':
+        case 'admin_comment':
+            return 'warning';
+        case 'resolved':
+            return 'success';
+        default:
+            return 'info';
+    }
+}
+
+function getNotificationTitle(type, complaintType, complaintId) {
+    switch (type) {
+        case 'status_change':
+            return `Report #${complaintId} Status Update`;
+        case 'admin_message':
+        case 'admin_comment':
+            return `New Message - Report #${complaintId}`;
+        case 'resolved':
+            return `Report #${complaintId} Resolved`;
+        default:
+            return `Update for ${complaintType || 'Report'} #${complaintId}`;
+    }
 }
 
 function renderNotifications() {
@@ -333,18 +388,56 @@ function renderNotifications() {
         return;
     }
 
-    container.innerHTML = notifications.map(n => `
-        <div class="notification-card ${n.read ? '' : 'unread'}">
-            <div class="notification-card-icon ${n.type}">
-                <i class="fas fa-${n.type === 'success' ? 'check' : n.type === 'warning' ? 'exclamation' : 'info'}"></i>
-            </div>
-            <div class="notification-card-content">
-                <h4>${n.title}</h4>
-                <p>${n.message}</p>
-                <span class="notification-card-time">${formatTimeAgo(n.time)}</span>
-            </div>
+    container.innerHTML = `
+        <div class="notifications-header">
+            <button class="btn btn-sm btn-secondary" id="mark-all-read-btn">
+                <i class="fas fa-check-double"></i> Mark all as read
+            </button>
         </div>
-    `).join('');
+        ${notifications.map(n => `
+            <div class="notification-card ${n.read ? '' : 'unread'}" data-id="${n.id}" ${n.complaintId ? `data-complaint-id="${n.complaintId}"` : ''}>
+                <div class="notification-card-icon ${n.type}">
+                    <i class="fas fa-${n.type === 'success' ? 'check' : n.type === 'warning' ? 'comment' : 'info'}"></i>
+                </div>
+                <div class="notification-card-content">
+                    <h4>${n.title}</h4>
+                    <p>${n.message}</p>
+                    <span class="notification-card-time">${formatTimeAgo(n.time)}</span>
+                </div>
+            </div>
+        `).join('')}
+    `;
+
+    // Add event listener for mark all as read
+    document.getElementById('mark-all-read-btn')?.addEventListener('click', markAllNotificationsRead);
+    
+    // Add click handlers for notifications to navigate to complaint
+    document.querySelectorAll('.notification-card[data-complaint-id]').forEach(card => {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', () => {
+            const complaintId = card.dataset.complaintId;
+            if (complaintId) {
+                viewComplaint(parseInt(complaintId));
+            }
+        });
+    });
+}
+
+async function markAllNotificationsRead() {
+    try {
+        const response = await fetch(`${API_BASE}/mark-all-notifications-read`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            notifications.forEach(n => n.read = true);
+            renderNotifications();
+            updateNotificationCount();
+        }
+    } catch (error) {
+        console.error('Error marking notifications as read:', error);
+    }
 }
 
 function updateNotificationCount() {

@@ -77,6 +77,8 @@ router.get('/get-admin-dashboard-stats', adminController.getDashboardStats);
 router.get('/profile', requireUser, userController.getProfile);
 router.post('/update-profile', requireUser, userController.updateProfile);
 router.get('/get-user-data', requireUser, userController.getUserData);
+router.get('/user-notifications', requireUser, userController.getAllUserNotifications);
+router.post('/mark-all-notifications-read', requireUser, userController.markAllUserNotificationsRead);
 
 // ========== COMPLAINT ROUTES ==========
 // Redirect /complain to profile page with new-report tab (requires authentication)

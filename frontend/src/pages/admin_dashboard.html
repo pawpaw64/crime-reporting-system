@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureVoice | Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="stylesheet" href="/src/css/adminDashboard.css">
+    <script src="/src/js/admin-dashboard-protection.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <img src="/images/auth/secureVOICE.png" alt="SecureVoice" class="logo-img">
+                </div>
+            </div>
+
+            <div class="admin-profile">
+                <div class="admin-avatar">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h2 id="admin-fullname">Loading...</h2>
+                <span class="district-badge" id="admin-district">
+                    <i class="fas fa-map-marker-alt"></i> <span id="district-name">Loading...</span>
+                </span>
+            </div>
+
+            <nav class="nav-links">
+                <button class="tab-btn active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="tab-btn" data-tab="profile">
+                    <i class="fas fa-user"></i>
+                    <span>My Profile</span>
+                </button>
+                <button class="tab-btn" data-tab="complaints">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Complaints</span>
+                </button>
+                <button class="tab-btn" data-tab="cases">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Case Analytics</span>
+                </button>
+                <button class="tab-btn" data-tab="users">
+                    <i class="fas fa-users"></i>
+                    <span>Users</span>
+                </button>
+                <button class="tab-btn" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </button>
+            </nav>
+
+            <div class="bottom-nav">
+                <a href="/homepage" class="home-btn">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <button class="logout-btn" id="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Dashboard Tab -->
+            <div class="tab-content active" id="dashboard">
+                <div class="header">
+                    <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+                    <div class="header-actions">
+                        <span class="welcome-text">Welcome, <span id="welcome-name">Admin</span>!</span>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon total">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-cases">0</h3>
+                            <p>Total Cases</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pending">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="pending-cases">0</h3>
+                            <p>Pending</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon verifying">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="verifying-cases">0</h3>
+                            <p>Verifying</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon investigating">
+                            <i class="fas fa-user-secret"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="investigating-cases">0</h3>
+                            <p>Investigating</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon resolved">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="resolved-cases">0</h3>
+                            <p>Resolved</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Complaints -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-history"></i> Recent Complaints</h3>
+                        <button class="btn btn-outline" data-action="switchTab" data-tab="complaints">View All</button>
+                    </div>
+                    <div id="recent-complaints">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i> Loading recent complaints...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div class="tab-content" id="profile">
+                <div class="header">
+                    <h1><i class="fas fa-user"></i> Admin Profile</h1>
+                    <button class="btn btn-primary" id="edit-profile-btn">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                </div>
+
+                <div class="card profile-card">
+                    <div class="profile-avatar-large">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="profile-info">
+                        <h2 id="profile-fullname">Loading...</h2>
+                        <p class="username">@<span id="profile-username">username</span></p>
+                        <span class="district-badge">
+                            <i class="fas fa-map-marker-alt"></i> <span id="profile-district">District</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-info-circle"></i> Profile Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Full Name</label>
+                            <p id="info-fullname">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Username</label>
+                            <p id="info-username">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Email</label>
+                            <p id="info-email">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Phone</label>
+                            <p id="info-phone">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Designation</label>
+                            <p id="info-designation">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Official ID</label>
+                            <p id="info-official-id">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>District</label>
+                            <p id="info-district">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Date of Birth</label>
+                            <p id="info-dob">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Account Created</label>
+                            <p id="info-created">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Complaints Tab -->
+            <div class="tab-content" id="complaints">
+                <div class="header">
+                    <h1><i class="fas fa-file-alt"></i> Complaint Reports</h1>
+                    <span id="complaints-count">Total: 0 complaints</span>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label><i class="fas fa-filter"></i> Status</label>
+                            <select class="filter-input" id="filter-status">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="verifying">Verifying</option>
+                                <option value="investigating">Investigating</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label><i class="fas fa-search"></i> Search</label>
+                            <input type="text" class="filter-input" id="filter-search" placeholder="Search by user or type...">
+                        </div>
+                        <div class="filter-group">
+                            <button class="btn btn-primary" onclick="applyFilters()">
+                                <i class="fas fa-search"></i> Apply
+                            </button>
+                            <button class="btn btn-outline" onclick="clearFilters()">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-container" id="complaints-table-container">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i> Loading complaints...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cases Tab -->
+            <div class="tab-content" id="cases">
+                <div class="header">
+                    <h1><i class="fas fa-briefcase"></i> Case Analytics</h1>
+                    <button class="btn btn-primary" onclick="refreshCases()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+
+                <!-- Analytics Stats (duplicate for this tab) -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon total">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="cases-total">0</h3>
+                            <p>Total Cases</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pending">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="cases-pending">0</h3>
+                            <p>Pending</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon verifying">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="cases-verifying">0</h3>
+                            <p>Verifying</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon investigating">
+                            <i class="fas fa-user-secret"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="cases-investigating">0</h3>
+                            <p>Investigating</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon resolved">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="cases-resolved">0</h3>
+                            <p>Resolved</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label><i class="fas fa-user"></i> Complainant</label>
+                            <input type="text" class="filter-input" id="case-filter-user" placeholder="Search by name...">
+                        </div>
+                        <div class="filter-group">
+                            <label><i class="fas fa-calendar"></i> From Date</label>
+                            <input type="date" class="filter-input" id="case-filter-from">
+                        </div>
+                        <div class="filter-group">
+                            <label><i class="fas fa-calendar"></i> To Date</label>
+                            <input type="date" class="filter-input" id="case-filter-to">
+                        </div>
+                        <div class="filter-group">
+                            <button class="btn btn-primary" onclick="applyCaseFilters()">
+                                <i class="fas fa-search"></i> Apply
+                            </button>
+                            <button class="btn btn-outline" onclick="clearCaseFilters()">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-container" id="cases-table-container">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i> Loading cases...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div class="tab-content" id="users">
+                <div class="header">
+                    <h1><i class="fas fa-users"></i> Complainant Users</h1>
+                    <span id="users-count">Total: 0 users</span>
+                </div>
+
+                <div class="card">
+                    <div class="table-container" id="users-table-container">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i> Loading users...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-content" id="settings">
+                <div class="header">
+                    <h1><i class="fas fa-cog"></i> Settings</h1>
+                </div>
+
+                <div class="card">
+                    <div class="settings-group">
+                        <h4><i class="fas fa-palette"></i> Appearance</h4>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h5>Dark Mode</h5>
+                                <p>Switch between light and dark themes</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="darkModeToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h4><i class="fas fa-bell"></i> Notifications</h4>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h5>Email Notifications</h5>
+                                <p>Receive email alerts for new complaints</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailNotificationsToggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Status Update Modal -->
+    <div class="modal-overlay" id="statusModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Update Complaint Status</h3>
+                <button class="modal-close" onclick="closeModal('statusModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Complaint ID: <strong id="modal-complaint-id"></strong></p>
+                <p>Current Status: <strong id="modal-current-status"></strong></p>
+                <div class="filter-group" style="margin-top: 15px;">
+                    <label>New Status</label>
+                    <select class="filter-input" id="modal-new-status">
+                        <option value="pending">Pending</option>
+                        <option value="verifying">Verifying</option>
+                        <option value="investigating">Investigating</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('statusModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="updateComplaintStatus()">Update Status</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evidence Modal -->
+    <div class="modal-overlay" id="evidenceModal">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>Evidence Viewer - Complaint #<span id="evidence-complaint-id"></span></h3>
+                <button class="modal-close" onclick="closeModal('evidenceModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="evidence-content">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i> Loading evidence...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description Modal -->
+    <div class="modal-overlay" id="descriptionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Complaint Description</h3>
+                <button class="modal-close" onclick="closeModal('descriptionModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Complaint ID: <strong id="desc-complaint-id"></strong></p>
+                <div style="background: var(--light-grey); padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <p id="desc-content"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('descriptionModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div class="modal-overlay chat-modal" id="chatModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <h3>Chat with User</h3>
+                    <small>Complaint #<span id="chat-complaint-id"></span></small>
+                </div>
+                <button class="modal-close" onclick="closeModal('chatModal')">&times;</button>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i> Loading messages...
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <textarea class="chat-input" id="chat-input" placeholder="Type your message..." rows="1"></textarea>
+                <button class="chat-send" id="chat-send">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal-overlay" id="editProfileModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Edit Profile</h3>
+                <button class="modal-close" onclick="closeModal('editProfileModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-profile-form">
+                    <div class="filter-group" style="margin-bottom: 15px;">
+                        <label>Full Name</label>
+                        <input type="text" class="filter-input" id="edit-fullname">
+                    </div>
+                    <div class="filter-group" style="margin-bottom: 15px;">
+                        <label>Date of Birth</label>
+                        <input type="date" class="filter-input" id="edit-dob">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('editProfileModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/src/js/admin-dashboard-new.js"></script>
+</body>
+</html>

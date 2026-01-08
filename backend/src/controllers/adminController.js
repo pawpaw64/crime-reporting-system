@@ -45,8 +45,8 @@ exports.getAdminDashboard = async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        // Serve the admin dashboard HTML file
-        res.sendFile(path.join(__dirname, '../../../frontend/src/pages/admin_page.html'));
+        // Serve the new admin dashboard HTML file
+        res.sendFile(path.join(__dirname, '../../../frontend/src/pages/admin_dashboard.html'));
     } catch (err) {
         console.error("Dashboard error:", err);
         res.status(500).send("Error loading dashboard");
@@ -389,26 +389,24 @@ exports.updateComplaintStatus = async (req, res) => {
                 [complaintIdInt, adminUsername, newStatus, complaintIdInt]
             );
 
-            await connection.commit();
-
-            // Log status update action
-            await logAdminAction(adminUsername, 'status_update', {
-                result: 'success',
-                actionDetails: JSON.stringify({ oldStatus: results[0].status, newStatus }),
-                complaintId: complaintIdInt,
-                targetUsername: results[0].username,
-                ipAddress: req.ip
-            });
-
-            // Create notification
+            // Create notification for user
             const notificationMessage = `Your complaint #${complaintIdInt} status has been updated to: ${newStatus.toUpperCase()}`;
             await connection.query(
-                'INSERT INTO complaint_notifications (complaint_id, message, type, created_at) VALUES (?, ?, ?, NOW())',
+                'INSERT INTO complaint_notifications (complaint_id, message, type, is_read, created_at) VALUES (?, ?, ?, 0, NOW())',
                 [complaintIdInt, notificationMessage, 'status_change']
             );
 
             await connection.commit();
             connection.release();
+
+            // Log status update action (after commit to not block transaction)
+            await logAdminAction(adminUsername, 'status_update', {
+                result: 'success',
+                actionDetails: JSON.stringify({ newStatus }),
+                complaintId: complaintIdInt,
+                targetUsername: results[0].username,
+                ipAddress: req.ip
+            });
 
             res.json({ success: true, message: 'Complaint status updated successfully' });
         } catch (err) {
