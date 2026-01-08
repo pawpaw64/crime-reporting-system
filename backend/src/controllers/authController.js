@@ -35,14 +35,29 @@ exports.adminRegistrationRequest = async (req, res) => {
     try {
         const { 
             username, email, fullName, phone, designation, official_id, 
-            district_name, documents 
+            district_name, password, confirmPassword 
         } = req.body;
 
         // Validation
-        if (!username || !email || !fullName || !phone || !district_name || !designation) {
+        if (!username || !email || !fullName || !phone || !district_name || !designation || !password) {
             return res.status(400).json({
                 success: false,
                 message: "All required fields must be provided"
+            });
+        }
+
+        // Password validation
+        if (password.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 8 characters"
+            });
+        }
+
+        if (password !== confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Passwords do not match"
             });
         }
 
@@ -59,13 +74,19 @@ exports.adminRegistrationRequest = async (req, res) => {
             });
         }
 
-        // Insert admin (core identity data)
+        // Hash password
+        const hashedPassword = await hashPassword(password);
+
+        // Generate email verification token
+        const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+
+        // Insert admin (core identity data) with hashed password
         const [result] = await pool.query(
             `INSERT INTO admins(
                 username, email, fullName, phone, designation, official_id, 
-                district_name, is_active
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
-            [username, email, fullName, phone, designation, official_id, district_name]
+                district_name, password, is_active
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+            [username, email, fullName, phone, designation, official_id, district_name, hashedPassword]
         );
 
         // Insert into admin_approval_workflow table (workflow data)
@@ -75,6 +96,48 @@ exports.adminRegistrationRequest = async (req, res) => {
             ) VALUES (?, 'pending', NOW())`,
             [username]
         );
+
+        // Insert email verification token
+        await pool.query(
+            `INSERT INTO admin_verification_tokens 
+            (admin_username, token_type, token_value, expires_at, is_used)
+            VALUES (?, 'email_verification', ?, DATE_ADD(NOW(), INTERVAL 7 DAY), 0)`,
+            [username, emailVerificationToken]
+        );
+
+        // Send verification email to admin
+        const verifyLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin-verify?token=${emailVerificationToken}`;
+        
+        try {
+            await sendEmail(
+                email,
+                'SecureVoice - Verify Your Email Address',
+                `
+                <h2>Welcome to SecureVoice!</h2>
+                <p>Dear ${fullName},</p>
+                <p>Thank you for registering as a District Admin. Please verify your email address by clicking the button below:</p>
+                
+                <a href="${verifyLink}" style="display: inline-block; margin: 20px 0; padding: 12px 24px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                    Verify Email Address
+                </a>
+                
+                <p>Or copy and paste this link in your browser:</p>
+                <p style="word-break: break-all; color: #666;">${verifyLink}</p>
+                
+                <hr style="margin: 20px 0;">
+                <p><strong>What happens next?</strong></p>
+                <ol>
+                    <li>Verify your email (click the button above)</li>
+                    <li>Wait for Super Admin approval (2-3 business days)</li>
+                    <li>Once approved, you can login with your credentials</li>
+                </ol>
+                
+                <p style="color: #666; font-size: 12px;">This link will expire in 7 days. If you did not create this account, please ignore this email.</p>
+                `
+            );
+        } catch (emailErr) {
+            console.error('Error sending verification email to admin:', emailErr);
+        }
 
         // Send notification email to Super Admin
         try {
@@ -102,7 +165,7 @@ exports.adminRegistrationRequest = async (req, res) => {
 
         res.json({
             success: true,
-            message: "Registration request submitted successfully. You will receive an email once approved by the Super Admin.",
+            message: "Registration request submitted successfully! Please check your email to verify your address. You will be notified once approved by the Super Admin.",
             adminId: result.insertId
         });
 
@@ -224,47 +287,37 @@ exports.adminLogin = async (req, res) => {
             });
         }
 
-        // Generate and send OTP
-        const otp = generateOTP();
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-        // Store OTP in database
+        // Update last login
         await pool.query(
-            'INSERT INTO admin_otp_verification (admin_username, otp_code, expires_at) VALUES (?, ?, ?)',
-            [username, otp, expiresAt]
+            'UPDATE admins SET last_login = NOW() WHERE username = ?',
+            [username]
         );
 
-        // Send OTP via email
-        try {
-            await sendEmail(
-                admin.email,
-                'Your Admin Login OTP',
-                `
-                <h2>Admin Login Verification</h2>
-                <p>Your OTP code is: <strong style="font-size: 24px;">${otp}</strong></p>
-                <p>This code will expire in 10 minutes.</p>
-                <p>If you did not attempt to login, please contact Super Admin immediately.</p>
-                `
-            );
-        } catch (emailErr) {
-            console.error('Error sending OTP email:', emailErr);
-            return res.status(500).json({
-                success: false,
-                message: "Failed to send OTP. Please try again."
-            });
-        }
+        // Set session
+        req.session.adminId = admin.adminid;
+        req.session.adminUsername = admin.username;
+        req.session.adminEmail = admin.email;
+        req.session.district = admin.district_name;
+        req.session.isAdmin = true;
 
-        // Log OTP sent
-        await logAdminAction(username, 'otp_sent', {
+        // Log successful login
+        await logAdminAction(username, 'login', {
             result: 'success',
-            ipAddress: req.ip
+            actionDetails: 'Successful login',
+            ipAddress: req.ip,
+            userAgent: req.headers['user-agent']
         });
 
         res.json({
             success: true,
-            message: "OTP sent to your registered email",
-            requireOTP: true,
-            username: username
+            message: "Login successful",
+            redirect: "/admin-dashboard",
+            admin: {
+                username: admin.username,
+                email: admin.email,
+                fullName: admin.fullName,
+                district: admin.district_name
+            }
         });
 
     } catch (err) {
@@ -276,7 +329,7 @@ exports.adminLogin = async (req, res) => {
     }
 };
 
-// Step 2: Verify OTP and complete login
+// Legacy OTP verification (kept for backward compatibility, but not used in main flow)
 exports.adminVerifyOTP = async (req, res) => {
     try {
         const { username, otp } = req.body;
@@ -476,18 +529,32 @@ exports.verifyAdminEmail = async (req, res) => {
             });
         }
 
-        // Find admin with token (using admin_verification_tokens table)
+        // Find admin with token (using admin_verification_tokens table) - check expiry
         const [tokenResults] = await pool.query(
             `SELECT admin_username FROM admin_verification_tokens 
              WHERE token_value = ? AND token_type = 'email_verification' 
-             AND is_used = 0`,
+             AND is_used = 0 AND expires_at > NOW()`,
             [token]
         );
 
         if (tokenResults.length === 0) {
+            // Check if token exists but expired
+            const [expiredCheck] = await pool.query(
+                `SELECT admin_username, expires_at FROM admin_verification_tokens 
+                 WHERE token_value = ? AND token_type = 'email_verification'`,
+                [token]
+            );
+            
+            if (expiredCheck.length > 0 && expiredCheck[0].expires_at < new Date()) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Verification link has expired. Please register again."
+                });
+            }
+            
             return res.status(400).json({
                 success: false,
-                message: "Invalid verification token"
+                message: "Invalid or already used verification token"
             });
         }
 
@@ -509,7 +576,7 @@ exports.verifyAdminEmail = async (req, res) => {
 
         res.json({
             success: true,
-            message: "Email verified successfully! You can now login."
+            message: "Email verified successfully! Your account is now pending Super Admin approval."
         });
 
     } catch (err) {
@@ -869,17 +936,6 @@ exports.verifyOTP = (req, res) => {
     }
 };
 
-// Admin Logout
-exports.adminLogout = (req, res) => {
-    req.session.destroy(function(err) {
-        if (err) {
-            return res.status(500).json({ success: false, message: "Error logging out" });
-        }
-        res.clearCookie('connect.sid');
-        res.json({ success: true, message: "Logged out successfully" });
-    });
-};
-
 // User Logout
 exports.userLogout = (req, res) => {
     req.session.destroy(function(err) {
@@ -889,15 +945,6 @@ exports.userLogout = (req, res) => {
         res.clearCookie('connect.sid');
         res.json({ success: true, message: "Logout successful" });
     });
-};
-
-// Check admin auth
-exports.checkAdminAuth = (req, res) => {
-    if (req.session && req.session.adminId) {
-        res.json({ authenticated: true });
-    } else {
-        res.status(401).json({ authenticated: false });
-    }
 };
 
 // Check user auth

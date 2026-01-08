@@ -205,14 +205,17 @@ exports.approveAdminRequest = async (req, res) => {
             });
         }
 
-        // Generate password setup token
-        const passwordToken = crypto.randomBytes(32).toString('hex');
-        const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+        // Check if email is verified
+        const [verificationResults] = await pool.query(
+            `SELECT is_used FROM admin_verification_tokens 
+             WHERE admin_username = ? AND token_type = 'email_verification' 
+             ORDER BY created_at DESC LIMIT 1`,
+            [admin.username]
+        );
 
-        // Generate email verification token
-        const emailToken = crypto.randomBytes(32).toString('hex');
+        const emailVerified = verificationResults.length > 0 && verificationResults[0].is_used === 1;
 
-        // Update workflow status to approved
+        // Update workflow status to approved and activate account
         await pool.query(
             `UPDATE admin_approval_workflow 
             SET status = 'approved',
@@ -222,45 +225,34 @@ exports.approveAdminRequest = async (req, res) => {
             [req.session.superAdminUsername, admin.username]
         );
 
-        // Insert password setup token
+        // Activate admin account (password already set at registration)
         await pool.query(
-            `INSERT INTO admin_verification_tokens 
-            (admin_username, token_type, token_value, expires_at, is_used)
-            VALUES (?, 'password_setup', ?, ?, 0)`,
-            [admin.username, passwordToken, tokenExpiry]
+            `UPDATE admins SET is_active = 1 WHERE username = ?`,
+            [admin.username]
         );
 
-        // Insert email verification token
-        await pool.query(
-            `INSERT INTO admin_verification_tokens 
-            (admin_username, token_type, token_value, expires_at, is_used)
-            VALUES (?, 'email_verification', ?, DATE_ADD(NOW(), INTERVAL 7 DAY), 0)`,
-            [admin.username, emailToken]
-        );
+        // Log action
+        await logAdminAction(admin.username, 'account_approved', {
+            result: 'success',
+            approvedBy: req.session.superAdminUsername,
+            emailVerified: emailVerified
+        });
 
-        // Send approval email with password setup link
-        const passwordSetupLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin-password-setup?token=${passwordToken}`;
-        const emailVerifyLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-admin-email?token=${emailToken}`;
-
+        // Send approval notification email
         try {
             await sendEmail(
                 admin.email,
-                'District Admin Account Approved',
+                'District Admin Account Approved - You Can Now Login!',
                 `
-                <h2>Your District Admin Account Has Been Approved!</h2>
+                <h2>🎉 Your District Admin Account Has Been Approved!</h2>
                 <p>Dear ${admin.fullName || admin.username},</p>
-                <p>Your registration request for District Admin access has been approved by the Super Administrator.</p>
+                <p>Great news! Your registration request for District Admin access has been approved by the Super Administrator.</p>
                 
-                <h3>Next Steps:</h3>
-                <ol>
-                    <li><strong>Set Your Password:</strong> Click the link below to create your secure password:
-                        <br><a href="${passwordSetupLink}" style="display: inline-block; margin: 10px 0; padding: 10px 20px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 5px;">Set Password</a>
-                        <br><small>This link will expire in 24 hours.</small>
-                    </li>
-                    <li><strong>Verify Your Email:</strong> Click here to verify your email address:
-                        <br><a href="${emailVerifyLink}" style="display: inline-block; margin: 10px 0; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
-                    </li>
-                </ol>
+                ${!emailVerified ? `
+                <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                    <strong>⚠️ Important:</strong> Please verify your email before logging in if you haven't already.
+                </div>
+                ` : ''}
                 
                 <h3>Your Account Details:</h3>
                 <ul>
@@ -268,10 +260,13 @@ exports.approveAdminRequest = async (req, res) => {
                     <li><strong>Email:</strong> ${admin.email}</li>
                     <li><strong>District:</strong> ${admin.district_name}</li>
                     <li><strong>Designation:</strong> ${admin.designation}</li>
+                    <li><strong>Email Verified:</strong> ${emailVerified ? '✅ Yes' : '❌ Not yet'}</li>
                 </ul>
                 
-                <p>After completing password setup and email verification, you can login at:</p>
-                <p><a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/adminLogin">Admin Login Page</a></p>
+                <p>You can now login to the Admin Dashboard:</p>
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/adminLogin" style="display: inline-block; margin: 15px 0; padding: 12px 24px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                    Login to Dashboard
+                </a>
                 
                 <p><strong>Note:</strong> Two-factor authentication (OTP) will be required for each login for enhanced security.</p>
                 
@@ -292,7 +287,8 @@ exports.approveAdminRequest = async (req, res) => {
 
         res.json({
             success: true,
-            message: `Admin ${admin.username} has been approved. Password setup email sent.`
+            message: `Admin ${admin.username} has been approved and can now login.`,
+            emailVerified: emailVerified
         });
 
     } catch (err) {

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureVoice | Email Verification</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Poppins", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .verify-container {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 50px 40px;
+            text-align: center;
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .logo {
+            width: 120px;
+            margin-bottom: 20px;
+        }
+        
+        .status-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            font-size: 50px;
+        }
+        
+        .status-icon.loading {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .status-icon.success {
+            background: linear-gradient(135deg, #4CAF50 0%, #2e7d32 100%);
+            color: #fff;
+        }
+        
+        .status-icon.error {
+            background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
+            color: #fff;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        h2 {
+            font-size: 1.6rem;
+            color: #1a1a2e;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .message {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .info-box h4 {
+            font-size: 0.9rem;
+            color: #0369a1;
+            margin-bottom: 10px;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .info-box li {
+            font-size: 0.85rem;
+            color: #475569;
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-box li i {
+            color: #0ea5e9;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 14px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 26, 46, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 500px) {
+            .verify-container {
+                padding: 30px 20px;
+            }
+            
+            h2 {
+                font-size: 1.4rem;
+            }
+            
+            .status-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <a href="/">
+            <img src="../../images/auth/secureVOICE.png" alt="SecureVoice" class="logo">
+        </a>
+        
+        <!-- Loading State -->
+        <div id="loading-state">
+            <div class="status-icon loading">
+                <i class="fas fa-spinner spinner"></i>
+            </div>
+            <h2>Verifying Your Email</h2>
+            <p class="message">Please wait while we verify your email address...</p>
+        </div>
+        
+        <!-- Success State -->
+        <div id="success-state" class="hidden">
+            <div class="status-icon success">
+                <i class="fas fa-check"></i>
+            </div>
+            <h2>Email Verified Successfully! 🎉</h2>
+            <p class="message">Your email address has been verified. Your account is now pending Super Admin approval.</p>
+            
+            <div class="info-box">
+                <h4><i class="fas fa-info-circle"></i> What happens next?</h4>
+                <ul>
+                    <li><i class="fas fa-clock"></i> Super Admin will review your request (2-3 business days)</li>
+                    <li><i class="fas fa-envelope"></i> You'll receive an email once approved</li>
+                    <li><i class="fas fa-sign-in-alt"></i> After approval, you can login with your credentials</li>
+                </ul>
+            </div>
+            
+            <a href="/adminLogin" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt"></i> Go to Admin Login
+            </a>
+            <a href="/" class="btn btn-secondary">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+        </div>
+        
+        <!-- Error State -->
+        <div id="error-state" class="hidden">
+            <div class="status-icon error">
+                <i class="fas fa-times"></i>
+            </div>
+            <h2>Verification Failed</h2>
+            <p class="message" id="error-message">Unable to verify your email. The link may be invalid or expired.</p>
+            
+            <a href="/admin-registration" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i> Register Again
+            </a>
+            <a href="/contact-us" class="btn btn-secondary">
+                <i class="fas fa-headset"></i> Contact Support
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const loadingState = document.getElementById('loading-state');
+            const successState = document.getElementById('success-state');
+            const errorState = document.getElementById('error-state');
+            const errorMessage = document.getElementById('error-message');
+
+            // Get token from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+
+            if (!token) {
+                showError('No verification token provided. Please use the link from your email.');
+                return;
+            }
+
+            try {
+                // Call backend verification endpoint
+                const response = await fetch(`/verify-admin-email?token=${encodeURIComponent(token)}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess();
+                } else {
+                    showError(data.message || 'Verification failed. Please try again or contact support.');
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                showError('An error occurred during verification. Please try again later.');
+            }
+
+            function showSuccess() {
+                loadingState.classList.add('hidden');
+                successState.classList.remove('hidden');
+            }
+
+            function showError(message) {
+                loadingState.classList.add('hidden');
+                errorMessage.textContent = message;
+                errorState.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -345,6 +345,14 @@ app.get('/admin-login', (req, res) => {
     res.sendFile(path.join(__dirname, '../../frontend/src/pages/adminLogin.html'));
 });
 
+app.get('/admin-registration', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../frontend/src/pages/admin-registration.html'));
+});
+
+app.get('/admin-verify', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../frontend/src/pages/admin-verify.html'));
+});
+
 app.get('/contact', (req, res) => {
     res.sendFile(path.join(__dirname, '../../frontend/src/pages/contact-us.html'));
 });

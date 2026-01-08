@@ -1,4 +1,5 @@
 const pool = require('../db');
+const path = require('path');
 const { createNotification } = require('../utils/notificationUtils');
 const { logAdminAction, getAdminAuditLogs } = require('../utils/auditUtils');
 
@@ -23,8 +24,16 @@ exports.getAdminDashboard = async (req, res) => {
 
         const admin = adminResults[0];
 
+        // Check workflow status from admin_approval_workflow table
+        const [workflowResults] = await pool.query(
+            'SELECT status FROM admin_approval_workflow WHERE admin_username = ?',
+            [adminUsername]
+        );
+
+        const workflowStatus = workflowResults.length > 0 ? workflowResults[0].status : 'pending';
+
         // Check if admin is approved and active
-        if (admin.status !== 'approved' || !admin.is_active) {
+        if (workflowStatus !== 'approved' || !admin.is_active) {
             req.session.destroy();
             return res.redirect('/adminLogin?error=inactive');
         }
@@ -36,60 +45,8 @@ exports.getAdminDashboard = async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        // District-scoped: Only show complaints from admin's district
-        const complaintsQuery = `
-            SELECT 
-                c.complaint_id,
-                c.username as complainant_username,
-                COALESCE(u.fullName, 'N/A') as complainant_fullname,
-                COALESCE(c.complaint_type, 'General') as complaint_type,
-                c.created_at,
-                c.status,
-                COALESCE(c.description, '') as description,
-                COALESCE(c.location_address, '') as location_address,
-                COALESCE(ac.last_updated, c.created_at) as last_updated
-            FROM complaint c 
-            INNER JOIN users u ON c.username = u.username
-            LEFT JOIN admin_cases ac ON c.complaint_id = ac.complaint_id AND ac.admin_username = ?
-            LEFT JOIN location l ON c.location_id = l.location_id
-            WHERE (c.admin_username = ? OR l.district_name = ? OR u.district = ?)
-            ORDER BY c.created_at DESC
-        `;
-
-        const [complaintsResults] = await pool.query(
-            complaintsQuery, 
-            [adminUsername, adminUsername, admin.district_name, admin.district_name]
-        );
-
-        const usersQuery = `
-            SELECT DISTINCT 
-                u.username,
-                u.fullName,
-                u.email,
-                u.phone,
-                u.location,
-                u.age,
-                u.district
-            FROM users u 
-            INNER JOIN complaint c ON u.username = c.username 
-            WHERE c.admin_username = ? OR u.district = ?
-            ORDER BY u.fullName ASC
-        `;
-
-        const [usersResults] = await pool.query(usersQuery, [adminUsername, admin.district_name]);
-
-        res.set({
-            'X-Frame-Options': 'DENY',
-            'X-Content-Type-Options': 'nosniff',
-            'X-XSS-Protection': '1; mode=block',
-            'Referrer-Policy': 'strict-origin-when-cross-origin'
-        });
-
-        res.render('admin-page', {
-            admin: admin,
-            complaints: complaintsResults,
-            users: usersResults
-        });
+        // Serve the admin dashboard HTML file
+        res.sendFile(path.join(__dirname, '../../../frontend/src/pages/admin_page.html'));
     } catch (err) {
         console.error("Dashboard error:", err);
         res.status(500).send("Error loading dashboard");
@@ -492,5 +449,135 @@ exports.getAdminLogs = async (req, res) => {
     } catch (err) {
         console.error("Error fetching admin logs:", err);
         res.status(500).json({ success: false, message: "Error fetching logs" });
+    }
+};
+
+// Get Admin Profile Data (for dashboard)
+exports.getAdminProfile = async (req, res) => {
+    try {
+        if (!req.session.adminId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
+
+        const [adminResults] = await pool.query(
+            'SELECT adminid, username, email, fullName, dob, phone, designation, official_id, district_name, created_at FROM admins WHERE adminid = ?',
+            [req.session.adminId]
+        );
+
+        if (adminResults.length === 0) {
+            return res.status(404).json({ success: false, message: "Admin not found" });
+        }
+
+        res.json({
+            success: true,
+            admin: adminResults[0]
+        });
+    } catch (err) {
+        console.error("Get admin profile error:", err);
+        res.status(500).json({ success: false, message: "Error fetching profile" });
+    }
+};
+
+// Get Admin Complaints (for dashboard reports section)
+exports.getAdminComplaints = async (req, res) => {
+    try {
+        if (!req.session.adminId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
+
+        const adminUsername = req.session.adminUsername;
+
+        const [complaints] = await pool.query(
+            `SELECT 
+                c.complaint_id,
+                c.username,
+                c.complaint_type,
+                c.description,
+                c.location_address,
+                c.status,
+                c.created_at,
+                COALESCE(u.fullName, 'N/A') as user_fullname
+            FROM complaint c
+            LEFT JOIN users u ON c.username = u.username
+            WHERE c.admin_username = ?
+            ORDER BY c.created_at DESC`,
+            [adminUsername]
+        );
+
+        res.json({
+            success: true,
+            complaints: complaints
+        });
+    } catch (err) {
+        console.error("Get admin complaints error:", err);
+        res.status(500).json({ success: false, message: "Error fetching complaints" });
+    }
+};
+
+// Get District Users (for dashboard users section)
+exports.getDistrictUsers = async (req, res) => {
+    try {
+        if (!req.session.adminId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
+
+        const adminUsername = req.session.adminUsername;
+
+        // Get users who have filed complaints in this admin's district
+        const [users] = await pool.query(
+            `SELECT DISTINCT 
+                u.userid,
+                u.username,
+                u.email,
+                u.fullName,
+                u.phone,
+                u.location,
+                u.age
+            FROM users u
+            INNER JOIN complaint c ON u.username = c.username
+            WHERE c.admin_username = ?
+            ORDER BY u.fullName`,
+            [adminUsername]
+        );
+
+        res.json({
+            success: true,
+            users: users
+        });
+    } catch (err) {
+        console.error("Get district users error:", err);
+        res.status(500).json({ success: false, message: "Error fetching users" });
+    }
+};
+
+// Get Dashboard Summary Stats
+exports.getDashboardStats = async (req, res) => {
+    try {
+        if (!req.session.adminId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
+
+        const adminUsername = req.session.adminUsername;
+
+        const [complaints] = await pool.query(
+            'SELECT status FROM complaint WHERE admin_username = ?',
+            [adminUsername]
+        );
+
+        const stats = {
+            total: complaints.length,
+            pending: complaints.filter(c => c.status === 'pending').length,
+            verifying: complaints.filter(c => c.status === 'verifying').length,
+            investigating: complaints.filter(c => c.status === 'investigating').length,
+            resolved: complaints.filter(c => c.status === 'resolved').length
+        };
+
+        res.json({
+            success: true,
+            stats: stats
+        });
+    } catch (err) {
+        console.error("Get dashboard stats error:", err);
+        res.status(500).json({ success: false, message: "Error fetching stats" });
     }
 };

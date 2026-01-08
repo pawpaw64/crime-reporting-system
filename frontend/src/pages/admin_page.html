@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
-    <link rel="icon" type="image/x-icon" href="/Home Page/assets/images/favicon.ico">
-
+    <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="/Admin Page/assets/js/admin-dashboard-protection.js"></script>
+    <script src="../js/admin-dashboard-protection.js"></script>
 
     <style>
         /* Professional Admin Dashboard CSS */
@@ -1281,7 +1280,7 @@
             <div class="location">
                 <i class="fas fa-map-marker-alt"></i>
                 <select id="district">
-                    <option value="<%= admin.district_name %>"><%= admin.district_name %></option>
+                    <option value="" id="district-option">Loading...</option>
                 </select>
             </div>
             <div class="profile-area"></div>
@@ -1349,34 +1348,34 @@
                     <div class="form-content-container">
                         <div class="form-content">
                             <label>Full Name</label>
-                            <span id="fullNameDisplay"><%= admin.fullName || 'Not provided' %></span>
-                            <input type="text" id="fullNameEdit" class="editable-field" value="<%= admin.fullName || '' %>">
+                            <span id="fullNameDisplay">Loading...</span>
+                            <input type="text" id="fullNameEdit" class="editable-field" value="">
                         </div>
 
                         <div class="form-content">
                             <label>Date of Birth</label>
-                            <span id="dobDisplay"><%= admin.dob || 'Not provided' %></span>
-                            <input type="date" id="dobEdit" class="editable-field" value="<%= admin.dob || '' %>">
+                            <span id="dobDisplay">Loading...</span>
+                            <input type="date" id="dobEdit" class="editable-field" value="">
                         </div>
 
                         <div class="form-content">
                             <label>Username</label>
-                            <span><%= admin.username %></span>
+                            <span id="usernameDisplay">Loading...</span>
                         </div>
 
                         <div class="form-content">
                             <label>Email</label>
-                            <span><%= admin.email %></span>
+                            <span id="emailDisplay">Loading...</span>
                         </div>
 
                         <div class="form-content">
                             <label>District</label>
-                            <span><%= admin.district_name %></span>
+                            <span id="districtDisplay">Loading...</span>
                         </div>
 
                         <div class="form-content">
                             <label>Account Created</label>
-                            <span><%= new Date(admin.created_at).toLocaleDateString() %></span>
+                            <span id="createdAtDisplay">Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -1390,70 +1389,14 @@
                             <i class="fas fa-file-alt"></i>
                             Complaint Reports
                         </h2>
-                        <span>Total: <%= complaints.length %> complaints</span>
+                        <span id="complaints-count">Total: Loading...</span>
                     </div>
 
-                    <div class="table-container">
-                        <% if (complaints.length > 0) { %>
-                            <table>
-                                <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>User</th>
-                                    <th>Type</th>
-                                    <th>Date</th>
-                                    <th>Location</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <% complaints.forEach(complaint => { %>
-                                    <tr>
-                                        <td>#<%= complaint.complaint_id %></td>
-                                        <td><%= complaint.username %></td>
-                                        <td><%= complaint.complaint_type %></td>
-                                        <td><%= new Date(complaint.created_at).toLocaleDateString() %></td>
-                                        <td><%= complaint.location_address || 'Not specified' %></td>
-                                        <td>
-                                                <span class="status-badge <%= complaint.status %>">
-                                                    <%= complaint.status %>
-                                                </span>
-                                        </td>
-                                        <td>
-                                            <div class="actions-container">
-                                                <button class="action-btn primary update-status-btn"
-                                                        data-complaint-id="<%= complaint.complaint_id %>"
-                                                        data-current-status="<%= complaint.status %>">
-                                                    <i class="fas fa-edit"></i> Status
-                                                </button>
-                                                <button class="action-btn secondary view-evidence-btn"
-                                                        data-complaint-id="<%= complaint.complaint_id %>">
-                                                    <i class="fas fa-eye"></i> Evidence
-                                                </button>
-                                                <button class="action-btn tertiary view-description-btn"
-                                                        data-complaint-id="<%= complaint.complaint_id %>"
-                                                        data-description="<%= complaint.description || 'No description provided' %>">
-                                                    <i class="fas fa-file-text"></i> Description
-                                                </button>
-                                                <button class="chat-btn" onclick="openAdminChat('<%= complaint.complaint_id %>', '<%= complaint.username %>')">
-                                                    <i class="fas fa-comments"></i> Chat
-                                                </button>
-
-                                            </div>
-
-                                        </td>
-                                    </tr>
-                                <% }); %>
-                                </tbody>
-                            </table>
-                        <% } else { %>
-                            <div class="empty-state">
-                                <i class="fas fa-inbox"></i>
-                                <h3>No Complaints Found</h3>
-                                <p>There are no complaints assigned to your district yet.</p>
-                            </div>
-                        <% } %>
+                    <div class="table-container" id="complaints-table-container">
+                        <div class="empty-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <h3>Loading Complaints...</h3>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1471,14 +1414,14 @@
                             <i class="fas fa-refresh"></i> Refresh
                         </button>
                     </div>
-                    <!-- Case Analytics Cards - ADD THIS BLOCK HERE -->
+                    <!-- Case Analytics Cards -->
                     <div class="analytics-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-lg); margin: var(--spacing-xl); background: var(--light-gray); border-radius: var(--radius-lg); padding: var(--spacing-lg);">
 
                         <div class="stats-card" style="background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-light) 100%); color: var(--white); padding: var(--spacing-xl); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <h3 style="font-size: var(--font-sm); font-weight: 500; opacity: 0.9; margin-bottom: var(--spacing-sm);">Total Cases</h3>
-                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="total-cases"><%= complaints.length %></p>
+                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="total-cases">0</p>
                                 </div>
                                 <i class="fas fa-clipboard-list" style="font-size: 2rem; opacity: 0.7;"></i>
                             </div>
@@ -1488,7 +1431,7 @@
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <h3 style="font-size: var(--font-sm); font-weight: 500; opacity: 0.9; margin-bottom: var(--spacing-sm);">Pending</h3>
-                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="pending-cases"><%= complaints.filter(c => c.status === 'pending').length %></p>
+                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="pending-cases">0</p>
                                 </div>
                                 <i class="fas fa-clock" style="font-size: 2rem; opacity: 0.7;"></i>
                             </div>
@@ -1498,7 +1441,7 @@
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <h3 style="font-size: var(--font-sm); font-weight: 500; opacity: 0.9; margin-bottom: var(--spacing-sm);">Verifying</h3>
-                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="verifying-cases"><%= complaints.filter(c => c.status === 'verifying').length %></p>
+                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="verifying-cases">0</p>
                                 </div>
                                 <i class="fas fa-search" style="font-size: 2rem; opacity: 0.7;"></i>
                             </div>
@@ -1508,7 +1451,7 @@
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <h3 style="font-size: var(--font-sm); font-weight: 500; opacity: 0.9; margin-bottom: var(--spacing-sm);">Investigating</h3>
-                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="investigating-cases"><%= complaints.filter(c => c.status === 'investigating').length %></p>
+                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="investigating-cases">0</p>
                                 </div>
                                 <i class="fas fa-magnifying-glass" style="font-size: 2rem; opacity: 0.7;"></i>
                             </div>
@@ -1518,7 +1461,7 @@
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <h3 style="font-size: var(--font-sm); font-weight: 500; opacity: 0.9; margin-bottom: var(--spacing-sm);">Resolved</h3>
-                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="resolved-cases"><%= complaints.filter(c => c.status === 'resolved').length %></p>
+                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="resolved-cases">0</p>
                                 </div>
                                 <i class="fas fa-check-circle" style="font-size: 2rem; opacity: 0.7;"></i>
                             </div>
@@ -1601,42 +1544,14 @@
                             <i class="fas fa-users"></i>
                             Complainant Users
                         </h2>
-                        <span>Total: <%= users.length %> users</span>
+                        <span id="users-count">Total: Loading...</span>
                     </div>
 
-                    <div class="table-container">
-                        <% if (users.length > 0) { %>
-                            <table>
-                                <thead>
-                                <tr>
-                                    <th>Full Name</th>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Phone</th>
-                                    <th>Location</th>
-                                    <th>Age</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <% users.forEach(user => { %>
-                                    <tr>
-                                        <td><%= user.fullName || 'Not provided' %></td>
-                                        <td><%= user.username %></td>
-                                        <td><%= user.email %></td>
-                                        <td><%= user.phone || 'Not provided' %></td>
-                                        <td><%= user.location || 'Not provided' %></td>
-                                        <td><%= user.age || 'Not provided' %></td>
-                                    </tr>
-                                <% }); %>
-                                </tbody>
-                            </table>
-                        <% } else { %>
-                            <div class="empty-state">
-                                <i class="fas fa-user-slash"></i>
-                                <h3>No Users Found</h3>
-                                <p>No users have filed complaints in your district yet.</p>
-                            </div>
-                        <% } %>
+                    <div class="table-container" id="users-table-container">
+                        <div class="empty-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <h3>Loading Users...</h3>
+                        </div>
                     </div>
                 </div>
     </section>
@@ -2049,12 +1964,12 @@
 
     // Make sure this function exists for updating analytics
     function updateAnalyticsGrid(analytics) {
-        // Update analytics display elements
-        const totalElement = document.querySelector('.analytics-card .total-cases');
-        const pendingElement = document.querySelector('.analytics-card .pending-cases');
-        const verifyingElement = document.querySelector('.analytics-card .verifying-cases');
-        const investigatingElement = document.querySelector('.analytics-card .investigating-cases');
-        const resolvedElement = document.querySelector('.analytics-card .resolved-cases');
+        // Update analytics display elements using correct IDs
+        const totalElement = document.getElementById('total-cases');
+        const pendingElement = document.getElementById('pending-cases');
+        const verifyingElement = document.getElementById('verifying-cases');
+        const investigatingElement = document.getElementById('investigating-cases');
+        const resolvedElement = document.getElementById('resolved-cases');
 
         if (totalElement) totalElement.textContent = analytics.total || 0;
         if (pendingElement) pendingElement.textContent = analytics.pending || 0;
@@ -2317,7 +2232,7 @@
 
             // Load cases data when cases section is selected
             if (target === 'cases') {
-                loadCases();
+                refreshCases();
             }
         });
     });
@@ -2701,10 +2616,287 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize with profile section active
         document.getElementById('profile').style.display = 'block';
+        
+        // Load all dashboard data
+        loadAdminProfile();
+        loadComplaints();
+        loadUsers();
+        loadDashboardStats();
     });
 
+    // Global admin data store
+    let adminData = null;
+    let complaintsData = [];
+    let usersData = [];
 
+    // Load Admin Profile
+    async function loadAdminProfile() {
+        try {
+            const response = await fetch('/get-admin-profile');
+            const data = await response.json();
+            
+            if (data.success) {
+                adminData = data.admin;
+                
+                // Update profile section
+                document.getElementById('fullNameDisplay').textContent = adminData.fullName || 'Not provided';
+                document.getElementById('dobDisplay').textContent = adminData.dob || 'Not provided';
+                document.getElementById('usernameDisplay').textContent = adminData.username || 'N/A';
+                document.getElementById('emailDisplay').textContent = adminData.email || 'N/A';
+                document.getElementById('districtDisplay').textContent = adminData.district_name || 'N/A';
+                document.getElementById('createdAtDisplay').textContent = adminData.created_at ? new Date(adminData.created_at).toLocaleDateString() : 'N/A';
+                
+                // Update edit fields
+                document.getElementById('fullNameEdit').value = adminData.fullName || '';
+                document.getElementById('dobEdit').value = adminData.dob || '';
+                
+                // Update header district
+                const districtOption = document.getElementById('district-option');
+                if (districtOption) {
+                    districtOption.value = adminData.district_name || '';
+                    districtOption.textContent = adminData.district_name || 'N/A';
+                }
+            } else {
+                console.error('Error loading profile:', data.message);
+                showMessage('Error loading profile', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading admin profile:', error);
+            showMessage('Error loading profile', 'error');
+        }
+    }
 
+    // Load Complaints
+    async function loadComplaints() {
+        try {
+            const response = await fetch('/get-admin-complaints');
+            const data = await response.json();
+            
+            if (data.success) {
+                complaintsData = data.complaints;
+                renderComplaintsTable(complaintsData);
+                document.getElementById('complaints-count').textContent = `Total: ${complaintsData.length} complaints`;
+            } else {
+                console.error('Error loading complaints:', data.message);
+                document.getElementById('complaints-table-container').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error Loading Complaints</h3>
+                        <p>${data.message}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading complaints:', error);
+            document.getElementById('complaints-table-container').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error Loading Complaints</h3>
+                    <p>Please try again later</p>
+                </div>
+            `;
+        }
+    }
+
+    // Render Complaints Table
+    function renderComplaintsTable(complaints) {
+        const container = document.getElementById('complaints-table-container');
+        
+        if (complaints.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h3>No Complaints Found</h3>
+                    <p>There are no complaints assigned to your district yet.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        complaints.forEach(complaint => {
+            const description = complaint.description || 'No description provided';
+            // Escape HTML for data attribute
+            const escapedDescription = description.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            
+            html += `
+                <tr>
+                    <td>#${complaint.complaint_id}</td>
+                    <td>${complaint.username}</td>
+                    <td>${complaint.complaint_type || 'General'}</td>
+                    <td>${new Date(complaint.created_at).toLocaleDateString()}</td>
+                    <td>${complaint.location_address || 'Not specified'}</td>
+                    <td>
+                        <span class="status-badge ${complaint.status}">
+                            ${complaint.status}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions-container">
+                            <button class="action-btn primary update-status-btn"
+                                    data-complaint-id="${complaint.complaint_id}"
+                                    data-current-status="${complaint.status}">
+                                <i class="fas fa-edit"></i> Status
+                            </button>
+                            <button class="action-btn secondary view-evidence-btn"
+                                    data-complaint-id="${complaint.complaint_id}">
+                                <i class="fas fa-eye"></i> Evidence
+                            </button>
+                            <button class="action-btn tertiary view-description-btn"
+                                    data-complaint-id="${complaint.complaint_id}"
+                                    data-description="${escapedDescription}">
+                                <i class="fas fa-file-text"></i> Description
+                            </button>
+                            <button class="chat-btn" onclick="openAdminChat('${complaint.complaint_id}', '${complaint.username}')">
+                                <i class="fas fa-comments"></i> Chat
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    // Load Users
+    async function loadUsers() {
+        try {
+            const response = await fetch('/get-district-users');
+            const data = await response.json();
+            
+            if (data.success) {
+                usersData = data.users;
+                renderUsersTable(usersData);
+                document.getElementById('users-count').textContent = `Total: ${usersData.length} users`;
+            } else {
+                console.error('Error loading users:', data.message);
+                document.getElementById('users-table-container').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error Loading Users</h3>
+                        <p>${data.message}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading users:', error);
+            document.getElementById('users-table-container').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error Loading Users</h3>
+                    <p>Please try again later</p>
+                </div>
+            `;
+        }
+    }
+
+    // Render Users Table
+    function renderUsersTable(users) {
+        const container = document.getElementById('users-table-container');
+        
+        if (users.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-user-slash"></i>
+                    <h3>No Users Found</h3>
+                    <p>No users have filed complaints in your district yet.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Location</th>
+                        <th>Age</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        users.forEach(user => {
+            html += `
+                <tr>
+                    <td>${user.fullName || 'Not provided'}</td>
+                    <td>${user.username}</td>
+                    <td>${user.email}</td>
+                    <td>${user.phone || 'Not provided'}</td>
+                    <td>${user.location || 'Not provided'}</td>
+                    <td>${user.age || 'Not provided'}</td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    // Load Dashboard Stats
+    async function loadDashboardStats() {
+        try {
+            const response = await fetch('/get-admin-dashboard-stats');
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById('total-cases').textContent = data.stats.total || 0;
+                document.getElementById('pending-cases').textContent = data.stats.pending || 0;
+                document.getElementById('verifying-cases').textContent = data.stats.verifying || 0;
+                document.getElementById('investigating-cases').textContent = data.stats.investigating || 0;
+                document.getElementById('resolved-cases').textContent = data.stats.resolved || 0;
+            }
+        } catch (error) {
+            console.error('Error loading dashboard stats:', error);
+        }
+    }
+
+    // Show message helper function
+    function showMessage(message, type) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            ${type === 'success' ? 'background: var(--success);' : 'background: var(--danger);'}
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
 
 
 </script>

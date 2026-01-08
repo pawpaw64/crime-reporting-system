@@ -440,8 +440,8 @@
         <div class="security-features">
             <h4><i class="fas fa-shield-alt"></i> Security Features</h4>
             <ul>
-                <li><i class="fas fa-check-circle"></i> Two-Factor Authentication</li>
-                <li><i class="fas fa-check-circle"></i> OTP Email Verification</li>
+                <li><i class="fas fa-check-circle"></i> Email Verification Required</li>
+                <li><i class="fas fa-check-circle"></i> Super Admin Approval</li>
                 <li><i class="fas fa-check-circle"></i> Encrypted Sessions</li>
                 <li><i class="fas fa-check-circle"></i> Activity Audit Logs</li>
             </ul>
@@ -479,41 +479,10 @@
                     <span id="password-error-admin" class="error-message"></span>
                 </div>
                 
-                <button type="submit" class="submit-btn" id="login-btn">
-                    <i class="fas fa-sign-in-alt"></i> Login
-                </button>
+                <input type="submit" class="submit-btn" id="login-btn" value="Login">
                 
-                <!-- OTP Verification Section -->
-                <div class="otp-container" id="otp-container">
-                    <div class="otp-header">
-                        <i class="fas fa-envelope-open-text"></i>
-                        <h3>OTP Verification Required</h3>
-                        <p>Enter the 6-digit code sent to your email</p>
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="otp-input">Verification Code</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-key"></i>
-                            <input type="text" id="otp-input" placeholder="Enter 6-digit OTP" maxlength="6">
-                        </div>
-                        <span id="otp-error" class="error-message"></span>
-                    </div>
-                    
-                    <button type="button" class="submit-btn secondary" id="verify-otp-btn">
-                        <i class="fas fa-check-circle"></i> Verify & Login
-                    </button>
-                </div>
-                
-                <div class="message-box info" id="info-message">
-                    <i class="fas fa-info-circle"></i>
-                    <span id="info-text"></span>
-                </div>
-                
-                <div class="message-box error" id="error-message">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <span id="error-text"></span>
-                </div>
+                <!-- Message container -->
+                <div id="message-container"></div>
                 
                 <div class="links-section">
                     <p>Don't have an account?</p>
@@ -532,132 +501,6 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('admin-login-form');
-    const loginBtn = document.getElementById('login-btn');
-    const otpContainer = document.getElementById('otp-container');
-    const otpInput = document.getElementById('otp-input');
-    const verifyOtpBtn = document.getElementById('verify-otp-btn');
-    const infoMessage = document.getElementById('info-message');
-    const errorMessage = document.getElementById('error-message');
-    
-    let currentUsername = '';
-    
-    // Login form submission
-    form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
-        
-        if (!username || !password) {
-            showError('Please enter both username and password');
-            return;
-        }
-        
-        currentUsername = username;
-        
-        try {
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
-            loginBtn.disabled = true;
-            hideMessages();
-            
-            const response = await fetch('/adminLogin', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success && data.requireOTP) {
-                // Show OTP section
-                otpContainer.classList.add('show');
-                loginBtn.style.display = 'none';
-                document.getElementById('username').disabled = true;
-                document.getElementById('password').disabled = true;
-                showInfo('OTP sent to your registered email. Please check your inbox.');
-                otpInput.focus();
-            } else if (data.success) {
-                showInfo('Login successful! Redirecting...');
-                window.location.href = data.redirect || '/admin-dashboard';
-            } else {
-                showError(data.message || 'Login failed. Please try again.');
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-                loginBtn.disabled = false;
-            }
-        } catch (error) {
-            console.error('Login error:', error);
-            showError('An error occurred. Please try again.');
-            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-            loginBtn.disabled = false;
-        }
-    });
-    
-    // OTP verification
-    verifyOtpBtn.addEventListener('click', async function() {
-        const otp = otpInput.value.trim();
-        
-        if (!otp || otp.length !== 6) {
-            showError('Please enter a valid 6-digit OTP');
-            return;
-        }
-        
-        try {
-            verifyOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
-            verifyOtpBtn.disabled = true;
-            hideMessages();
-            
-            const response = await fetch('/admin-verify-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUsername, otp })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                showInfo('Verification successful! Redirecting...');
-                setTimeout(() => {
-                    window.location.href = data.redirect || '/admin-dashboard';
-                }, 1000);
-            } else {
-                showError(data.message || 'Invalid OTP. Please try again.');
-                verifyOtpBtn.innerHTML = '<i class="fas fa-check-circle"></i> Verify & Login';
-                verifyOtpBtn.disabled = false;
-            }
-        } catch (error) {
-            console.error('OTP verification error:', error);
-            showError('An error occurred. Please try again.');
-            verifyOtpBtn.innerHTML = '<i class="fas fa-check-circle"></i> Verify & Login';
-            verifyOtpBtn.disabled = false;
-        }
-    });
-    
-    // OTP input - only allow numbers
-    otpInput.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '');
-    });
-    
-    function showInfo(message) {
-        infoMessage.classList.add('show');
-        errorMessage.classList.remove('show');
-        document.getElementById('info-text').textContent = message;
-    }
-    
-    function showError(message) {
-        errorMessage.classList.add('show');
-        infoMessage.classList.remove('show');
-        document.getElementById('error-text').textContent = message;
-    }
-    
-    function hideMessages() {
-        infoMessage.classList.remove('show');
-        errorMessage.classList.remove('show');
-    }
-});
-</script>
-
+<script src="../js/adminLogin.js"></script>
 </body>
 </html>

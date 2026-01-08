@@ -68,6 +68,10 @@ router.get('/get-complaint-evidence/:complaintId', adminController.getComplaintE
 router.get('/get-admin-cases', adminController.getAdminCases);
 router.post('/update-complaint-status', adminController.updateComplaintStatus);
 router.get('/get-admin-logs', adminController.getAdminLogs);
+router.get('/get-admin-profile', adminController.getAdminProfile);
+router.get('/get-admin-complaints', adminController.getAdminComplaints);
+router.get('/get-district-users', adminController.getDistrictUsers);
+router.get('/get-admin-dashboard-stats', adminController.getDashboardStats);
 
 // ========== USER ROUTES ==========
 router.get('/profile', requireUser, userController.getProfile);

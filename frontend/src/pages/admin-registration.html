@@ -485,14 +485,33 @@
                     </div>
                     <span id="district-error" class="error-message"></span>
                 </div>
+                
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" placeholder="Create a strong password" required minlength="8">
+                    </div>
+                    <span id="password-error" class="error-message"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter your password" required>
+                    </div>
+                    <span id="confirmPassword-error" class="error-message"></span>
+                </div>
             </div>
             
             <div class="info-box">
                 <h4><i class="fas fa-info-circle"></i> Important Information</h4>
                 <ul>
+                    <li>A verification email will be sent to confirm your email address</li>
                     <li>Super Administrator will review your request within 2-3 business days</li>
                     <li>You'll receive email updates at each step of the process</li>
-                    <li>After approval, you'll set your password and verify your email</li>
+                    <li>After approval, you can login with your credentials</li>
                     <li>All information must be accurate and verifiable</li>
                 </ul>
             </div>
@@ -539,14 +558,27 @@
                 phone: document.getElementById('phone').value.trim(),
                 designation: document.getElementById('designation').value.trim(),
                 official_id: document.getElementById('official_id').value.trim(),
-                district_name: document.getElementById('district_name').value
+                district_name: document.getElementById('district_name').value,
+                password: document.getElementById('password').value,
+                confirmPassword: document.getElementById('confirmPassword').value
             };
 
             // Basic validation
             if (!formData.username || !formData.email || !formData.fullName || 
                 !formData.phone || !formData.designation || !formData.official_id || 
-                !formData.district_name) {
+                !formData.district_name || !formData.password || !formData.confirmPassword) {
                 showError('Please fill in all required fields');
+                return;
+            }
+            
+            // Password validation
+            if (formData.password.length < 8) {
+                showError('Password must be at least 8 characters long');
+                return;
+            }
+            
+            if (formData.password !== formData.confirmPassword) {
+                showError('Passwords do not match');
                 return;
             }
 
@@ -644,6 +676,25 @@
                 phoneError.textContent = 'Enter a valid phone number';
             } else {
                 phoneError.textContent = '';
+            }
+        });
+        
+        document.getElementById('password').addEventListener('blur', function() {
+            const passwordError = document.getElementById('password-error');
+            if (this.value && this.value.length < 8) {
+                passwordError.textContent = 'Password must be at least 8 characters';
+            } else {
+                passwordError.textContent = '';
+            }
+        });
+        
+        document.getElementById('confirmPassword').addEventListener('blur', function() {
+            const confirmError = document.getElementById('confirmPassword-error');
+            const password = document.getElementById('password').value;
+            if (this.value && this.value !== password) {
+                confirmError.textContent = 'Passwords do not match';
+            } else {
+                confirmError.textContent = '';
             }
         });
     });
