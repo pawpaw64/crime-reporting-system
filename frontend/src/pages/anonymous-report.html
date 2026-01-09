@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Submit an anonymous crime report securely - No login required">
+    <title>Anonymous Crime Report - SecureVoice</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/anonymous-report.css">
+</head>
+<body>
+    <!-- Disclaimer Modal -->
+    <div id="disclaimerModal" class="modal">
+        <div class="modal-content disclaimer">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-shield-alt"></i>
+                    Important Information
+                </h2>
+            </div>
+            <div class="modal-body">
+                <div class="disclaimer-intro">
+                    <p>Before submitting an anonymous report, please understand the following:</p>
+                </div>
+                <ul class="disclaimer-list">
+                    <li>
+                        <strong><i class="fas fa-user-secret"></i> Complete Anonymity</strong>
+                        <p>We do not collect your name, email, phone number, or any personal information. Your IP address is hashed and cannot be traced back to you.</p>
+                    </li>
+                    <li>
+                        <strong><i class="fas fa-file-alt"></i> Evidence Required</strong>
+                        <p>To ensure the validity of reports and reduce false submissions, at least one piece of evidence (photo, video, or document) is required.</p>
+                    </li>
+                    <li>
+                        <strong><i class="fas fa-clock"></i> Rate Limited</strong>
+                        <p>To prevent abuse, you can submit up to 3 anonymous reports per day from your location.</p>
+                    </li>
+                    <li>
+                        <strong><i class="fas fa-balance-scale"></i> Legal Responsibility</strong>
+                        <p>Filing false reports is a criminal offense. Only submit genuine reports about real incidents.</p>
+                    </li>
+                    <li>
+                        <strong><i class="fas fa-id-badge"></i> Track Your Report</strong>
+                        <p>You will receive a unique Report ID. Save it to check the status of your report later.</p>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelDisclaimer" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button id="acceptDisclaimer" class="btn btn-primary">
+                    <i class="fas fa-check"></i> I Understand, Continue
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Report Container -->
+    <div id="reportContainer" class="container hidden">
+        <!-- Back Button -->
+        <a href="/" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Back to Home
+        </a>
+
+        <header class="page-header">
+            <div class="anonymous-badge">
+                <i class="fas fa-user-secret"></i>
+                <span>Anonymous Mode</span>
+            </div>
+            <h1>Submit Anonymous Report</h1>
+            <p class="subtitle">Your identity is completely protected. No login required.</p>
+        </header>
+
+        <form id="anonymousReportForm" enctype="multipart/form-data">
+            <!-- Section 1: Incident Type -->
+            <section class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-tag icon"></i>
+                    <h2>Incident Type</h2>
+                    <span class="required-badge">Required</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="crimeType">
+                        Type of Crime *
+                    </label>
+                    <select id="crimeType" name="crimeType" required>
+                        <option value="">Select the type of crime</option>
+                        <option value="theft">Theft / Burglary / Robbery</option>
+                        <option value="assault">Assault / Physical Violence</option>
+                        <option value="fraud">Fraud / Scams</option>
+                        <option value="vandalism">Vandalism / Property Damage</option>
+                        <option value="harassment">Harassment / Stalking</option>
+                        <option value="drug_related">Drug Related Activity</option>
+                        <option value="cybercrime">Cybercrime / Online Fraud</option>
+                        <option value="domestic_violence">Domestic Violence</option>
+                        <option value="corruption">Corruption / Bribery</option>
+                        <option value="human_trafficking">Human Trafficking</option>
+                        <option value="environmental">Environmental Crime</option>
+                        <option value="organized_crime">Gang / Organized Crime</option>
+                        <option value="threat">Threats / Intimidation</option>
+                        <option value="public_safety">Public Safety Concern</option>
+                        <option value="traffic_violation">Serious Traffic Violation</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <span class="error-message" id="crimeTypeError"></span>
+                </div>
+            </section>
+
+            <!-- Section 2: Incident Details -->
+            <section class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-file-alt icon"></i>
+                    <h2>Incident Details</h2>
+                    <span class="required-badge">Required</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">
+                        Description *
+                        <span class="char-count">
+                            <span id="descCharCount">0</span>/5000
+                        </span>
+                    </label>
+                    <textarea 
+                        id="description" 
+                        name="description" 
+                        rows="6" 
+                        placeholder="Describe the incident in detail. Include what happened, who was involved (without personal names if unknown), and any other relevant information. Minimum 50 characters required."
+                        required
+                        minlength="50"
+                        maxlength="5000"
+                    ></textarea>
+                    <span class="error-message" id="descriptionError"></span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="incidentDate">
+                            Date of Incident *
+                        </label>
+                        <input 
+                            type="date" 
+                            id="incidentDate" 
+                            name="incidentDate" 
+                            required
+                        >
+                        <span class="error-message" id="incidentDateError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="incidentTime">
+                            Time of Incident *
+                        </label>
+                        <input 
+                            type="time" 
+                            id="incidentTime" 
+                            name="incidentTime" 
+                            required
+                        >
+                        <span class="error-message" id="incidentTimeError"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">
+                        <i class="fas fa-map-marker-alt"></i> Location *
+                    </label>
+                    <div class="location-input-group">
+                        <input 
+                            type="text" 
+                            id="location" 
+                            name="location" 
+                            placeholder="Enter address or location details"
+                            required
+                            minlength="10"
+                            maxlength="500"
+                        >
+                        <button type="button" id="openMapBtn" class="btn btn-map">
+                            <i class="fas fa-map-marker-alt"></i> Use Map
+                        </button>
+                    </div>
+                    <span class="error-message" id="locationError"></span>
+                    
+                    <!-- Hidden fields for coordinates -->
+                    <input type="hidden" id="latitude" name="latitude">
+                    <input type="hidden" id="longitude" name="longitude">
+                    <input type="hidden" id="locationAccuracy" name="locationAccuracy" value="accurate">
+                </div>
+            </section>
+
+            <!-- Section 3: Suspect Information (Optional) -->
+            <section class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-user icon"></i>
+                    <h2>Suspect Information</h2>
+                    <span class="optional-badge">Optional</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="suspectDescription">
+                        Suspect Description
+                        <span class="char-count">
+                            <span id="suspectCharCount">0</span>/2000
+                        </span>
+                    </label>
+                    <textarea 
+                        id="suspectDescription" 
+                        name="suspectDescription" 
+                        rows="3" 
+                        placeholder="Describe any suspects: physical appearance, clothing, vehicle, or any identifying features. Leave blank if unknown."
+                        maxlength="2000"
+                    ></textarea>
+                </div>
+            </section>
+
+            <!-- Section 4: Evidence Upload -->
+            <section class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-camera icon"></i>
+                    <h2>Evidence</h2>
+                    <span class="required-badge">Required</span>
+                </div>
+
+                <div class="upload-area" id="uploadArea">
+                    <input 
+                        type="file" 
+                        id="evidenceFiles" 
+                        name="evidence" 
+                        class="file-input"
+                        multiple
+                        accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
+                    >
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <p class="upload-text">
+                        Drag & drop files here or <span class="link">browse</span>
+                    </p>
+                    <p class="upload-hint">
+                        Supported: Images, Videos, Audio, PDF, DOC (Max 50MB each, up to 10 files)
+                    </p>
+                </div>
+
+                <div id="fileList" class="file-list"></div>
+                <p class="file-count" id="fileCount">0 files selected</p>
+                <span class="error-message" id="evidenceError"></span>
+
+                <div class="privacy-notice">
+                    <i class="fas fa-shield-alt"></i>
+                    <p>All metadata (location data, camera info, etc.) is stripped from images for your privacy.</p>
+                </div>
+            </section>
+
+            <!-- Section 5: Additional Information -->
+            <section class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-sticky-note icon"></i>
+                    <h2>Additional Notes</h2>
+                    <span class="optional-badge">Optional</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="additionalNotes">
+                        Any other information
+                        <span class="char-count">
+                            <span id="notesCharCount">0</span>/2000
+                        </span>
+                    </label>
+                    <textarea 
+                        id="additionalNotes" 
+                        name="additionalNotes" 
+                        rows="3" 
+                        placeholder="Any additional information that might help with the investigation..."
+                        maxlength="2000"
+                    ></textarea>
+                </div>
+            </section>
+
+            <!-- Section 6: CAPTCHA Verification -->
+            <section class="form-section">
+                <div class="section-title">
+                    <i class="fas fa-robot icon"></i>
+                    <h2>Verification</h2>
+                    <span class="required-badge">Required</span>
+                </div>
+
+                <div class="captcha-container">
+                    <div class="captcha-question" id="captchaQuestion">
+                        Loading...
+                    </div>
+                    <input type="hidden" id="captchaExpected" name="captchaExpected">
+                    <input 
+                        type="text" 
+                        id="captchaAnswer" 
+                        name="captchaAnswer" 
+                        placeholder="Enter answer"
+                        required
+                        class="captcha-input"
+                    >
+                    <button type="button" id="refreshCaptcha" class="btn btn-icon" title="New question">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <span class="error-message" id="captchaError"></span>
+            </section>
+
+            <!-- Submit Section -->
+            <section class="submit-section">
+                <button type="submit" id="submitBtn" class="btn btn-primary btn-large">
+                    <i class="fas fa-paper-plane"></i>
+                    Submit Anonymous Report
+                </button>
+                <p class="submit-notice">
+                    <i class="fas fa-lock"></i>
+                    Your submission is encrypted and your identity is protected.
+                </p>
+            </section>
+        </form>
+    </div>
+
+    <!-- Success Container -->
+    <div id="successContainer" class="container success-container hidden">
+        <div class="success-content">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h1>Report Submitted Successfully!</h1>
+            <p class="success-message">
+                Your anonymous report has been received and will be reviewed by authorities.
+            </p>
+
+            <div class="report-id-box">
+                <p class="label">Your Report ID</p>
+                <p class="report-id" id="reportIdDisplay">SV-XXXXXXXX</p>
+                <button id="copyReportId" class="btn btn-small">
+                    <i class="fas fa-copy"></i> Copy ID
+                </button>
+            </div>
+
+            <div class="important-notice">
+                <h3><i class="fas fa-exclamation-triangle"></i> Important</h3>
+                <p>Save your Report ID! This is the only way to check the status of your report. We cannot recover this ID for you.</p>
+            </div>
+
+            <div class="success-actions">
+                <a href="/" class="btn btn-secondary">
+                    <i class="fas fa-home"></i> Return Home
+                </a>
+                <button id="checkStatusBtn" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Check Status
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Check Modal -->
+    <div id="statusModal" class="modal hidden">
+        <div class="modal-content status-modal">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-search"></i>
+                    Check Report Status
+                </h2>
+                <button class="modal-close" id="closeStatusModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="statusReportId">Enter your Report ID</label>
+                    <input 
+                        type="text" 
+                        id="statusReportId" 
+                        placeholder="SV-XXXXXXXX"
+                        pattern="SV-[A-Z0-9]+"
+                    >
+                </div>
+                <button id="searchStatus" class="btn btn-primary btn-large">
+                    <i class="fas fa-search"></i> Check Status
+                </button>
+                
+                <div id="statusResult" class="status-result hidden">
+                    <!-- Status results will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Location Picker Modal -->
+    <div id="mapModal" class="modal hidden">
+        <div class="modal-content map-modal">
+            <div class="modal-header">
+                <h2>
+                    <i class="fas fa-crosshairs"></i>
+                    Select Location Accuracy
+                </h2>
+                <button class="modal-close" id="closeMapModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Accuracy Options -->
+                <div class="accuracy-options">
+                    <label class="accuracy-option selected" id="accurateOption">
+                        <input type="radio" name="accuracy" value="accurate" checked>
+                        <div class="option-content">
+                            <i class="fas fa-crosshairs"></i>
+                            <div class="option-text">
+                                <strong>Accurate Location</strong>
+                                <span>Exact incident location</span>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="accuracy-option" id="approximateOption">
+                        <input type="radio" name="accuracy" value="approximate">
+                        <div class="option-content">
+                            <i class="fas fa-globe"></i>
+                            <div class="option-text">
+                                <strong>Approximate Location</strong>
+                                <span>General area (privacy protection)</span>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Map Instructions -->
+                <p class="map-instruction">
+                    <i class="fas fa-info-circle"></i>
+                    Click on the map or drag the marker to select the incident location
+                </p>
+
+                <!-- Current Location Button -->
+                <button type="button" id="useCurrentLocationBtn" class="btn btn-current-location">
+                    <i class="fas fa-location-arrow"></i> Use My Current Location
+                </button>
+
+                <!-- Map Container -->
+                <div id="mapContainer" class="map-container">
+                    <div id="anonymousMap"></div>
+                </div>
+            </div>
+            <div class="modal-footer map-footer">
+                <button type="button" id="confirmLocationBtn" class="btn btn-confirm">
+                    <i class="fas fa-check"></i> Confirm Location
+                </button>
+                <button type="button" id="cancelLocationBtn" class="btn btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/anonymous-report.js"></script>
+</body>
+</html>

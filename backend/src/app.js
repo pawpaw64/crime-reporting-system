@@ -41,8 +41,11 @@ app.use(helmet({
                 "'self'", 
                 "https://api.opencagedata.com", 
                 "https://nominatim.openstreetmap.org",
-                "https://*.tile.openstreetmap.org",  // Map tiles
-                "https://tile.openstreetmap.org"     // Map tiles
+                "https://*.tile.openstreetmap.org",  // Map tiles (includes a/b/c subdomains)
+                "https://tile.openstreetmap.org",    // Map tiles
+                "https://a.tile.openstreetmap.org",
+                "https://b.tile.openstreetmap.org",
+                "https://c.tile.openstreetmap.org"
             ]
         }
     },

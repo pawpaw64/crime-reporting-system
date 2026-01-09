@@ -175,9 +175,11 @@
 .report-crime-btn-container {
     display: flex;
     justify-content: center;
+    gap: 20px;
     padding: 30px;
     background: transparent;
     border-top: none;
+    flex-wrap: wrap;
 }
 
 .report-crime-btn {
@@ -236,6 +238,65 @@
 
 .report-crime-btn:hover i {
     transform: rotate(15deg) scale(1.1);
+}
+
+/* Anonymous Report Button - Red Themed */
+.anonymous-report-btn {
+    padding: 16px 36px;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: #ffffff;
+    border: 2px solid rgba(220, 38, 38, 0.3);
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: "Montserrat", sans-serif;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 6px 25px rgba(220, 38, 38, 0.35);
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.anonymous-report-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s;
+}
+
+.anonymous-report-btn:hover::before {
+    left: 100%;
+}
+
+.anonymous-report-btn:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 35px rgba(220, 38, 38, 0.5);
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.anonymous-report-btn:active {
+    transform: translateY(-1px) scale(1);
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+}
+
+.anonymous-report-btn i {
+    font-size: 18px;
+    color: #ffffff;
+    transition: transform 0.3s ease;
+}
+
+.anonymous-report-btn:hover i {
+    transform: scale(1.15);
 }
 
 .map-info {
@@ -323,9 +384,11 @@
     .report-crime-btn-container {
         margin-top: 15px;
         padding: 0 20px;
+        gap: 15px;
     }
     
-    .report-crime-btn {
+    .report-crime-btn,
+    .anonymous-report-btn {
         padding: 12px 25px;
         font-size: 14px;
     }
@@ -376,11 +439,18 @@
     .report-crime-btn-container {
         margin-top: 10px;
         padding: 0 15px;
+        gap: 10px;
+        flex-direction: column;
+        align-items: center;
     }
     
-    .report-crime-btn {
+    .report-crime-btn,
+    .anonymous-report-btn {
         padding: 10px 20px;
         font-size: 13px;
+        width: 100%;
+        max-width: 280px;
+        justify-content: center;
     }
     
     .info-card {

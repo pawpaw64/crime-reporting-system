@@ -111,6 +111,17 @@ exports.getComplainPage = (req, res) => {
     res.redirect('/profile?tab=new-report');
 };
 
+// Get Anonymous Report Page
+exports.getAnonymousReportPage = (req, res) => {
+    const anonymousReportPath = path.join(__dirname, '../../../frontend/src/pages/anonymous-report.html');
+
+    if (!fs.existsSync(anonymousReportPath)) {
+        return res.status(404).send("Anonymous report page not found");
+    }
+
+    res.sendFile(anonymousReportPath);
+};
+
 // Test Email
 exports.testEmail = async (req, res) => {
     const { sendEmail } = require('../utils/emailUtils');

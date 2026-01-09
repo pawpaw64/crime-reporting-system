@@ -8,6 +8,7 @@ const superAdminController = require('./controllers/superAdminController');
 const userController = require('./controllers/userController');
 const complaintController = require('./controllers/complaintController');
 const pageController = require('./controllers/pageController');
+const anonymousReportController = require('./controllers/anonymousReportController');
 
 // Import middleware
 const { requireUser, requireAdmin } = require('./middleware/authMiddleware');
@@ -19,6 +20,7 @@ router.get('/contact-us', pageController.getContactUs);
 router.get('/adminLogin', pageController.getAdminLoginPage);
 router.get('/signup', pageController.getSignupPage);
 router.get('/login', pageController.getLoginPage);
+router.get('/anonymous-report', pageController.getAnonymousReportPage);
 router.get('/test-email', pageController.testEmail);
 
 // ========== AUTH ROUTES ==========
@@ -95,5 +97,24 @@ router.post('/send-chat-message', requireUser, complaintController.sendChatMessa
 router.delete('/delete-complaint/:id', requireUser, complaintController.deleteComplaint);
 router.get('/dashboard-stats', requireUser, complaintController.getDashboardStats);
 router.get('/complaint-heatmap-data', complaintController.getComplaintHeatmapData);  // Public heatmap data
+
+// ========== ANONYMOUS REPORT ROUTES ==========
+// Public routes (no authentication required)
+router.post('/anonymous-report', upload.array('evidence', 10), anonymousReportController.submitAnonymousReport);
+router.get('/anonymous-report/:reportId/status', anonymousReportController.checkAnonymousReportStatus);
+router.get('/anonymous-heatmap-data', anonymousReportController.getAnonymousHeatmapData);
+
+// Admin routes for anonymous reports (new format)
+router.get('/admin/anonymous-reports', anonymousReportController.getAnonymousReports);
+router.get('/admin/anonymous-reports/:reportId', anonymousReportController.getAnonymousReportDetails);
+router.put('/admin/anonymous-reports/:reportId/status', anonymousReportController.updateAnonymousReportStatus);
+router.get('/admin/anonymous-reports/:reportId/evidence', anonymousReportController.getAnonymousReportEvidence);
+
+// Legacy admin routes for anonymous reports
+router.get('/admin-anonymous-reports', anonymousReportController.getAnonymousReports);
+router.get('/admin-anonymous-report/:reportId', anonymousReportController.getAnonymousReportDetails);
+router.patch('/admin-anonymous-report/:reportId/status', anonymousReportController.updateAnonymousReportStatus);
+router.patch('/admin-anonymous-report/:reportId/flag', anonymousReportController.flagAnonymousReport);
+router.get('/anonymous-report-stats', anonymousReportController.getAnonymousReportStats);
 
 module.exports = router;

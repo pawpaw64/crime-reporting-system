@@ -5,7 +5,10 @@
 let adminData = null;
 let complaintsData = [];
 let usersData = [];
+let anonymousReportsData = [];
 let currentComplaintId = null;
+let currentAnonReportId = null;
+let anonDetailMap = null;
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -45,7 +48,8 @@ async function loadDashboardData() {
         loadAdminProfile(),
         loadComplaints(),
         loadUsers(),
-        loadDashboardStats()
+        loadDashboardStats(),
+        loadAnonymousReports()
     ]);
 }
 
@@ -870,4 +874,374 @@ function showToast(message, type = 'info') {
     document.body.appendChild(toast);
 
     setTimeout(() => toast.remove(), 3000);
+}
+
+// ===== ANONYMOUS REPORTS =====
+async function loadAnonymousReports() {
+    try {
+        const response = await fetch('/admin/anonymous-reports', { credentials: 'include' });
+        const data = await response.json();
+
+        if (data.success) {
+            anonymousReportsData = data.reports || [];
+            renderAnonymousReports();
+            updateAnonymousStats();
+            document.getElementById('anonymous-reports-count').textContent = `Total: ${anonymousReportsData.length} reports`;
+        }
+    } catch (error) {
+        console.error('Error loading anonymous reports:', error);
+        document.getElementById('anonymous-reports-table-container').innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error Loading Reports</h3>
+                <p>Please try again later</p>
+            </div>
+        `;
+    }
+}
+
+function updateAnonymousStats() {
+    const pending = anonymousReportsData.filter(r => r.status === 'pending' || r.status === 'reviewing').length;
+    const investigating = anonymousReportsData.filter(r => r.status === 'investigating').length;
+    const resolved = anonymousReportsData.filter(r => r.status === 'resolved').length;
+
+    document.getElementById('anon-total').textContent = anonymousReportsData.length;
+    document.getElementById('anon-pending').textContent = pending;
+    document.getElementById('anon-investigating').textContent = investigating;
+    document.getElementById('anon-resolved').textContent = resolved;
+}
+
+function renderAnonymousReports(filteredData = null) {
+    const container = document.getElementById('anonymous-reports-table-container');
+    const reports = filteredData || anonymousReportsData;
+
+    if (reports.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-user-secret"></i>
+                <h3>No Anonymous Reports</h3>
+                <p>There are no anonymous reports assigned to your district</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Report ID</th>
+                    <th>Crime Type</th>
+                    <th>Incident Date</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${reports.map(r => `
+                    <tr>
+                        <td><strong>${r.report_id}</strong></td>
+                        <td>${formatCrimeType(r.crime_type)}</td>
+                        <td>${new Date(r.incident_date).toLocaleDateString()}</td>
+                        <td>${truncateText(r.location_address || 'Not specified', 30)}</td>
+                        <td><span class="status ${r.status}">${formatStatus(r.status)}</span></td>
+                        <td>${new Date(r.submitted_at).toLocaleDateString()}</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn btn-primary btn-sm" onclick="viewAnonReport('${r.report_id}')" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="openAnonStatusModal('${r.report_id}', '${r.status}')" title="Update Status">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                ${r.latitude && r.longitude ? `
+                                    <button class="btn btn-warning btn-sm" onclick="viewAnonLocation('${r.report_id}', ${r.latitude}, ${r.longitude}, '${escapeHtml(r.location_address || '')}')" title="View on Map">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </button>
+                                ` : ''}
+                                <button class="btn btn-success btn-sm" onclick="viewAnonEvidence('${r.report_id}')" title="View Evidence">
+                                    <i class="fas fa-images"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function formatCrimeType(type) {
+    if (!type) return 'Unknown';
+    return type
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+function formatStatus(status) {
+    const statusMap = {
+        'pending': 'Pending',
+        'reviewing': 'Reviewing',
+        'investigated': 'Investigated',
+        'investigating': 'Investigating',
+        'resolved': 'Resolved',
+        'dismissed': 'Dismissed'
+    };
+    return statusMap[status] || status;
+}
+
+async function viewAnonReport(reportId) {
+    currentAnonReportId = reportId;
+    const modal = document.getElementById('anonReportModal');
+    const content = document.getElementById('anon-report-content');
+    
+    modal.classList.add('active');
+    content.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+    try {
+        const response = await fetch(`/admin/anonymous-reports/${reportId}`, { credentials: 'include' });
+        const data = await response.json();
+
+        if (data.success) {
+            const r = data.report;
+            content.innerHTML = `
+                <div class="report-details-grid">
+                    <div class="detail-section">
+                        <h4><i class="fas fa-info-circle"></i> Report Information</h4>
+                        <div class="detail-row">
+                            <span class="label">Report ID:</span>
+                            <span class="value"><strong>${r.report_id}</strong></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Status:</span>
+                            <span class="value"><span class="status ${r.status}">${formatStatus(r.status)}</span></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Submitted:</span>
+                            <span class="value">${new Date(r.submitted_at).toLocaleString()}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h4><i class="fas fa-tag"></i> Crime Details</h4>
+                        <div class="detail-row">
+                            <span class="label">Crime Type:</span>
+                            <span class="value">${formatCrimeType(r.crime_type)}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Incident Date:</span>
+                            <span class="value">${new Date(r.incident_date).toLocaleDateString()}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Incident Time:</span>
+                            <span class="value">${r.incident_time || 'Not specified'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section full-width">
+                        <h4><i class="fas fa-map-marker-alt"></i> Location</h4>
+                        <p>${r.location_address || 'Not specified'}</p>
+                        ${r.latitude && r.longitude ? `
+                            <p class="coords"><small>Coordinates: ${r.latitude.toFixed(6)}, ${r.longitude.toFixed(6)}</small></p>
+                            <button class="btn btn-outline btn-sm" onclick="viewAnonLocation('${r.report_id}', ${r.latitude}, ${r.longitude}, '${escapeHtml(r.location_address || '')}')">
+                                <i class="fas fa-map"></i> View on Map
+                            </button>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="detail-section full-width">
+                        <h4><i class="fas fa-file-alt"></i> Description</h4>
+                        <div class="description-box">${escapeHtml(r.description)}</div>
+                    </div>
+                    
+                    ${r.suspect_description ? `
+                        <div class="detail-section full-width">
+                            <h4><i class="fas fa-user"></i> Suspect Description</h4>
+                            <div class="description-box">${escapeHtml(r.suspect_description)}</div>
+                        </div>
+                    ` : ''}
+                    
+                    ${r.additional_notes ? `
+                        <div class="detail-section full-width">
+                            <h4><i class="fas fa-sticky-note"></i> Additional Notes</h4>
+                            <div class="description-box">${escapeHtml(r.additional_notes)}</div>
+                        </div>
+                    ` : ''}
+                    
+                    ${r.admin_notes ? `
+                        <div class="detail-section full-width">
+                            <h4><i class="fas fa-clipboard"></i> Admin Notes</h4>
+                            <div class="description-box admin-notes">${escapeHtml(r.admin_notes)}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        } else {
+            content.innerHTML = `<div class="error-state"><i class="fas fa-exclamation-triangle"></i> Failed to load report</div>`;
+        }
+    } catch (error) {
+        console.error('Error loading report:', error);
+        content.innerHTML = `<div class="error-state"><i class="fas fa-exclamation-triangle"></i> Error loading report</div>`;
+    }
+}
+
+function openAnonStatusModal(reportId, currentStatus) {
+    currentAnonReportId = reportId;
+    document.getElementById('anon-modal-report-id').textContent = reportId;
+    document.getElementById('anon-modal-current-status').textContent = formatStatus(currentStatus);
+    document.getElementById('anon-modal-new-status').value = currentStatus;
+    document.getElementById('anon-modal-notes').value = '';
+    document.getElementById('anonStatusModal').classList.add('active');
+}
+
+async function updateAnonReportStatus() {
+    const newStatus = document.getElementById('anon-modal-new-status').value;
+    const notes = document.getElementById('anon-modal-notes').value;
+
+    try {
+        const response = await fetch(`/admin/anonymous-reports/${currentAnonReportId}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: newStatus, adminNotes: notes })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('Status updated successfully', 'success');
+            closeModal('anonStatusModal');
+            loadAnonymousReports();
+        } else {
+            showToast(data.message || 'Failed to update status', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating status:', error);
+        showToast('Error updating status', 'error');
+    }
+}
+
+function viewAnonLocation(reportId, lat, lng, address) {
+    document.getElementById('anon-map-report-id').textContent = reportId;
+    document.getElementById('anon-map-address').textContent = address || 'Location not specified';
+    document.getElementById('anonMapModal').classList.add('active');
+
+    setTimeout(() => {
+        const mapContainer = document.getElementById('anon-detail-map');
+        
+        if (anonDetailMap) {
+            anonDetailMap.remove();
+        }
+        
+        anonDetailMap = L.map('anon-detail-map').setView([lat, lng], 16);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(anonDetailMap);
+        
+        L.marker([lat, lng])
+            .addTo(anonDetailMap)
+            .bindPopup(`📍 ${address || 'Incident Location'}`)
+            .openPopup();
+    }, 100);
+}
+
+function closeAnonMapModal() {
+    document.getElementById('anonMapModal').classList.remove('active');
+    if (anonDetailMap) {
+        anonDetailMap.remove();
+        anonDetailMap = null;
+    }
+}
+
+async function viewAnonEvidence(reportId) {
+    document.getElementById('anon-evidence-report-id').textContent = reportId;
+    const modal = document.getElementById('anonEvidenceModal');
+    const content = document.getElementById('anon-evidence-content');
+    
+    modal.classList.add('active');
+    content.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading evidence...</div>';
+
+    try {
+        const response = await fetch(`/admin/anonymous-reports/${reportId}/evidence`, { credentials: 'include' });
+        const data = await response.json();
+
+        if (data.success && data.evidence && data.evidence.length > 0) {
+            content.innerHTML = `
+                <div class="evidence-grid">
+                    ${data.evidence.map(e => `
+                        <div class="evidence-item">
+                            ${getEvidencePreview(e)}
+                            <div class="evidence-info">
+                                <p class="file-name">${escapeHtml(e.original_name)}</p>
+                                <p class="file-meta">${formatFileSize(e.file_size)} • ${e.file_type}</p>
+                            </div>
+                            <a href="/${e.file_path}" target="_blank" class="btn btn-sm btn-outline">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            content.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-folder-open"></i>
+                    <h3>No Evidence</h3>
+                    <p>No evidence files found for this report</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading evidence:', error);
+        content.innerHTML = `<div class="error-state"><i class="fas fa-exclamation-triangle"></i> Error loading evidence</div>`;
+    }
+}
+
+function getEvidencePreview(evidence) {
+    const fileType = evidence.file_type || '';
+    const filePath = `/${evidence.file_path}`;
+    
+    if (fileType === 'image') {
+        return `<img src="${filePath}" alt="${escapeHtml(evidence.original_name)}" class="evidence-preview">`;
+    } else if (fileType === 'video') {
+        return `<video src="${filePath}" controls class="evidence-preview"></video>`;
+    } else if (fileType === 'audio') {
+        return `<div class="evidence-icon"><i class="fas fa-music"></i></div><audio src="${filePath}" controls></audio>`;
+    } else {
+        return `<div class="evidence-icon"><i class="fas fa-file"></i></div>`;
+    }
+}
+
+function formatFileSize(bytes) {
+    if (!bytes) return 'Unknown size';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function applyAnonFilters() {
+    const status = document.getElementById('anon-filter-status').value;
+    const type = document.getElementById('anon-filter-type').value;
+
+    let filtered = anonymousReportsData;
+
+    if (status) {
+        filtered = filtered.filter(r => r.status === status);
+    }
+
+    if (type) {
+        filtered = filtered.filter(r => r.crime_type === type);
+    }
+
+    renderAnonymousReports(filtered);
+}
+
+function clearAnonFilters() {
+    document.getElementById('anon-filter-status').value = '';
+    document.getElementById('anon-filter-type').value = '';
+    renderAnonymousReports();
 }

@@ -44,7 +44,7 @@
         <a href="#cases-section" class="navigation-link">Cases We Handle</a>
     </li>
     <li class="navigation-item">
-        <a href="#ready-to-get-started" class="navigation-link">About Us</a>
+        <a href="#track-anonymous-report" class="navigation-link">Track Report</a>
     </li>
     <li class="navigation-item">
         <a href="src/pages/contact-us.html" class="navigation-link">Contact Us</a>
@@ -101,6 +101,10 @@
                 <i class="fa-solid fa-exclamation-triangle"></i>
                 Report a Crime
             </button>
+            <button id="anonymous-report-btn" class="anonymous-report-btn" onclick="handleAnonymousReport()">
+                <i class="fa-solid fa-user-secret"></i>
+                Anonymous Report
+            </button>
         </div>
         
         <!-- Heatmap Info Panel -->
@@ -142,6 +146,44 @@
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 
 <script src="src/js/map.js"></script>
+
+<!-- Start: Track Anonymous Report Section -->
+<section id="track-anonymous-report">
+    <div class="container">
+        <div class="track-report-content">
+            <div class="track-report-header">
+                <div class="track-icon">
+                    <i class="fas fa-search-location"></i>
+                </div>
+                <h2>Track Your Anonymous Report</h2>
+                <p>Already submitted an anonymous report? Enter your Report ID to check its current status.</p>
+            </div>
+            
+            <div class="track-report-form">
+                <div class="input-group">
+                    <i class="fas fa-hashtag"></i>
+                    <input type="text" id="trackReportId" placeholder="Enter Report ID (e.g., SV-XXXXXXXX)" maxlength="20">
+                    <button id="trackReportBtn" class="track-btn">
+                        <i class="fas fa-search"></i>
+                        <span>Track Status</span>
+                    </button>
+                </div>
+                <p class="track-hint">
+                    <i class="fas fa-info-circle"></i>
+                    Your Report ID was provided when you submitted your anonymous report. Keep it safe!
+                </p>
+            </div>
+            
+            <!-- Status Result Container -->
+            <div id="trackResult" class="track-result hidden">
+                <div class="result-content">
+                    <!-- Results will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End: Track Anonymous Report Section -->
 
 <!-- Start: How it works -->
 <section id="how-it-works">
@@ -415,6 +457,173 @@
         // Redirect to the unified complaint form in profile page
         window.location.href = '/profile?tab=new-report';
     }
+    
+    // Handle Anonymous Report button click
+    function handleAnonymousReport() {
+        // Redirect to the anonymous report page
+        window.location.href = 'src/pages/anonymous-report.html';
+    }
+    
+    // ======================
+    // TRACK ANONYMOUS REPORT
+    // ======================
+    document.addEventListener('DOMContentLoaded', function() {
+        const trackInput = document.getElementById('trackReportId');
+        const trackBtn = document.getElementById('trackReportBtn');
+        const trackResult = document.getElementById('trackResult');
+        
+        if (!trackInput || !trackBtn || !trackResult) return;
+        
+        // Get API URL
+        const getApiUrl = () => {
+            const hostname = window.location.hostname;
+            const port = window.location.port;
+            if (['3000', '3001', '5000'].includes(port)) {
+                return '';
+            }
+            return `http://${hostname}:3000`;
+        };
+        
+        // Format crime type
+        const formatCrimeType = (type) => {
+            if (!type) return 'N/A';
+            return type.split('_').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+        };
+        
+        // Format status
+        const formatStatus = (status) => {
+            const statusMap = {
+                'pending': 'Pending Review',
+                'reviewing': 'Under Review',
+                'reviewed': 'Reviewed',
+                'investigating': 'Under Investigation',
+                'resolved': 'Resolved',
+                'dismissed': 'Dismissed'
+            };
+            return statusMap[status] || status;
+        };
+        
+        // Format date
+        const formatDate = (dateStr) => {
+            if (!dateStr) return 'N/A';
+            return new Date(dateStr).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        };
+        
+        // Handle Enter key
+        trackInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                trackBtn.click();
+            }
+        });
+        
+        // Auto-format input
+        trackInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+        });
+        
+        // Track button click
+        trackBtn.addEventListener('click', async () => {
+            const reportId = trackInput.value.trim().toUpperCase();
+            
+            // Validate format
+            if (!reportId || !reportId.match(/^SV-[A-Z0-9]+$/)) {
+                showError('Please enter a valid Report ID (e.g., SV-XXXXXXXX)');
+                return;
+            }
+            
+            // Show loading state
+            trackBtn.disabled = true;
+            trackBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Searching...</span>';
+            
+            try {
+                const apiUrl = getApiUrl();
+                const response = await fetch(`${apiUrl}/anonymous-report/${reportId}/status`);
+                const data = await response.json();
+                
+                if (data.success && data.report) {
+                    showSuccess(data.report);
+                } else {
+                    showError(data.message || 'Report not found. Please check your Report ID and try again.');
+                }
+            } catch (error) {
+                console.error('Track error:', error);
+                showError('Unable to check status. Please try again later.');
+            } finally {
+                trackBtn.disabled = false;
+                trackBtn.innerHTML = '<i class="fas fa-search"></i> <span>Track Status</span>';
+            }
+        });
+        
+        // Show success result
+        function showSuccess(report) {
+            trackResult.classList.remove('hidden');
+            trackResult.querySelector('.result-content').className = 'result-content success';
+            trackResult.querySelector('.result-content').innerHTML = `
+                <div class="result-header">
+                    <h3><i class="fas fa-file-alt"></i> Report Found</h3>
+                    <button class="close-result" onclick="document.getElementById('trackResult').classList.add('hidden')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="result-grid">
+                    <div class="result-item">
+                        <span class="label">Report ID</span>
+                        <span class="value report-id">${escapeHtml(report.reportId)}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="label">Crime Type</span>
+                        <span class="value">${formatCrimeType(report.crimeType)}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="label">Submitted</span>
+                        <span class="value">${formatDate(report.submittedAt)}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="label">Status</span>
+                        <span class="status-badge ${report.status}">${formatStatus(report.status)}</span>
+                    </div>
+                </div>
+                <div class="result-message">
+                    <i class="fas fa-info-circle"></i>
+                    <span>${escapeHtml(report.statusMessage || 'Your report is being processed. Check back later for updates.')}</span>
+                </div>
+            `;
+            
+            // Scroll to result
+            trackResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Show error result
+        function showError(message) {
+            trackResult.classList.remove('hidden');
+            trackResult.querySelector('.result-content').className = 'result-content error';
+            trackResult.querySelector('.result-content').innerHTML = `
+                <div class="result-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div>
+                        <p>${escapeHtml(message)}</p>
+                    </div>
+                    <button class="close-result" style="margin-left: auto;" onclick="document.getElementById('trackResult').classList.add('hidden')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    });
 </script>
 </body>
 </html>

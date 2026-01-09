@@ -249,6 +249,370 @@ end: header  */
 }
 /* end: explore us */
 
+/* start: Track Anonymous Report */
+#track-anonymous-report {
+    background: linear-gradient(135deg, #212A31 0%, #124E66 50%, #212A31 100%);
+    padding: 60px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+#track-anonymous-report::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+}
+
+.track-report-content {
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.track-report-header {
+    margin-bottom: 30px;
+}
+
+.track-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #124E66, #0f3e52);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(18, 78, 102, 0.4);
+    }
+    50% {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 0 15px rgba(18, 78, 102, 0);
+    }
+}
+
+.track-icon i {
+    font-size: 2rem;
+    color: white;
+}
+
+.track-report-header h2 {
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    color: white;
+    margin-bottom: 10px;
+    font-weight: 700;
+    font-family: "Montserrat", sans-serif;
+}
+
+.track-report-header p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    max-width: 500px;
+    margin: 0 auto;
+    font-family: "Poppins", sans-serif;
+}
+
+.track-report-form {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.track-report-form .input-group {
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 12px;
+    padding: 8px;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.track-report-form .input-group i.fa-hashtag {
+    font-size: 1.25rem;
+    color: #124E66;
+    margin-left: 12px;
+}
+
+.track-report-form .input-group input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    padding: 12px 0;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #212A31;
+}
+
+.track-report-form .input-group input::placeholder {
+    text-transform: none;
+    letter-spacing: 0;
+    color: #748D92;
+}
+
+.track-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #124E66, #0f3e52);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.track-btn:hover {
+    background: linear-gradient(135deg, #0f3e52, #0a2d3a);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(18, 78, 102, 0.4);
+}
+
+.track-btn:disabled {
+    background: #748D92;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.track-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 15px;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.track-hint i {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Track Result Styles */
+.track-result {
+    margin-top: 25px;
+    animation: slideUp 0.3s ease;
+}
+
+.track-result.hidden {
+    display: none;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.result-content {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: left;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.result-content.error {
+    border-left: 4px solid #ef4444;
+}
+
+.result-content.success {
+    border-left: 4px solid #22c55e;
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.result-header h3 {
+    font-size: 1.125rem;
+    color: #212A31;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.result-header h3 i {
+    color: #124E66;
+}
+
+.close-result {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: #748D92;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s;
+}
+
+.close-result:hover {
+    color: #212A31;
+}
+
+.result-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.result-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.result-item .label {
+    font-size: 0.75rem;
+    color: #748D92;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.result-item .value {
+    font-size: 0.9375rem;
+    color: #212A31;
+    font-weight: 500;
+}
+
+.result-item .value.report-id {
+    font-family: 'Courier New', monospace;
+    color: #124E66;
+    font-weight: 700;
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.status-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.reviewing {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge.investigating {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.status-badge.resolved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.dismissed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.result-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #2E3944;
+}
+
+.result-message i {
+    color: #124E66;
+    margin-top: 2px;
+}
+
+.result-error {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #991b1b;
+}
+
+.result-error i {
+    font-size: 1.5rem;
+}
+
+.result-error p {
+    font-size: 0.9375rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #track-anonymous-report {
+        padding: 40px 20px;
+    }
+    
+    .track-report-form .input-group {
+        flex-direction: column;
+        padding: 15px;
+    }
+    
+    .track-report-form .input-group i.fa-hashtag {
+        display: none;
+    }
+    
+    .track-report-form .input-group input {
+        width: 100%;
+        text-align: center;
+        padding: 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+    }
+    
+    .track-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 15px;
+    }
+    
+    .result-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* end: Track Anonymous Report */
+
 /* start: how it works */
 #how-it-works{
     width: 100%;

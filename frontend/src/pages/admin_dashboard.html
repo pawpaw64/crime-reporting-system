@@ -42,6 +42,10 @@
                     <i class="fas fa-file-alt"></i>
                     <span>Complaints</span>
                 </button>
+                <button class="tab-btn" data-tab="anonymous-reports">
+                    <i class="fas fa-user-secret"></i>
+                    <span>Anonymous Reports</span>
+                </button>
                 <button class="tab-btn" data-tab="cases">
                     <i class="fas fa-briefcase"></i>
                     <span>Case Analytics</span>
@@ -245,6 +249,99 @@
                     <div class="table-container" id="complaints-table-container">
                         <div class="loading-spinner">
                             <i class="fas fa-spinner fa-spin"></i> Loading complaints...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Anonymous Reports Tab -->
+            <div class="tab-content" id="anonymous-reports">
+                <div class="header">
+                    <h1><i class="fas fa-user-secret"></i> Anonymous Reports</h1>
+                    <span id="anonymous-reports-count">Total: 0 reports</span>
+                </div>
+
+                <!-- Anonymous Reports Stats -->
+                <div class="stats-grid" style="margin-bottom: 20px;">
+                    <div class="stat-card">
+                        <div class="stat-icon total">
+                            <i class="fas fa-user-secret"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="anon-total">0</h3>
+                            <p>Total Anonymous</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pending">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="anon-pending">0</h3>
+                            <p>Pending Review</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon investigating">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="anon-investigating">0</h3>
+                            <p>Investigating</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon resolved">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="anon-resolved">0</h3>
+                            <p>Resolved</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label><i class="fas fa-filter"></i> Status</label>
+                            <select class="filter-input" id="anon-filter-status">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="reviewing">Reviewing</option>
+                                <option value="investigating">Investigating</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="dismissed">Dismissed</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label><i class="fas fa-tag"></i> Crime Type</label>
+                            <select class="filter-input" id="anon-filter-type">
+                                <option value="">All Types</option>
+                                <option value="theft">Theft / Burglary</option>
+                                <option value="assault">Assault</option>
+                                <option value="fraud">Fraud</option>
+                                <option value="vandalism">Vandalism</option>
+                                <option value="harassment">Harassment</option>
+                                <option value="drug_related">Drug Related</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <button class="btn btn-primary" onclick="applyAnonFilters()">
+                                <i class="fas fa-search"></i> Apply
+                            </button>
+                            <button class="btn btn-outline" onclick="clearAnonFilters()">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-container" id="anonymous-reports-table-container">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i> Loading anonymous reports...
                         </div>
                     </div>
                 </div>
@@ -508,6 +605,89 @@
         </div>
     </div>
 
+    <!-- Anonymous Report Details Modal -->
+    <div class="modal-overlay" id="anonReportModal">
+        <div class="modal" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-secret"></i> Anonymous Report Details</h3>
+                <button class="modal-close" onclick="closeModal('anonReportModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="anon-report-content">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i> Loading report details...
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('anonReportModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anonymous Report Status Update Modal -->
+    <div class="modal-overlay" id="anonStatusModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Update Anonymous Report Status</h3>
+                <button class="modal-close" onclick="closeModal('anonStatusModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Report ID: <strong id="anon-modal-report-id"></strong></p>
+                <p>Current Status: <strong id="anon-modal-current-status"></strong></p>
+                <div class="filter-group" style="margin-top: 15px;">
+                    <label>New Status</label>
+                    <select class="filter-input" id="anon-modal-new-status">
+                        <option value="pending">Pending</option>
+                        <option value="reviewing">Reviewing</option>
+                        <option value="investigating">Investigating</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="dismissed">Dismissed</option>
+                    </select>
+                </div>
+                <div class="filter-group" style="margin-top: 15px;">
+                    <label>Admin Notes (Optional)</label>
+                    <textarea class="filter-input" id="anon-modal-notes" rows="3" placeholder="Add notes about this status change..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('anonStatusModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="updateAnonReportStatus()">Update Status</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anonymous Report Map Modal -->
+    <div class="modal-overlay" id="anonMapModal">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-map-marker-alt"></i> Incident Location</h3>
+                <button class="modal-close" onclick="closeAnonMapModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 10px;"><strong>Report ID:</strong> <span id="anon-map-report-id"></span></p>
+                <p style="margin-bottom: 15px;"><strong>Address:</strong> <span id="anon-map-address"></span></p>
+                <div id="anon-detail-map" style="height: 400px; border-radius: 8px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anonymous Evidence Modal -->
+    <div class="modal-overlay" id="anonEvidenceModal">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>Evidence - Report <span id="anon-evidence-report-id"></span></h3>
+                <button class="modal-close" onclick="closeModal('anonEvidenceModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="anon-evidence-content">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i> Loading evidence...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet CSS and JS for admin map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="/src/js/admin-dashboard-new.js"></script>
 </body>
 </html>

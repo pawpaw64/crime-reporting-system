@@ -971,3 +971,167 @@ input:checked + .slider:before {
         opacity: 1;
     }
 }
+
+/* Anonymous Reports Styles */
+.report-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.detail-section {
+    background: var(--light-grey);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.detail-section.full-width {
+    grid-column: span 2;
+}
+
+.detail-section h4 {
+    margin-bottom: 12px;
+    color: var(--deep-teal);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.detail-row:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.detail-row .label {
+    color: var(--slate-gray);
+    font-size: 0.875rem;
+}
+
+.detail-row .value {
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.description-box {
+    background: white;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.description-box.admin-notes {
+    background: #fff3cd;
+    border-left: 3px solid #ffc107;
+}
+
+.coords {
+    margin-top: 8px;
+    color: var(--muted-blue);
+}
+
+/* Evidence Grid */
+.evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.evidence-item {
+    background: var(--light-grey);
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.evidence-preview {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    background: #f0f0f0;
+}
+
+.evidence-icon {
+    width: 100%;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--deep-teal), var(--slate-gray));
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.evidence-icon i {
+    font-size: 3rem;
+    color: white;
+}
+
+.evidence-info {
+    margin-bottom: 10px;
+}
+
+.evidence-info .file-name {
+    font-size: 0.8rem;
+    font-weight: 500;
+    word-break: break-word;
+    margin-bottom: 4px;
+}
+
+.evidence-info .file-meta {
+    font-size: 0.75rem;
+    color: var(--muted-blue);
+}
+
+/* Error and Empty States */
+.error-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--danger);
+}
+
+.error-state i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* Status Badge Colors */
+.status.reviewing {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status.dismissed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+@media (max-width: 768px) {
+    .report-details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .detail-section.full-width {
+        grid-column: span 1;
+    }
+    
+    .evidence-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}
