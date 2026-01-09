@@ -282,7 +282,7 @@ exports.getAdminCases = async (req, res) => {
             FROM complaint c 
             INNER JOIN users u ON c.username = u.username
             LEFT JOIN admin_cases ac ON c.complaint_id = ac.complaint_id AND ac.admin_username = ?
-            WHERE c.admin_username = ?
+            WHERE c.admin_username = ? AND (c.is_discarded IS NULL OR c.is_discarded = FALSE)
         `;
 
         const queryParams = [adminUsername, adminUsername];
@@ -497,7 +497,7 @@ exports.getAdminComplaints = async (req, res) => {
                 COALESCE(u.fullName, 'N/A') as user_fullname
             FROM complaint c
             LEFT JOIN users u ON c.username = u.username
-            WHERE c.admin_username = ?
+            WHERE c.admin_username = ? AND (c.is_discarded IS NULL OR c.is_discarded = FALSE)
             ORDER BY c.created_at DESC`,
             [adminUsername]
         );
@@ -558,7 +558,7 @@ exports.getDashboardStats = async (req, res) => {
         const adminUsername = req.session.adminUsername;
 
         const [complaints] = await pool.query(
-            'SELECT status FROM complaint WHERE admin_username = ?',
+            'SELECT status FROM complaint WHERE admin_username = ? AND (is_discarded IS NULL OR is_discarded = FALSE)',
             [adminUsername]
         );
 

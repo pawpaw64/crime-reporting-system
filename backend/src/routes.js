@@ -9,6 +9,7 @@ const userController = require('./controllers/userController');
 const complaintController = require('./controllers/complaintController');
 const pageController = require('./controllers/pageController');
 const anonymousReportController = require('./controllers/anonymousReportController');
+const analyticsController = require('./controllers/analyticsController');
 
 // Import middleware
 const { requireUser, requireAdmin } = require('./middleware/authMiddleware');
@@ -74,6 +75,11 @@ router.get('/get-admin-profile', adminController.getAdminProfile);
 router.get('/get-admin-complaints', adminController.getAdminComplaints);
 router.get('/get-district-users', adminController.getDistrictUsers);
 router.get('/get-admin-dashboard-stats', adminController.getDashboardStats);
+
+// ========== ANALYTICS ROUTES ==========
+router.get('/analytics/case-analytics', analyticsController.getCaseAnalytics);
+router.post('/analytics/discard-case/:id', analyticsController.discardCase);
+router.post('/analytics/restore-case/:id', analyticsController.restoreCase);
 
 // ========== USER ROUTES ==========
 router.get('/profile', requireUser, userController.getProfile);

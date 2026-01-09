@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
+    
+    <!-- Version: 2.0 - Analytics Update -->
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="../js/admin-dashboard-protection.js"></script>
 
     <style>
@@ -1292,6 +1295,317 @@
             }
         }
 
+        /* Analytics Dashboard Styles */
+        .analytics-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .analytics-stat-card {
+            border-radius: 16px;
+            padding: 2rem;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .analytics-stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-icon {
+            font-size: 3rem;
+            opacity: 0.9;
+        }
+
+        .stat-content h3 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-content p {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        .stat-content small {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        /* Charts Grid */
+        .analytics-charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .chart-card-wide {
+            grid-column: span 2;
+        }
+
+        .chart-header {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .chart-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Dark mode chart cards */
+        .dark-mode .chart-card {
+            background: #1e293b;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark-mode .chart-header {
+            border-bottom-color: #334155;
+        }
+
+        .dark-mode .chart-header h3 {
+            color: #e2e8f0;
+        }
+
+        /* Analytics Filter Section */
+        .analytics-filter-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .analytics-filter-section h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .analytics-filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .filter-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-input-group label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .filter-button-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-button-group .btn {
+            flex: 1;
+        }
+
+        /* Dark mode filters */
+        .dark-mode .analytics-filter-section {
+            background: #1e293b;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark-mode .analytics-filter-section h3 {
+            color: #e2e8f0;
+        }
+
+        .dark-mode .filter-input-group label {
+            color: #cbd5e1;
+        }
+
+        /* Analytics Table */
+        .analytics-table-wrapper {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .analytics-table-wrapper .table-header {
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .analytics-table-wrapper .table-header h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .table-subtitle {
+            font-size: 0.9rem;
+            color: #666;
+            margin: 0;
+        }
+
+        /* Dark mode table */
+        .dark-mode .analytics-table-wrapper {
+            background: #1e293b;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark-mode .analytics-table-wrapper .table-header {
+            border-bottom-color: #334155;
+        }
+
+        .dark-mode .analytics-table-wrapper .table-header h3 {
+            color: #e2e8f0;
+        }
+
+        .dark-mode .table-subtitle {
+            color: #94a3b8;
+        }
+
+        /* State badges */
+        .state-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .state-badge.active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .state-badge.discarded {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .dark-mode .state-badge.active {
+            background: #064e3b;
+            color: #a7f3d0;
+        }
+
+        .dark-mode .state-badge.discarded {
+            background: #7f1d1d;
+            color: #fecaca;
+        }
+
+        /* Discarded row styling */
+        .discarded-row {
+            opacity: 0.7;
+            background: #fef2f2;
+        }
+
+        .dark-mode .discarded-row {
+            background: #1e1b1b;
+        }
+
+        /* Action buttons */
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: white;
+            color: #333;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 10000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-success {
+            border-left: 4px solid #10b981;
+        }
+
+        .toast-error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .toast-info {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .dark-mode .toast {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
 
         /* Responsive Design */
         @media (max-width: 768px) {
@@ -1447,138 +1761,154 @@
                 </div>
             </section>
 
-            <!-- Cases Section -->
+            <!-- Case Analytics Section - Completely Redesigned -->
             <section id="cases" class="panel-section">
-
                 <div class="data-table">
                     <div class="table-header">
                         <h2 class="table-title">
-                            <i class="fas fa-chart-bar"></i>
-                            Case Analytics
+                            <i class="fas fa-chart-line"></i>
+                            Case Analytics & Management
                         </h2>
-                        <button class="btn primary" onclick="refreshCases()">
-                            <i class="fas fa-refresh"></i> Refresh
+                        <button class="btn primary" onclick="initializeAnalytics()">
+                            <i class="fas fa-sync-alt"></i> Refresh Analytics
                         </button>
                     </div>
-                    <!-- Case Analytics Cards -->
-                    <div class="analytics-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-lg); margin: var(--spacing-xl); background: var(--light-gray); border-radius: var(--radius-lg); padding: var(--spacing-lg);">
 
-                        <div class="stats-card" style="background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-light) 100%); color: var(--white); padding: var(--spacing-xl); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <h3 style="font-size: var(--font-sm); font-weight: 500; opacity: 0.9; margin-bottom: var(--spacing-sm);">Total Cases</h3>
-                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="total-cases">0</p>
-                                </div>
-                                <i class="fas fa-clipboard-list" style="font-size: 2rem; opacity: 0.7;"></i>
+                    <!-- Statistics Cards -->
+                    <div class="analytics-stats-grid">
+                        <div class="analytics-stat-card" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                            <div class="stat-icon">
+                                <i class="fas fa-folder-open"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Total Cases</h3>
+                                <p id="total-cases-stat">0</p>
+                                <small>All time</small>
                             </div>
                         </div>
 
-                        <div class="stats-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: var(--white); padding: var(--spacing-xl); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <h3 style="font-size: var(--font-sm); font-weight: 500; opacity: 0.9; margin-bottom: var(--spacing-sm);">Pending</h3>
-                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="pending-cases">0</p>
-                                </div>
-                                <i class="fas fa-clock" style="font-size: 2rem; opacity: 0.7;"></i>
+                        <div class="analytics-stat-card" style="background: linear-gradient(135deg, #10b981, #059669);">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-double"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Active Cases</h3>
+                                <p id="active-cases-stat">0</p>
+                                <small>Currently active</small>
                             </div>
                         </div>
 
-                        <div class="stats-card" style="background: linear-gradient(135deg, var(--primary-blue) 0%, #1e40af 100%); color: var(--white); padding: var(--spacing-xl); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <h3 style="font-size: var(--font-sm); font-weight: 500; opacity: 0.9; margin-bottom: var(--spacing-sm);">Verifying</h3>
-                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="verifying-cases">0</p>
-                                </div>
-                                <i class="fas fa-search" style="font-size: 2rem; opacity: 0.7;"></i>
+                        <div class="analytics-stat-card" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Resolved</h3>
+                                <p id="resolved-cases-stat">0</p>
+                                <small>Successfully closed</small>
                             </div>
                         </div>
 
-                        <div class="stats-card" style="background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); color: var(--white); padding: var(--spacing-xl); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <h3 style="font-size: var(--font-sm); font-weight: 500; opacity: 0.9; margin-bottom: var(--spacing-sm);">Investigating</h3>
-                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="investigating-cases">0</p>
-                                </div>
-                                <i class="fas fa-magnifying-glass" style="font-size: 2rem; opacity: 0.7;"></i>
+                        <div class="analytics-stat-card" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                            <div class="stat-icon">
+                                <i class="fas fa-trash-alt"></i>
                             </div>
-                        </div>
-
-                        <div class="stats-card" style="background: linear-gradient(135deg, var(--success) 0%, #047857 100%); color: var(--white); padding: var(--spacing-xl); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <h3 style="font-size: var(--font-sm); font-weight: 500; opacity: 0.9; margin-bottom: var(--spacing-sm);">Resolved</h3>
-                                    <p style="font-size: var(--font-3xl); font-weight: 700; margin: 0;" id="resolved-cases">0</p>
-                                </div>
-                                <i class="fas fa-check-circle" style="font-size: 2rem; opacity: 0.7;"></i>
+                            <div class="stat-content">
+                                <h3>Discarded</h3>
+                                <p id="discarded-cases-stat">0</p>
+                                <small>Removed cases</small>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Charts Section -->
+                    <div class="analytics-charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3><i class="fas fa-chart-pie"></i> Status Distribution</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card chart-card-wide">
+                            <div class="chart-header">
+                                <h3><i class="fas fa-chart-line"></i> Monthly Trends</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3><i class="fas fa-chart-bar"></i> Case Types</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="typeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Filter Section -->
-                    <div class="filter-section">
-                        <div class="filter-container">
-                            <div class="filter-group">
-                                <label for="username-filter">
-                                    <i class="fas fa-user"></i>
-                                    Search Complainant
-                                </label>
-                                <input
-                                        type="text"
-                                        id="username-filter"
-                                        class="filter-input"
-                                        placeholder="Enter username or full name..."
+                    <div class="analytics-filter-section">
+                        <h3><i class="fas fa-filter"></i> Filter Cases</h3>
+                        <div class="analytics-filter-grid">
+                            <div class="filter-input-group">
+                                <label for="analytics-filter-status">Status</label>
+                                <select id="analytics-filter-status" class="filter-input">
+                                    <option value="">All Statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="verifying">Verifying</option>
+                                    <option value="investigating">Investigating</option>
+                                    <option value="resolved">Resolved</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-input-group">
+                                <label for="analytics-filter-state">Case State</label>
+                                <select id="analytics-filter-state" class="filter-input">
+                                    <option value="">All Cases</option>
+                                    <option value="active">Active Only</option>
+                                    <option value="discarded">Discarded Only</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-input-group">
+                                <label for="analytics-filter-search">Search</label>
+                                <input 
+                                    type="text" 
+                                    id="analytics-filter-search" 
+                                    class="filter-input" 
+                                    placeholder="Search by ID, name, type..."
                                 >
                             </div>
-                            <div class="filter-group">
-                                <label for="date-from-filter">
-                                    <i class="fas fa-calendar-alt"></i>
-                                    From Date
-                                </label>
-                                <input
-                                        type="date"
-                                        id="date-from-filter"
-                                        class="filter-input"
-                                >
-                            </div>
-                            <div class="filter-group">
-                                <label for="date-to-filter">
-                                    <i class="fas fa-calendar-alt"></i>
-                                    To Date
-                                </label>
-                                <input
-                                        type="date"
-                                        id="date-to-filter"
-                                        class="filter-input"
-                                >
-                            </div>
-                            <div class="filter-group">
-                                <button class="btn primary filter-btn" onclick="applyCaseFilters()">
-                                    <i class="fas fa-search"></i>
-                                    Apply Filters
+
+                            <div class="filter-button-group">
+                                <button class="btn primary" onclick="applyAnalyticsFilters()">
+                                    <i class="fas fa-search"></i> Apply
                                 </button>
-                            </div>
-                            <div class="filter-group">
-                                <button class="btn secondary filter-btn" onclick="clearCaseFilters()">
-                                    <i class="fas fa-times"></i>
-                                    Clear Filters
+                                <button class="btn secondary" onclick="clearAnalyticsFilters()">
+                                    <i class="fas fa-eraser"></i> Clear
                                 </button>
                             </div>
                         </div>
                     </div>
 
-
-
-                    <div class="table-container">
-                        <div id="cases-content">
-                            <!-- Cases data will be loaded here via JavaScript -->
+                    <!-- Analytics Table -->
+                    <div class="analytics-table-wrapper">
+                        <div class="table-header">
+                            <h3><i class="fas fa-table"></i> All Cases</h3>
+                            <p class="table-subtitle">Complete history of all handled cases including discarded ones</p>
+                        </div>
+                        <div id="analytics-table-container" class="table-container">
                             <div class="empty-state">
-                                <i class="fas fa-spinner fa-spin"></i>
-                                <h3>Loading Cases...</h3>
+                                <i class="fas fa-spinner fa-spin fa-3x"></i>
+                                <h3>Loading Analytics...</h3>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </section>
 
@@ -1753,6 +2083,7 @@
 </div>
 
 <script src="/Admin Page/admin-chat.js"></script>
+<script src="../js/admin-analytics.js"></script>
 
 <script>
     // Embedded Admin Settings JavaScript
@@ -2278,7 +2609,15 @@
 
             // Load cases data when cases section is selected
             if (target === 'cases') {
-                refreshCases();
+                // Initialize analytics dashboard
+                console.log('Cases section clicked, checking if initializeAnalytics exists...');
+                if (typeof initializeAnalytics === 'function') {
+                    console.log('initializeAnalytics function found, calling it...');
+                    setTimeout(() => initializeAnalytics(), 100);
+                } else {
+                    console.error('initializeAnalytics function not found! Check if admin-analytics.js is loaded.');
+                    alert('Analytics module not loaded. Please refresh the page.');
+                }
             }
         });
     });
@@ -2652,8 +2991,19 @@
 
     // Load cases when page loads
     document.addEventListener('DOMContentLoaded', function() {
+        // Hide all sections first
+        sections.forEach(section => {
+            section.style.display = 'none';
+        });
+        
         // Initialize with profile section active
         document.getElementById('profile').style.display = 'block';
+        
+        // Set profile button as active
+        const profileBtn = document.querySelector('[data-section="profile"]');
+        if (profileBtn) {
+            profileBtn.classList.add('active');
+        }
         
         // Load all dashboard data
         loadAdminProfile();
