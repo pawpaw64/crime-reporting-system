@@ -511,6 +511,52 @@
             display: flex;
             flex-direction: column;
             gap: var(--spacing-sm);
+            overflow-y: auto;
+            position: relative;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .side-panel .buttons::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Scroll indicator arrow */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.1) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+
+        .scroll-indicator.visible {
+            opacity: 1;
+        }
+
+        .scroll-indicator i {
+            color: var(--text-light);
+            font-size: 16px;
+            animation: bounce 1.5s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(4px);
+            }
         }
 
         .btn-organize {
@@ -2388,20 +2434,12 @@
                             const isAudio = ['mp3', 'wav', 'ogg', 'aac'].includes(fileExtension);
 
                             // Construct the correct file path
-                            let filePath;
-                            if (evidence.file_path.includes('/')) {
-                                filePath = `/uploads/${evidence.file_path}`;
-                            } else {
-                                if (isImage) {
-                                    filePath = `/uploads/images/${evidence.file_path}`;
-                                } else if (isVideo) {
-                                    filePath = `/uploads/videos/${evidence.file_path}`;
-                                } else if (isAudio) {
-                                    filePath = `/uploads/audio/${evidence.file_path}`;
-                                } else {
-                                    filePath = `/uploads/${evidence.file_path}`;
-                                }
-                            }
+                            // The file_path already includes the folder (images/, videos/, audio/)
+                            const filePath = `/uploads/${evidence.file_path}`;
+                            
+                            // Debug logging
+                            console.log('Evidence file path:', evidence.file_path);
+                            console.log('Constructed full path:', filePath);
 
                             evidenceHtml += `
                             <div style="background: var(--white); border: 1px solid var(--border-gray); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm);">
@@ -2897,6 +2935,40 @@
             notification.remove();
         }, 3000);
     }
+
+    // Initialize scroll indicator for sidebar
+    function initSidebarScrollIndicator() {
+        const sidebarButtons = document.querySelector('.side-panel .buttons');
+        if (!sidebarButtons) return;
+
+        // Create scroll indicator
+        const scrollIndicator = document.createElement('div');
+        scrollIndicator.className = 'scroll-indicator';
+        scrollIndicator.innerHTML = '<i class=\"fas fa-chevron-down\"></i>';
+        sidebarButtons.appendChild(scrollIndicator);
+
+        // Function to check if scrolled to bottom
+        function updateScrollIndicator() {
+            const isScrollable = sidebarButtons.scrollHeight > sidebarButtons.clientHeight;
+            const isAtBottom = sidebarButtons.scrollHeight - sidebarButtons.scrollTop - sidebarButtons.clientHeight < 5;
+            
+            if (isScrollable && !isAtBottom) {
+                scrollIndicator.classList.add('visible');
+            } else {
+                scrollIndicator.classList.remove('visible');
+            }
+        }
+
+        // Check on scroll
+        sidebarButtons.addEventListener('scroll', updateScrollIndicator);
+
+        // Check on load and resize
+        setTimeout(updateScrollIndicator, 100);
+        window.addEventListener('resize', updateScrollIndicator);
+    }
+
+    // Initialize scroll indicator after DOM load
+    initSidebarScrollIndicator();
 
 
 </script>

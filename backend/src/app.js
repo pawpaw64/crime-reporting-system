@@ -107,6 +107,9 @@ app.use('/js', express.static(path.join(__dirname, '../../frontend/src/js')));
 app.use('/images', express.static(path.join(__dirname, '../../frontend/images')));
 app.use('/public', express.static(path.join(__dirname, '../../frontend/public')));
 
+// Serve uploaded files (evidence images, videos, audio)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Import controllers
 const authController = require('./controllers/authController');
 const authMiddleware = require('./middleware/authMiddleware');

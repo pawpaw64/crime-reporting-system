@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabNavigation();
     initEventListeners();
     initSettings();
+    initSidebarScrollIndicator();
 });
 
 // ===== AUTHENTICATION =====
@@ -552,10 +553,11 @@ function renderEvidence(evidence) {
         const isVideo = ['mp4', 'webm', 'ogg'].includes(ext);
         const isAudio = ['mp3', 'wav', 'ogg'].includes(ext);
 
-        let filePath = e.file_path.includes('/') ? `/uploads/${e.file_path}` :
-            isImage ? `/uploads/images/${e.file_path}` :
-                isVideo ? `/uploads/videos/${e.file_path}` :
-                    isAudio ? `/uploads/audio/${e.file_path}` : `/uploads/${e.file_path}`;
+        // The file_path already includes the folder (images/, videos/, audio/)
+        const filePath = `/uploads/${e.file_path}`;
+        
+        console.log('Evidence file path:', e.file_path);
+        console.log('Full path:', filePath);
 
         let mediaHtml = '';
         if (isImage) {
@@ -1244,4 +1246,35 @@ function clearAnonFilters() {
     document.getElementById('anon-filter-status').value = '';
     document.getElementById('anon-filter-type').value = '';
     renderAnonymousReports();
+}
+
+// ===== SIDEBAR SCROLL INDICATOR =====
+function initSidebarScrollIndicator() {
+    const navLinks = document.querySelector('.nav-links');
+    if (!navLinks) return;
+
+    // Create scroll indicator
+    const scrollIndicator = document.createElement('div');
+    scrollIndicator.className = 'scroll-indicator';
+    scrollIndicator.innerHTML = '<i class="fas fa-chevron-down"></i>';
+    navLinks.appendChild(scrollIndicator);
+
+    // Function to check if scrolled to bottom
+    function updateScrollIndicator() {
+        const isScrollable = navLinks.scrollHeight > navLinks.clientHeight;
+        const isAtBottom = navLinks.scrollHeight - navLinks.scrollTop - navLinks.clientHeight < 5;
+        
+        if (isScrollable && !isAtBottom) {
+            scrollIndicator.classList.add('visible');
+        } else {
+            scrollIndicator.classList.remove('visible');
+        }
+    }
+
+    // Check on scroll
+    navLinks.addEventListener('scroll', updateScrollIndicator);
+
+    // Check on load and resize
+    setTimeout(updateScrollIndicator, 100);
+    window.addEventListener('resize', updateScrollIndicator);
 }
