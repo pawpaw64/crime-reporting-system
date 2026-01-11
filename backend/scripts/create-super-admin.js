@@ -5,7 +5,8 @@
 
 const bcrypt = require('bcrypt');
 const mysql = require('mysql2/promise');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // Get port from environment variable
 const PORT = process.env.PORT || 3000;

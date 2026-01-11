@@ -1,13 +1,20 @@
 /**
  * Anonymous Report Controller
  * Handles anonymous crime report submissions without requiring authentication
+ * Updated for 3NF normalized database structure
  */
 
 const pool = require('../db');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs').promises;
-const { findAdminByLocation, geocodeAddress } = require('../utils/helperUtils');
+const { 
+    findAdminByLocation, 
+    geocodeAddress, 
+    getCategoryIdNormalized,
+    getCategoryName,
+    getAllCategories 
+} = require('../utils/helperUtils');
 
 // Configuration
 const IP_HASH_SALT = process.env.IP_HASH_SALT || 'securevoice-anonymous-salt-2026';
@@ -15,7 +22,7 @@ const CONTENT_HASH_SALT = process.env.CONTENT_HASH_SALT || 'securevoice-content-
 const MAX_SUBMISSIONS_PER_DAY = parseInt(process.env.MAX_ANONYMOUS_SUBMISSIONS) || 3;
 const RATE_LIMIT_WINDOW_HOURS = 24;
 
-// Valid crime types for anonymous reports
+// Valid crime types for anonymous reports (mapped to normalized category table)
 const VALID_CRIME_TYPES = [
     'theft', 'assault', 'fraud', 'vandalism', 'harassment',
     'drug_related', 'cybercrime', 'domestic_violence', 'corruption',
@@ -357,16 +364,25 @@ exports.submitAnonymousReport = async (req, res) => {
             console.error('Admin lookup error:', adminError);
         }
         
-        // Insert anonymous report with assigned admin
+        // Get category ID from normalized category table (3NF)
+        let categoryId = null;
+        try {
+            categoryId = await getCategoryIdNormalized(crimeType);
+        } catch (categoryError) {
+            console.error('Category lookup error:', categoryError);
+        }
+        
+        // Insert anonymous report with assigned admin and category_id (3NF normalized)
         const [result] = await pool.query(
             `INSERT INTO anonymous_reports (
-                report_id, crime_type, description, incident_date, incident_time,
+                report_id, crime_type, category_id, description, incident_date, incident_time,
                 location_address, latitude, longitude, district_name, assigned_admin,
                 suspect_description, additional_notes, ip_hash, content_hash
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 reportId,
                 crimeType.toLowerCase(),
+                categoryId,
                 sanitizedDescription,
                 incidentDate,
                 incidentTime,
@@ -563,7 +579,10 @@ exports.getAnonymousReports = async (req, res) => {
         let query = `
             SELECT 
                 ar.report_id,
-                ar.crime_type,
+                COALESCE(c.name, ar.crime_type) as crime_type,
+                ar.category_id,
+                c.name as category_name,
+                c.crime_code,
                 ar.description,
                 ar.incident_date,
                 ar.incident_time,
@@ -579,6 +598,7 @@ exports.getAnonymousReports = async (req, res) => {
                 ar.reviewed_by,
                 (SELECT COUNT(*) FROM anonymous_evidence ae WHERE ae.report_id = ar.report_id) as evidence_count
             FROM anonymous_reports ar
+            LEFT JOIN category c ON ar.category_id = c.category_id
             WHERE (ar.assigned_admin = ? OR ar.district_name = ? OR (ar.assigned_admin IS NULL AND ar.district_name IS NULL))
         `;
         
@@ -643,10 +663,16 @@ exports.getAnonymousReportDetails = async (req, res) => {
         const adminUsername = req.session.adminUsername;
         const adminDistrict = req.session.adminDistrict || '';
         
+        // Use 3NF normalized query with category join
         const [reports] = await pool.query(
-            `SELECT * FROM anonymous_reports 
-             WHERE report_id = ? 
-             AND (assigned_admin = ? OR district_name = ? OR (assigned_admin IS NULL AND district_name IS NULL))`,
+            `SELECT ar.*, 
+                    COALESCE(c.name, ar.crime_type) as crime_type_display,
+                    c.name as category_name,
+                    c.crime_code
+             FROM anonymous_reports ar
+             LEFT JOIN category c ON ar.category_id = c.category_id
+             WHERE ar.report_id = ? 
+             AND (ar.assigned_admin = ? OR ar.district_name = ? OR (ar.assigned_admin IS NULL AND ar.district_name IS NULL))`,
             [reportId, adminUsername, adminDistrict]
         );
         

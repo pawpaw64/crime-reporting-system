@@ -23,8 +23,3 @@ ADD CONSTRAINT `chk_complaint_accuracy_radius` CHECK ((`location_accuracy_radius
 
 -- Create index on coordinates for faster heatmap queries
 CREATE INDEX `idx_complaint_coordinates` ON `complaint`(`latitude`, `longitude`);
-
--- Note: 
--- - These fields are optional as complaints may not always have precise coordinates
--- - The system will fall back to location table coordinates if complaint coordinates are NULL
--- - The location_accuracy_radius allows marking approximate locations (e.g., within 500m radius)
