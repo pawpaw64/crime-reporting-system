@@ -5,7 +5,7 @@ A web-based crime reporting system with real-time reporting, OTP verification, a
 ## Project Structure
 
 - **frontend/**: HTML, CSS (Tailwind), and JavaScript frontend
-- **backend/**: Node.js + Express + Prisma backend
+- **backend/**: Node.js + Express + MySQL
 
 ## Setup
 
