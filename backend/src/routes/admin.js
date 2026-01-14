@@ -31,8 +31,8 @@ router.get('/get-district-users', adminController.getDistrictUsers);
 router.get('/get-admin-dashboard-stats', adminController.getDashboardStats);
 
 // ========== ANALYTICS ROUTES ==========
-router.get('/analytics/case-analytics', analyticsController.getCaseAnalytics);
-router.post('/analytics/discard-case/:id', analyticsController.discardCase);
-router.post('/analytics/restore-case/:id', analyticsController.restoreCase);
+router.get('/get-trend-analysis', analyticsController.getTrendAnalysis);
+router.get('/get-crime-distribution', analyticsController.getCrimeDistribution);
+router.get('/get-performance-metrics', analyticsController.getPerformanceMetrics);
 
 module.exports = router;

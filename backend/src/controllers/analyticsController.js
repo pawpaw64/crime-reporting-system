@@ -1,191 +1,177 @@
-const db = require('../db');
+const pool = require('../db');
 
 /**
- * Get comprehensive case analytics for admin dashboard
- * Includes all cases handled by the admin (active and discarded)
+ * Case Analytics Controller
+ * Provides case statistics and analytics for admin dashboard
  */
-const getCaseAnalytics = async (req, res) => {
+
+// Get trend analysis data
+exports.getTrendAnalysis = async (req, res) => {
     try {
-        const adminUsername = req.session.adminUser;
-
-        if (!adminUsername) {
-            return res.status(401).json({ error: 'Unauthorized' });
+        if (!req.session.adminId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
         }
 
-        // Get admin's district
-        const [adminData] = await db.query(
-            'SELECT district_name FROM admins WHERE username = ?',
-            [adminUsername]
-        );
+        const adminUsername = req.session.adminUsername;
+        const { period = '30' } = req.query;
 
-        if (adminData.length === 0) {
-            return res.status(404).json({ error: 'Admin not found' });
-        }
-
-        const districtName = adminData[0].district_name;
-
-        // Get comprehensive statistics
-        const [stats] = await db.query(`
-            SELECT 
-                COUNT(*) as total_cases,
-                SUM(CASE WHEN status = 'pending' AND is_discarded = FALSE THEN 1 ELSE 0 END) as pending,
-                SUM(CASE WHEN status = 'verifying' AND is_discarded = FALSE THEN 1 ELSE 0 END) as verifying,
-                SUM(CASE WHEN status = 'investigating' AND is_discarded = FALSE THEN 1 ELSE 0 END) as investigating,
-                SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as resolved,
-                SUM(CASE WHEN is_discarded = TRUE THEN 1 ELSE 0 END) as discarded,
-                SUM(CASE WHEN is_discarded = FALSE THEN 1 ELSE 0 END) as active_cases
-            FROM complaint 
-            WHERE district_name = ?
-        `, [districtName]);
-
-        // Get monthly trend data (last 12 months)
-        const [monthlyTrend] = await db.query(`
-            SELECT 
-                DATE_FORMAT(created_at, '%Y-%m') as month,
-                COUNT(*) as count,
-                SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as resolved,
-                SUM(CASE WHEN is_discarded = TRUE THEN 1 ELSE 0 END) as discarded
-            FROM complaint 
-            WHERE district_name = ?
-            AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
-            ORDER BY month ASC
-        `, [districtName]);
-
-        // Get complaint type distribution
-        const [typeDistribution] = await db.query(`
-            SELECT 
-                complaint_type,
-                COUNT(*) as count
-            FROM complaint 
-            WHERE district_name = ?
-            GROUP BY complaint_type
-            ORDER BY count DESC
-        `, [districtName]);
-
-        // Get status distribution (excluding discarded)
-        const [statusDistribution] = await db.query(`
-            SELECT 
+        // Get complaints over time
+        const [trends] = await pool.query(
+            `SELECT 
+                DATE(created_at) as date,
                 status,
                 COUNT(*) as count
-            FROM complaint 
-            WHERE district_name = ? AND is_discarded = FALSE
-            GROUP BY status
-        `, [districtName]);
+            FROM complaint
+            WHERE admin_username = ? 
+                AND created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+                AND (is_discarded IS NULL OR is_discarded = FALSE)
+            GROUP BY DATE(created_at), status
+            ORDER BY date ASC`,
+            [adminUsername, parseInt(period)]
+        );
 
-        // Get all cases including discarded for analytics table
-        const [allCases] = await db.query(`
-            SELECT 
-                c.complaint_id,
-                c.username,
-                c.complaint_type,
-                c.status,
-                c.created_at,
-                c.updated_at,
-                c.location_address,
-                c.is_discarded,
-                c.discarded_at,
-                c.discarded_by,
-                u.fullName as complainant_fullname
-            FROM complaint c
-            LEFT JOIN users u ON c.username = u.username
-            WHERE c.district_name = ?
-            ORDER BY c.created_at DESC
-        `, [districtName]);
+        // Process trends for chart data
+        const chartData = processTrendData(trends, parseInt(period));
 
         res.json({
             success: true,
-            stats: stats[0],
-            monthlyTrend,
-            typeDistribution,
-            statusDistribution,
-            allCases
+            trends: chartData
         });
 
-    } catch (error) {
-        console.error('Error fetching case analytics:', error);
-        res.status(500).json({ error: 'Failed to fetch analytics data' });
+    } catch (err) {
+        console.error("Get trend analysis error:", err);
+        res.status(500).json({ success: false, message: "Error fetching trend analysis" });
     }
 };
 
-/**
- * Discard/Delete a case
- * Marks the case as discarded but keeps it in database for analytics
- */
-const discardCase = async (req, res) => {
+// Get crime type distribution
+exports.getCrimeDistribution = async (req, res) => {
     try {
-        const adminUsername = req.session.adminUser;
-        const complaintId = req.params.id;
-
-        if (!adminUsername) {
-            return res.status(401).json({ error: 'Unauthorized' });
+        if (!req.session.adminId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
         }
 
-        // Check if complaint exists and belongs to admin's district
-        const [complaint] = await db.query(`
-            SELECT c.complaint_id, c.district_name, a.district_name as admin_district
+        const adminUsername = req.session.adminUsername;
+
+        const [distribution] = await pool.query(
+            `SELECT 
+                COALESCE(cat.name, c.complaint_type, 'Other') as crime_type,
+                COUNT(*) as count,
+                SUM(CASE WHEN c.status = 'resolved' THEN 1 ELSE 0 END) as resolved_count,
+                AVG(DATEDIFF(
+                    IFNULL(
+                        (SELECT MIN(updated_at) FROM status_updates su 
+                         WHERE su.complaint_id = c.complaint_id AND su.status = 'resolved'),
+                        NOW()
+                    ),
+                    c.created_at
+                )) as avg_resolution_days
             FROM complaint c
-            CROSS JOIN admins a
-            WHERE c.complaint_id = ? AND a.username = ?
-        `, [complaintId, adminUsername]);
+            LEFT JOIN category cat ON c.category_id = cat.category_id
+            WHERE c.admin_username = ? AND (c.is_discarded IS NULL OR c.is_discarded = FALSE)
+            GROUP BY COALESCE(cat.name, c.complaint_type, 'Other')
+            ORDER BY count DESC`,
+            [adminUsername]
+        );
 
-        if (complaint.length === 0 || complaint[0].district_name !== complaint[0].admin_district) {
-            return res.status(404).json({ error: 'Complaint not found or access denied' });
-        }
-
-        // Mark as discarded
-        await db.query(`
-            UPDATE complaint 
-            SET is_discarded = TRUE, 
-                discarded_at = NOW(), 
-                discarded_by = ?
-            WHERE complaint_id = ?
-        `, [adminUsername, complaintId]);
-
-        res.json({ 
-            success: true, 
-            message: 'Case discarded successfully' 
+        res.json({
+            success: true,
+            distribution: distribution
         });
 
-    } catch (error) {
-        console.error('Error discarding case:', error);
-        res.status(500).json({ error: 'Failed to discard case' });
+    } catch (err) {
+        console.error("Get crime distribution error:", err);
+        res.status(500).json({ success: false, message: "Error fetching crime distribution" });
     }
 };
 
-/**
- * Restore a discarded case
- */
-const restoreCase = async (req, res) => {
+// Get performance metrics
+exports.getPerformanceMetrics = async (req, res) => {
     try {
-        const adminUsername = req.session.adminUser;
-        const complaintId = req.params.id;
-
-        if (!adminUsername) {
-            return res.status(401).json({ error: 'Unauthorized' });
+        if (!req.session.adminId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
         }
 
-        await db.query(`
-            UPDATE complaint 
-            SET is_discarded = FALSE, 
-                discarded_at = NULL, 
-                discarded_by = NULL
-            WHERE complaint_id = ?
-        `, [complaintId]);
+        const adminUsername = req.session.adminUsername;
 
-        res.json({ 
-            success: true, 
-            message: 'Case restored successfully' 
+        // Get resolution time metrics
+        const [metrics] = await pool.query(
+            `SELECT 
+                COUNT(*) as total_cases,
+                SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as resolved_cases,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_cases,
+                SUM(CASE WHEN status = 'verifying' THEN 1 ELSE 0 END) as verifying_cases,
+                SUM(CASE WHEN status = 'investigating' THEN 1 ELSE 0 END) as investigating_cases,
+                AVG(CASE 
+                    WHEN status = 'resolved' THEN 
+                        DATEDIFF(
+                            (SELECT MIN(updated_at) FROM status_updates su 
+                             WHERE su.complaint_id = c.complaint_id AND su.status = 'resolved'),
+                            c.created_at
+                        )
+                    ELSE NULL
+                END) as avg_resolution_time,
+                COUNT(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 END) as cases_this_week,
+                COUNT(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN 1 END) as cases_this_month
+            FROM complaint c
+            WHERE c.admin_username = ? AND (c.is_discarded IS NULL OR c.is_discarded = FALSE)`,
+            [adminUsername]
+        );
+
+        // Calculate resolution rate
+        const performanceData = metrics[0];
+        const resolutionRate = performanceData.total_cases > 0 
+            ? (performanceData.resolved_cases / performanceData.total_cases * 100) 
+            : 0;
+
+        const performance = {
+            ...performanceData,
+            resolution_rate: Math.round(resolutionRate * 10) / 10
+        };
+
+        res.json({
+            success: true,
+            performance: performance
         });
 
-    } catch (error) {
-        console.error('Error restoring case:', error);
-        res.status(500).json({ error: 'Failed to restore case' });
+    } catch (err) {
+        console.error("Get performance metrics error:", err);
+        res.status(500).json({ success: false, message: "Error fetching performance metrics" });
     }
 };
 
-module.exports = {
-    getCaseAnalytics,
-    discardCase,
-    restoreCase
-};
+// Helper function to process trend data for charts
+function processTrendData(trends, days) {
+    const dateMap = {};
+    const statusTotals = { pending: 0, verifying: 0, investigating: 0, resolved: 0 };
+
+    // Initialize all dates in range
+    for (let i = days - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        dateMap[dateStr] = { date: dateStr, total: 0, pending: 0, verifying: 0, investigating: 0, resolved: 0 };
+    }
+
+    // Fill in actual data
+    trends.forEach(trend => {
+        const dateStr = trend.date instanceof Date 
+            ? trend.date.toISOString().split('T')[0] 
+            : trend.date;
+        
+        if (dateMap[dateStr]) {
+            dateMap[dateStr].total += trend.count;
+            if (statusTotals.hasOwnProperty(trend.status)) {
+                dateMap[dateStr][trend.status] += trend.count;
+                statusTotals[trend.status] += trend.count;
+            }
+        }
+    });
+
+    return {
+        daily: Object.values(dateMap),
+        totals: statusTotals
+    };
+}
+
+module.exports = exports;

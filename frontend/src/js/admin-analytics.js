@@ -1,297 +1,140 @@
 /**
- * Admin Case Analytics Module
- * Handles statistical visualization and case management for analytics dashboard
+ * SecureVoice Admin Case Analytics JavaScript
+ * Handles analytics dashboard functionality with Chart.js
  */
 
-let analyticsData = null;
-let statusChart = null;
+// Chart instances
 let trendChart = null;
-let typeChart = null;
+let crimeDistributionChart = null;
+let statusChart = null;
+let resolutionChart = null;
 
-/**
- * Initialize analytics dashboard
- */
-async function initializeAnalytics() {
-    console.log('Initializing analytics dashboard...');
-    try {
-        await loadAnalyticsData();
-        renderCharts();
-        renderAnalyticsTable();
-        console.log('Analytics dashboard initialized successfully');
-    } catch (error) {
-        console.error('Error initializing analytics:', error);
-        showToast('Failed to initialize analytics dashboard', 'error');
+// Chart color palette matching admin dashboard theme
+const chartColors = {
+    primary: '#124E66',
+    secondary: '#2E3944',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    info: '#3b82f6',
+    purple: '#8b5cf6',
+    pink: '#ec4899',
+    teal: '#14b8a6',
+    gradient: {
+        primary: ['rgba(18, 78, 102, 0.8)', 'rgba(18, 78, 102, 0.1)'],
+        success: ['rgba(16, 185, 129, 0.8)', 'rgba(16, 185, 129, 0.1)'],
+        warning: ['rgba(245, 158, 11, 0.8)', 'rgba(245, 158, 11, 0.1)'],
+        danger: ['rgba(239, 68, 68, 0.8)', 'rgba(239, 68, 68, 0.1)']
     }
-}
+};
 
-/**
- * Load analytics data from backend
- */
-async function loadAnalyticsData() {
-    console.log('Loading analytics data from /analytics/case-analytics...');
-    try {
-        const response = await fetch('/analytics/case-analytics', {
-            method: 'GET',
-            credentials: 'include'
+// Initialize analytics when tab is opened
+document.addEventListener('DOMContentLoaded', () => {
+    // Listen for tab changes
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.dataset.tab === 'analytics') {
+                setTimeout(() => loadAnalytics(), 100);
+            }
         });
+    });
 
-        console.log('Analytics response status:', response.status);
+    // Period change handler
+    const periodSelect = document.getElementById('analytics-period');
+    if (periodSelect) {
+        periodSelect.addEventListener('change', loadAnalytics);
+    }
+});
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Analytics API error:', errorText);
-            throw new Error(`Failed to load analytics data: ${response.status}`);
-        }
-
-        analyticsData = await response.json();
-        console.log('Analytics data loaded:', analyticsData);
-        updateStatCards();
-        return analyticsData;
-
+// Main function to load all analytics
+async function loadAnalytics() {
+    const period = document.getElementById('analytics-period')?.value || '30';
+    
+    try {
+        await Promise.all([
+            loadSummaryStats(),
+            loadTrendData(period),
+            loadCrimeDistribution()
+        ]);
     } catch (error) {
         console.error('Error loading analytics:', error);
-        showToast('Failed to load analytics data: ' + error.message, 'error');
-        
-        // Show error in the table container
-        const container = document.getElementById('analytics-table-container');
-        if (container) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-exclamation-circle fa-3x" style="color: #ef4444;"></i>
-                    <h3>Error Loading Analytics</h3>
-                    <p>${error.message}</p>
-                    <button class="btn primary" onclick="initializeAnalytics()" style="margin-top: 1rem;">
-                        <i class="fas fa-sync-alt"></i> Retry
-                    </button>
-                </div>
-            `;
+        showToast('Error loading analytics data', 'error');
+    }
+}
+
+// Refresh analytics button handler
+function refreshAnalytics() {
+    loadAnalytics();
+    showToast('Analytics refreshed', 'success');
+}
+
+// Load summary statistics
+async function loadSummaryStats() {
+    try {
+        const response = await fetch('/get-performance-metrics', { credentials: 'include' });
+        const data = await response.json();
+
+        if (data.success) {
+            const perf = data.performance;
+            document.getElementById('analytics-total').textContent = perf.total_cases || 0;
+            document.getElementById('analytics-resolved').textContent = perf.resolved_cases || 0;
+            document.getElementById('resolution-rate').textContent = `${perf.resolution_rate || 0}%`;
+            document.getElementById('avg-resolution-time').textContent = Math.round(perf.avg_resolution_time || 0);
         }
+    } catch (error) {
+        console.error('Error loading summary stats:', error);
     }
 }
 
-/**
- * Update stat cards with current numbers
- */
-function updateStatCards() {
-    if (!analyticsData || !analyticsData.stats) return;
+// Load trend data and render chart
+async function loadTrendData(period) {
+    try {
+        const response = await fetch(`/get-trend-analysis?period=${period}`, { credentials: 'include' });
+        const data = await response.json();
 
-    const stats = analyticsData.stats;
-    
-    document.getElementById('total-cases-stat').textContent = stats.total_cases || 0;
-    document.getElementById('active-cases-stat').textContent = stats.active_cases || 0;
-    document.getElementById('resolved-cases-stat').textContent = stats.resolved || 0;
-    document.getElementById('discarded-cases-stat').textContent = stats.discarded || 0;
-}
-
-/**
- * Render all charts
- */
-function renderCharts() {
-    if (!analyticsData) {
-        console.warn('No analytics data available for charts');
-        return;
-    }
-
-    if (typeof Chart === 'undefined') {
-        console.error('Chart.js is not loaded!');
-        showToast('Chart library not loaded', 'error');
-        return;
-    }
-
-    console.log('Rendering charts...');
-    renderStatusDistributionChart();
-    renderMonthlyTrendChart();
-    renderTypeDistributionChart();
-}
-
-/**
- * Render status distribution pie chart
- */
-function renderStatusDistributionChart() {
-    const canvas = document.getElementById('statusChart');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-
-    // Destroy existing chart
-    if (statusChart) {
-        statusChart.destroy();
-    }
-
-    const statusData = analyticsData.statusDistribution || [];
-    const labels = statusData.map(item => capitalizeFirst(item.status));
-    const data = statusData.map(item => item.count);
-    
-    const colors = {
-        'Pending': '#f59e0b',
-        'Verifying': '#3b82f6',
-        'Investigating': '#8b5cf6',
-        'Resolved': '#10b981'
-    };
-
-    const backgroundColors = labels.map(label => colors[label] || '#6b7280');
-
-    statusChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: data,
-                backgroundColor: backgroundColors,
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 15,
-                        font: {
-                            size: 12
-                        }
-                    }
-                },
-                title: {
-                    display: true,
-                    text: 'Active Cases by Status',
-                    font: {
-                        size: 16,
-                        weight: 'bold'
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.parsed || 0;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1);
-                            return `${label}: ${value} (${percentage}%)`;
-                        }
-                    }
-                }
-            }
+        if (data.success) {
+            renderTrendChart(data.trends);
+            renderStatusChart(data.trends.totals);
         }
-    });
+    } catch (error) {
+        console.error('Error loading trend data:', error);
+    }
 }
 
-/**
- * Render monthly trend line chart
- */
-function renderMonthlyTrendChart() {
-    const canvas = document.getElementById('trendChart');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
+// Render trend line chart
+function renderTrendChart(trends) {
+    const ctx = document.getElementById('trendChart');
+    if (!ctx) return;
 
     // Destroy existing chart
     if (trendChart) {
         trendChart.destroy();
     }
 
-    const trendData = analyticsData.monthlyTrend || [];
-    const labels = trendData.map(item => {
-        const date = new Date(item.month + '-01');
-        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-    });
+    const labels = trends.daily.map(d => formatDate(d.date));
+    const totalData = trends.daily.map(d => d.total);
+
+    // Create gradient
+    const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, chartColors.gradient.primary[0]);
+    gradient.addColorStop(1, chartColors.gradient.primary[1]);
 
     trendChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
-            datasets: [
-                {
-                    label: 'Total Cases',
-                    data: trendData.map(item => item.count),
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                },
-                {
-                    label: 'Resolved',
-                    data: trendData.map(item => item.resolved),
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                },
-                {
-                    label: 'Discarded',
-                    data: trendData.map(item => item.discarded),
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 15,
-                        font: {
-                            size: 12
-                        }
-                    }
-                },
-                title: {
-                    display: true,
-                    text: 'Case Trends (Last 12 Months)',
-                    font: {
-                        size: 16,
-                        weight: 'bold'
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            }
-        }
-    });
-}
-
-/**
- * Render complaint type distribution bar chart
- */
-function renderTypeDistributionChart() {
-    const canvas = document.getElementById('typeChart');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-
-    // Destroy existing chart
-    if (typeChart) {
-        typeChart.destroy();
-    }
-
-    const typeData = analyticsData.typeDistribution || [];
-    const labels = typeData.map(item => item.complaint_type || 'Other');
-    const data = typeData.map(item => item.count);
-
-    typeChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
             datasets: [{
-                label: 'Number of Cases',
-                data: data,
-                backgroundColor: '#8b5cf6',
-                borderColor: '#7c3aed',
-                borderWidth: 1
+                label: 'Total Cases',
+                data: totalData,
+                borderColor: chartColors.primary,
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: chartColors.primary,
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
             }]
         },
         options: {
@@ -301,19 +144,99 @@ function renderTypeDistributionChart() {
                 legend: {
                     display: false
                 },
-                title: {
-                    display: true,
-                    text: 'Cases by Type',
-                    font: {
-                        size: 16,
-                        weight: 'bold'
-                    }
+                tooltip: {
+                    backgroundColor: chartColors.secondary,
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: false
                 }
             },
             scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxTicksLimit: 7,
+                        color: '#748D92'
+                    }
+                },
                 y: {
                     beginAtZero: true,
+                    grid: {
+                        color: 'rgba(116, 141, 146, 0.1)'
+                    },
                     ticks: {
+                        color: '#748D92',
+                        stepSize: 1
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+}
+
+// Render status bar chart
+function renderStatusChart(totals) {
+    const ctx = document.getElementById('statusChart');
+    if (!ctx) return;
+
+    if (statusChart) {
+        statusChart.destroy();
+    }
+
+    statusChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Pending', 'Verifying', 'Investigating', 'Resolved'],
+            datasets: [{
+                label: 'Cases',
+                data: [totals.pending, totals.verifying, totals.investigating, totals.resolved],
+                backgroundColor: [
+                    chartColors.warning,
+                    chartColors.info,
+                    chartColors.pink,
+                    chartColors.success
+                ],
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: chartColors.secondary,
+                    padding: 12,
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#748D92'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(116, 141, 146, 0.1)'
+                    },
+                    ticks: {
+                        color: '#748D92',
                         stepSize: 1
                     }
                 }
@@ -322,307 +245,240 @@ function renderTypeDistributionChart() {
     });
 }
 
-/**
- * Render analytics table with all cases
- */
-function renderAnalyticsTable() {
-    const container = document.getElementById('analytics-table-container');
-    if (!container || !analyticsData) return;
+// Load crime distribution data
+async function loadCrimeDistribution() {
+    try {
+        const response = await fetch('/get-crime-distribution', { credentials: 'include' });
+        const data = await response.json();
 
-    const cases = analyticsData.allCases || [];
-
-    if (cases.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-inbox fa-3x"></i>
-                <h3>No Cases Found</h3>
-                <p>No cases have been recorded yet.</p>
-            </div>
-        `;
-        return;
+        if (data.success) {
+            renderCrimeDistributionChart(data.distribution);
+            renderCrimeStatsTable(data.distribution);
+            renderResolutionChart(data.distribution);
+        }
+    } catch (error) {
+        console.error('Error loading crime distribution:', error);
     }
-
-    container.innerHTML = `
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Complainant</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th>Location</th>
-                    <th>State</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${cases.map(c => renderCaseRow(c)).join('')}
-            </tbody>
-        </table>
-    `;
 }
 
-/**
- * Render individual case row
- */
-function renderCaseRow(caseData) {
-    const statusClass = getStatusClass(caseData.status);
-    const isDiscarded = caseData.is_discarded;
-    
-    return `
-        <tr class="${isDiscarded ? 'discarded-row' : ''}">
-            <td>#${caseData.complaint_id}</td>
-            <td>
-                <strong>${caseData.complainant_fullname || caseData.username}</strong>
-                ${caseData.complainant_fullname ? `<br><small>@${caseData.username}</small>` : ''}
-            </td>
-            <td>${caseData.complaint_type || 'General'}</td>
-            <td><span class="status-badge ${statusClass}">${caseData.status}</span></td>
-            <td>${new Date(caseData.created_at).toLocaleDateString()}</td>
-            <td>${truncateText(caseData.location_address || 'N/A', 25)}</td>
-            <td>
-                ${isDiscarded 
-                    ? `<span class="state-badge discarded">
-                        <i class="fas fa-trash"></i> Discarded
-                       </span>` 
-                    : `<span class="state-badge active">
-                        <i class="fas fa-check-circle"></i> Active
-                       </span>`
-                }
-            </td>
-            <td>
-                <div class="action-btns">
-                    ${!isDiscarded 
-                        ? `<button class="btn btn-danger btn-sm" onclick="discardCase(${caseData.complaint_id})" title="Discard Case">
-                            <i class="fas fa-trash"></i> Discard
-                           </button>`
-                        : `<button class="btn btn-secondary btn-sm" onclick="restoreCase(${caseData.complaint_id})" title="Restore Case">
-                            <i class="fas fa-undo"></i> Restore
-                           </button>`
+// Render crime distribution doughnut chart
+function renderCrimeDistributionChart(distribution) {
+    const ctx = document.getElementById('crimeDistributionChart');
+    if (!ctx) return;
+
+    if (crimeDistributionChart) {
+        crimeDistributionChart.destroy();
+    }
+
+    const colors = [
+        chartColors.primary,
+        chartColors.success,
+        chartColors.warning,
+        chartColors.danger,
+        chartColors.info,
+        chartColors.purple,
+        chartColors.pink,
+        chartColors.teal
+    ];
+
+    crimeDistributionChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: distribution.map(d => d.crime_type),
+            datasets: [{
+                data: distribution.map(d => d.count),
+                backgroundColor: colors.slice(0, distribution.length),
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        color: '#212A31'
                     }
-                    <button class="btn btn-primary btn-sm" onclick="viewCaseDetails(${caseData.complaint_id})" title="View Details">
-                        <i class="fas fa-eye"></i> View
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `;
+                },
+                tooltip: {
+                    backgroundColor: chartColors.secondary,
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.raw / total) * 100).toFixed(1);
+                            return `${context.label}: ${context.raw} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
-/**
- * Discard a case
- */
-async function discardCase(complaintId) {
-    if (!confirm('Are you sure you want to discard this case? It will be removed from active cases but kept in analytics.')) {
+// Render resolution time chart
+function renderResolutionChart(distribution) {
+    const ctx = document.getElementById('resolutionChart');
+    if (!ctx) return;
+
+    if (resolutionChart) {
+        resolutionChart.destroy();
+    }
+
+    const sortedByTime = [...distribution]
+        .filter(d => d.avg_resolution_days !== null)
+        .sort((a, b) => b.avg_resolution_days - a.avg_resolution_days)
+        .slice(0, 6);
+
+    resolutionChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sortedByTime.map(d => d.crime_type),
+            datasets: [{
+                label: 'Avg. Days to Resolve',
+                data: sortedByTime.map(d => Math.round(d.avg_resolution_days || 0)),
+                backgroundColor: sortedByTime.map((_, i) => {
+                    const days = sortedByTime[i].avg_resolution_days || 0;
+                    if (days <= 7) return chartColors.success;
+                    if (days <= 14) return chartColors.info;
+                    if (days <= 30) return chartColors.warning;
+                    return chartColors.danger;
+                }),
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: chartColors.secondary,
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.raw} days average`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(116, 141, 146, 0.1)'
+                    },
+                    ticks: {
+                        color: '#748D92'
+                    }
+                },
+                y: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#748D92'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Render crime statistics table
+function renderCrimeStatsTable(distribution) {
+    const tbody = document.getElementById('crime-stats-body');
+    if (!tbody) return;
+
+    if (distribution.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty-state">
+                    <i class="fas fa-inbox"></i> No crime data available
+                </td>
+            </tr>
+        `;
         return;
     }
 
-    try {
-        const response = await fetch(`/analytics/discard-case/${complaintId}`, {
-            method: 'POST',
-            credentials: 'include'
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            showToast('Case discarded successfully', 'success');
-            await loadAnalyticsData();
-            renderCharts();
-            renderAnalyticsTable();
-        } else {
-            showToast(result.error || 'Failed to discard case', 'error');
+    tbody.innerHTML = distribution.map(item => {
+        const resolutionRate = item.count > 0 
+            ? Math.round((item.resolved_count / item.count) * 100) 
+            : 0;
+        const avgDays = Math.round(item.avg_resolution_days || 0);
+        
+        // Determine trend icon
+        let trendIcon = 'fa-minus';
+        let trendClass = 'trend-stable';
+        if (resolutionRate >= 70) {
+            trendIcon = 'fa-arrow-up';
+            trendClass = 'trend-up';
+        } else if (resolutionRate < 40) {
+            trendIcon = 'fa-arrow-down';
+            trendClass = 'trend-down';
         }
 
-    } catch (error) {
-        console.error('Error discarding case:', error);
-        showToast('Failed to discard case', 'error');
-    }
-}
-
-/**
- * Restore a discarded case
- */
-async function restoreCase(complaintId) {
-    if (!confirm('Are you sure you want to restore this case?')) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`/analytics/restore-case/${complaintId}`, {
-            method: 'POST',
-            credentials: 'include'
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            showToast('Case restored successfully', 'success');
-            await loadAnalyticsData();
-            renderCharts();
-            renderAnalyticsTable();
-        } else {
-            showToast(result.error || 'Failed to restore case', 'error');
-        }
-
-    } catch (error) {
-        console.error('Error restoring case:', error);
-        showToast('Failed to restore case', 'error');
-    }
-}
-
-/**
- * View case details (reuses existing modals)
- */
-function viewCaseDetails(complaintId) {
-    // Find the case in analyticsData
-    const caseData = analyticsData.allCases.find(c => c.complaint_id === complaintId);
-    
-    if (!caseData) return;
-
-    // Use existing functions to view details
-    if (typeof viewEvidence === 'function') {
-        viewEvidence(complaintId);
-    }
-}
-
-/**
- * Apply filters to analytics table
- */
-function applyAnalyticsFilters() {
-    const statusFilter = document.getElementById('analytics-filter-status').value;
-    const searchFilter = document.getElementById('analytics-filter-search').value.toLowerCase();
-    const stateFilter = document.getElementById('analytics-filter-state').value;
-
-    if (!analyticsData || !analyticsData.allCases) return;
-
-    let filtered = [...analyticsData.allCases];
-
-    // Apply status filter
-    if (statusFilter) {
-        filtered = filtered.filter(c => c.status === statusFilter);
-    }
-
-    // Apply state filter (active/discarded)
-    if (stateFilter === 'active') {
-        filtered = filtered.filter(c => !c.is_discarded);
-    } else if (stateFilter === 'discarded') {
-        filtered = filtered.filter(c => c.is_discarded);
-    }
-
-    // Apply search filter
-    if (searchFilter) {
-        filtered = filtered.filter(c => 
-            c.username.toLowerCase().includes(searchFilter) ||
-            (c.complainant_fullname && c.complainant_fullname.toLowerCase().includes(searchFilter)) ||
-            (c.complaint_type && c.complaint_type.toLowerCase().includes(searchFilter)) ||
-            c.complaint_id.toString().includes(searchFilter)
-        );
-    }
-
-    // Re-render table with filtered data
-    const container = document.getElementById('analytics-table-container');
-    if (filtered.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-search fa-3x"></i>
-                <h3>No Results Found</h3>
-                <p>No cases match your filter criteria.</p>
-            </div>
+        return `
+            <tr>
+                <td>
+                    <div class="crime-type-cell">
+                        <span class="crime-dot" style="background: ${getCrimeColor(item.crime_type)}"></span>
+                        ${item.crime_type}
+                    </div>
+                </td>
+                <td><strong>${item.count}</strong></td>
+                <td>${item.resolved_count || 0}</td>
+                <td>
+                    <div class="rate-bar">
+                        <div class="rate-fill" style="width: ${resolutionRate}%; background: ${getRateColor(resolutionRate)}"></div>
+                        <span>${resolutionRate}%</span>
+                    </div>
+                </td>
+                <td>${avgDays} days</td>
+                <td><i class="fas ${trendIcon} ${trendClass}"></i></td>
+            </tr>
         `;
-    } else {
-        container.innerHTML = `
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Complainant</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <th>Location</th>
-                        <th>State</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${filtered.map(c => renderCaseRow(c)).join('')}
-                </tbody>
-            </table>
-        `;
-    }
+    }).join('');
 }
 
-/**
- * Clear all filters
- */
-function clearAnalyticsFilters() {
-    document.getElementById('analytics-filter-status').value = '';
-    document.getElementById('analytics-filter-search').value = '';
-    document.getElementById('analytics-filter-state').value = '';
-    renderAnalyticsTable();
-}
-
-/**
- * Utility: Get status class for styling
- */
-function getStatusClass(status) {
-    const statusMap = {
-        'pending': 'pending',
-        'verifying': 'verifying',
-        'investigating': 'investigating',
-        'resolved': 'resolved'
+// Helper: Get color for crime type
+function getCrimeColor(type) {
+    const colorMap = {
+        'Theft': chartColors.danger,
+        'Harassment': chartColors.warning,
+        'Assault': chartColors.pink,
+        'Fraud': chartColors.purple,
+        'Threat': chartColors.info,
+        'Other': chartColors.teal
     };
-    return statusMap[status.toLowerCase()] || 'pending';
+    return colorMap[type] || chartColors.primary;
 }
 
-/**
- * Utility: Truncate text
- */
-function truncateText(text, maxLength) {
-    if (!text) return 'N/A';
-    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+// Helper: Get color based on rate
+function getRateColor(rate) {
+    if (rate >= 70) return chartColors.success;
+    if (rate >= 40) return chartColors.warning;
+    return chartColors.danger;
 }
 
-/**
- * Utility: Capitalize first letter
- */
-function capitalizeFirst(str) {
-    if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1);
+// Helper: Format date for charts
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-/**
- * Utility: Show toast notification
- */
-function showToast(message, type = 'info') {
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        <span>${message}</span>
-    `;
-    
-    document.body.appendChild(toast);
-    
-    // Trigger animation
-    setTimeout(() => toast.classList.add('show'), 10);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-// Export functions for use in HTML
-if (typeof window !== 'undefined') {
-    window.initializeAnalytics = initializeAnalytics;
-    window.discardCase = discardCase;
-    window.restoreCase = restoreCase;
-    window.viewCaseDetails = viewCaseDetails;
-    window.applyAnalyticsFilters = applyAnalyticsFilters;
-    window.clearAnalyticsFilters = clearAnalyticsFilters;
-}
+// Export for global access
+window.refreshAnalytics = refreshAnalytics;
+window.loadAnalytics = loadAnalytics;
