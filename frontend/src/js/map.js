@@ -1,12 +1,10 @@
 class CrimeMap {
     constructor() {
         this.map = null;
-        this.markersLayer = L.layerGroup();
         this.divisionMarkers = L.layerGroup();
         this.heatmapLayer = null;
 
         this.isHeatmapVisible = false;
-        this.isMarkersVisible = true;
         this.isDivisionMarkersVisible = true;
 
         this.divisions = [
@@ -31,7 +29,6 @@ class CrimeMap {
             attribution: "© OpenStreetMap contributors"
         }).addTo(this.map);
 
-        this.markersLayer.addTo(this.map);
         this.divisionMarkers.addTo(this.map);
 
         this.addDivisionMarkers();
@@ -69,18 +66,23 @@ class CrimeMap {
                 return;
             }
 
-            const maxIncident = Math.max(...points.map(p => Number(p.intensity) || 1));
-            const scale = maxIncident > 0 ? maxIncident : 1;
+            // Normalize intensity with a log-ish scale to emphasize dense clusters
+            const rawIntensities = points.map(p => Math.max(Number(p.intensity) || 1, 1));
+            const maxIncident = Math.max(...rawIntensities);
+            const scaled = points.map(p => {
+                const v = Math.max(Number(p.intensity) || 1, 1);
+                // log compression so very dense spots stand out but small clusters still show
+                return Math.max(Math.log1p(v) / Math.log1p(maxIncident || 1), 0.15);
+            });
 
-            // Prepare data for heat layer and markers
-            this.heatmapData = points.map(p => [
+            // Prepare data for heat layer only (no point markers)
+            this.heatmapData = points.map((p, idx) => [
                 Number(p.lat),
                 Number(p.lng),
-                Math.max((Number(p.intensity) || 1) / scale, 0.1)
+                scaled[idx]
             ]);
 
             this.heatmapMeta = points;
-            this.addComplaintMarkers();
             this.dataLoaded = true;
 
             // Auto-show heatmap on first load for quick feedback
@@ -94,37 +96,29 @@ class CrimeMap {
         }
     }
 
-    addComplaintMarkers() {
-        this.markersLayer.clearLayers();
-
-        if (!this.heatmapMeta.length) return;
-
-        this.heatmapMeta.forEach(point => {
-            const marker = L.marker([Number(point.lat), Number(point.lng)]).bindPopup(`
-                <strong>${point.location || "Unknown Location"}</strong><br>
-                District: ${point.district || "N/A"}<br>
-                Type: ${point.type || "N/A"}<br>
-                Category: ${point.category || "N/A"}<br>
-                Status: ${point.status || "N/A"}<br>
-                Reports: ${point.intensity}
-            `);
-            this.markersLayer.addLayer(marker);
-        });
-    }
-
     toggleHeatmap(forceOn = false) {
         // Allow toggle even if data is empty; warn but don't block
         if (!this.dataLoaded) {
             console.warn("Heatmap data is still loading; toggling anyway.");
         }
 
-        if (!this.heatmapLayer) {
-            this.heatmapLayer = L.heatLayer(this.heatmapData, {
-                radius: 30,
-                blur: 20,
-                maxZoom: 12
-            });
+        // Recreate layer each time to apply updated data/gradient
+        if (this.heatmapLayer) {
+            this.map.removeLayer(this.heatmapLayer);
         }
+
+        this.heatmapLayer = L.heatLayer(this.heatmapData, {
+            radius: 28,
+            blur: 18,
+            maxZoom: 14,
+            gradient: {
+                0.0: '#38bdf8',
+                0.25: '#22c55e',
+                0.5: '#facc15',
+                0.75: '#fb923c',
+                1.0: '#ef4444'
+            }
+        });
 
         if (forceOn) {
             this.heatmapLayer.addTo(this.map);
@@ -132,13 +126,8 @@ class CrimeMap {
             return;
         }
 
-        if (this.isHeatmapVisible) {
-            this.map.removeLayer(this.heatmapLayer);
-        } else {
-            this.heatmapLayer.addTo(this.map);
-        }
-
-        this.isHeatmapVisible = !this.isHeatmapVisible;
+        this.heatmapLayer.addTo(this.map);
+        this.isHeatmapVisible = true;
     }
 
     toggleMarkers() {
