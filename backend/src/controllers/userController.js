@@ -1,6 +1,11 @@
 const pool = require('../db');
 const path = require('path');
-const { calculateAge } = require('../utils/helperUtils');
+const { 
+    calculateAge, 
+    saveUserAddress, 
+    getUserFullAddress,
+    getDivisionId 
+} = require('../utils/helperUtils');
 
 // Get User Profile - Serve the HTML page
 exports.getProfile = async (req, res) => {
@@ -23,20 +28,25 @@ exports.getProfile = async (req, res) => {
     }
 };
 
-// Update User Profile
+// Update User Profile (supports both legacy and 3NF normalized address)
 exports.updateProfile = async (req, res) => {
     try {
         if (!req.session.userId) {
             return res.status(401).json({ success: false, message: "Not authenticated" });
         }
 
-        const { fullName, phone, location, dob } = req.body;
+        const { 
+            fullName, phone, location, dob,
+            // 3NF normalized address fields
+            division, district, policeStation, unionName, village, placeDetails 
+        } = req.body;
+        
         let age = null;
-
         if (dob) {
             age = calculateAge(dob);
         }
 
+        // Update basic user info
         const [result] = await pool.query(
             "UPDATE users SET fullName = ?, phone = ?, dob = ?, location = ?, age = ? WHERE userid = ?",
             [fullName, phone, dob, location, age, req.session.userId]
@@ -46,6 +56,23 @@ exports.updateProfile = async (req, res) => {
             return res.status(404).json({ success: false, message: "No user updated" });
         }
 
+        // If normalized address fields provided, save to user_addresses table (3NF)
+        if (division || district || policeStation || unionName || village || placeDetails) {
+            try {
+                await saveUserAddress(req.session.username, {
+                    divisionName: division,
+                    districtName: district,
+                    policeStationName: policeStation,
+                    unionName: unionName,
+                    villageName: village,
+                    placeDetails: placeDetails
+                });
+            } catch (addressError) {
+                console.error("Save address error:", addressError);
+                // Don't fail the whole update if address save fails
+            }
+        }
+
         res.json({ success: true, message: "Profile updated successfully" });
     } catch (err) {
         console.error("Update profile error:", err);
@@ -53,15 +80,16 @@ exports.updateProfile = async (req, res) => {
     }
 };
 
-// Get User Data
+// Get User Data (includes normalized address data)
 exports.getUserData = async (req, res) => {
     try {
         if (!req.session.userId) {
             return res.status(401).json({ success: false, message: "Not authenticated" });
         }
 
+        // Get basic user data
         const [results] = await pool.query(
-            'SELECT fullName, email, phone, location, dob FROM users WHERE userid = ?',
+            'SELECT fullName, email, phone, location, dob, division, district, police_station, union_name, village, place_details FROM users WHERE userid = ?',
             [req.session.userId]
         );
 
@@ -69,7 +97,28 @@ exports.getUserData = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        res.json({ success: true, user: results[0] });
+        const user = results[0];
+
+        // Try to get normalized address from user_addresses table (3NF)
+        let normalizedAddress = null;
+        try {
+            normalizedAddress = await getUserFullAddress(req.session.username);
+        } catch (addressError) {
+            console.error("Get normalized address error:", addressError);
+        }
+
+        // Merge normalized address with user data (prefer normalized if available)
+        if (normalizedAddress) {
+            user.division = normalizedAddress.division_name || user.division;
+            user.district = normalizedAddress.district_name || user.district;
+            user.police_station = normalizedAddress.police_station_name || user.police_station;
+            user.union_name = normalizedAddress.union_name || user.union_name;
+            user.village = normalizedAddress.village_name || user.village;
+            user.place_details = normalizedAddress.place_details || user.place_details;
+            user.address_normalized = true;
+        }
+
+        res.json({ success: true, user });
     } catch (err) {
         console.error("Get user data error:", err);
         res.status(500).json({ success: false, message: "Error fetching user data" });

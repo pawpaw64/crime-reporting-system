@@ -273,7 +273,10 @@ exports.getAdminCases = async (req, res) => {
                 c.complaint_id,
                 c.username as complainant_username,
                 COALESCE(u.fullName, 'N/A') as complainant_fullname,
-                COALESCE(c.complaint_type, 'General') as complaint_type,
+                COALESCE(cat.name, c.complaint_type, 'General') as complaint_type,
+                c.category_id,
+                cat.name as category_name,
+                cat.crime_code,
                 c.created_at,
                 c.status,
                 COALESCE(c.description, '') as description,
@@ -281,8 +284,9 @@ exports.getAdminCases = async (req, res) => {
                 COALESCE(ac.last_updated, c.created_at) as last_updated
             FROM complaint c 
             INNER JOIN users u ON c.username = u.username
+            LEFT JOIN category cat ON c.category_id = cat.category_id
             LEFT JOIN admin_cases ac ON c.complaint_id = ac.complaint_id AND ac.admin_username = ?
-            WHERE c.admin_username = ?
+            WHERE c.admin_username = ? AND (c.is_discarded IS NULL OR c.is_discarded = FALSE)
         `;
 
         const queryParams = [adminUsername, adminUsername];
@@ -497,7 +501,7 @@ exports.getAdminComplaints = async (req, res) => {
                 COALESCE(u.fullName, 'N/A') as user_fullname
             FROM complaint c
             LEFT JOIN users u ON c.username = u.username
-            WHERE c.admin_username = ?
+            WHERE c.admin_username = ? AND (c.is_discarded IS NULL OR c.is_discarded = FALSE)
             ORDER BY c.created_at DESC`,
             [adminUsername]
         );
@@ -558,7 +562,7 @@ exports.getDashboardStats = async (req, res) => {
         const adminUsername = req.session.adminUsername;
 
         const [complaints] = await pool.query(
-            'SELECT status FROM complaint WHERE admin_username = ?',
+            'SELECT status FROM complaint WHERE admin_username = ? AND (is_discarded IS NULL OR is_discarded = FALSE)',
             [adminUsername]
         );
 

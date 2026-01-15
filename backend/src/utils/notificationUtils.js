@@ -8,9 +8,9 @@ const pool = require('../db');
  */
 async function createNotification(complaintId, message, type = 'general') {
     try {
-        // Get the user ID from the complaint
+        // Get the username from the complaint
         const [complaint] = await pool.query(
-            'SELECT userid FROM complaint WHERE complaint_id = ?',
+            'SELECT username FROM complaint WHERE complaint_id = ?',
             [complaintId]
         );
 
@@ -19,7 +19,20 @@ async function createNotification(complaintId, message, type = 'general') {
             return false;
         }
 
-        const userid = complaint[0].userid;
+        const username = complaint[0].username;
+
+        // Get the user ID from the username
+        const [user] = await pool.query(
+            'SELECT userid FROM users WHERE username = ?',
+            [username]
+        );
+
+        if (user.length === 0) {
+            console.error('User not found for notification:', username);
+            return false;
+        }
+
+        const userid = user[0].userid;
 
         // Insert notification into database
         await pool.query(

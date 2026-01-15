@@ -31,7 +31,39 @@ document.addEventListener('DOMContentLoaded', () => {
     initReportForm();
     initFilters();
     initEventDelegation();
+    initSidebarScrollIndicator();
 });
+
+// ===== SIDEBAR SCROLL INDICATOR =====
+function initSidebarScrollIndicator() {
+    const navLinks = document.querySelector('.nav-links');
+    if (!navLinks) return;
+
+    // Create scroll indicator
+    const scrollIndicator = document.createElement('div');
+    scrollIndicator.className = 'scroll-indicator';
+    scrollIndicator.innerHTML = '<i class="fas fa-chevron-down"></i>';
+    navLinks.appendChild(scrollIndicator);
+
+    // Function to check if scrolled to bottom
+    function updateScrollIndicator() {
+        const isScrollable = navLinks.scrollHeight > navLinks.clientHeight;
+        const isAtBottom = navLinks.scrollHeight - navLinks.scrollTop - navLinks.clientHeight < 5;
+        
+        if (isScrollable && !isAtBottom) {
+            scrollIndicator.classList.add('visible');
+        } else {
+            scrollIndicator.classList.remove('visible');
+        }
+    }
+
+    // Check on scroll
+    navLinks.addEventListener('scroll', updateScrollIndicator);
+
+    // Check on load and resize
+    updateScrollIndicator();
+    window.addEventListener('resize', updateScrollIndicator);
+}
 
 // ===== EVENT DELEGATION =====
 function initEventDelegation() {

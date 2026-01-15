@@ -34,6 +34,10 @@
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </button>
+                <button class="tab-btn" data-tab="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Case Analytics</span>
+                </button>
                 <button class="tab-btn" data-tab="profile">
                     <i class="fas fa-user"></i>
                     <span>My Profile</span>
@@ -45,10 +49,6 @@
                 <button class="tab-btn" data-tab="anonymous-reports">
                     <i class="fas fa-user-secret"></i>
                     <span>Anonymous Reports</span>
-                </button>
-                <button class="tab-btn" data-tab="cases">
-                    <i class="fas fa-briefcase"></i>
-                    <span>Case Analytics</span>
                 </button>
                 <button class="tab-btn" data-tab="users">
                     <i class="fas fa-users"></i>
@@ -142,6 +142,134 @@
                         <div class="loading-spinner">
                             <i class="fas fa-spinner fa-spin"></i> Loading recent complaints...
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Case Analytics Tab -->
+            <div class="tab-content" id="analytics">
+                <div class="header">
+                    <h1><i class="fas fa-chart-bar"></i> Case Analytics</h1>
+                    <div class="header-actions">
+                        <select class="filter-input" id="analytics-period" style="width: auto;">
+                            <option value="7">Last 7 Days</option>
+                            <option value="30" selected>Last 30 Days</option>
+                            <option value="90">Last 90 Days</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="refreshAnalytics()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Stats Cards -->
+                <div class="analytics-summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-icon total">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="summary-info">
+                            <h3 id="analytics-total">0</h3>
+                            <p>Total Cases</p>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon resolved">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="summary-info">
+                            <h3 id="analytics-resolved">0</h3>
+                            <p>Resolved</p>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon rate">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="summary-info">
+                            <h3 id="resolution-rate">0%</h3>
+                            <p>Resolution Rate</p>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon time">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="summary-info">
+                            <h3 id="avg-resolution-time">0</h3>
+                            <p>Avg. Days to Resolve</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="analytics-charts-grid">
+                    <!-- Trend Chart -->
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-area"></i> Case Trends</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Crime Distribution Chart -->
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-pie"></i> Crime Distribution</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="crimeDistributionChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Status Distribution Chart -->
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-bar"></i> Status Overview</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Resolution Time Chart -->
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-clock"></i> Resolution Analysis</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="resolutionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Stats Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-table"></i> Crime Type Statistics</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>Crime Type</th>
+                                    <th>Total Cases</th>
+                                    <th>Resolved</th>
+                                    <th>Resolution Rate</th>
+                                    <th>Avg. Time</th>
+                                    <th>Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crime-stats-body">
+                                <tr>
+                                    <td colspan="6" class="loading-spinner">
+                                        <i class="fas fa-spinner fa-spin"></i> Loading statistics...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -342,98 +470,6 @@
                     <div class="table-container" id="anonymous-reports-table-container">
                         <div class="loading-spinner">
                             <i class="fas fa-spinner fa-spin"></i> Loading anonymous reports...
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Cases Tab -->
-            <div class="tab-content" id="cases">
-                <div class="header">
-                    <h1><i class="fas fa-briefcase"></i> Case Analytics</h1>
-                    <button class="btn btn-primary" onclick="refreshCases()">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-
-                <!-- Analytics Stats (duplicate for this tab) -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon total">
-                            <i class="fas fa-clipboard-list"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="cases-total">0</h3>
-                            <p>Total Cases</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon pending">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="cases-pending">0</h3>
-                            <p>Pending</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon verifying">
-                            <i class="fas fa-search"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="cases-verifying">0</h3>
-                            <p>Verifying</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon investigating">
-                            <i class="fas fa-user-secret"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="cases-investigating">0</h3>
-                            <p>Investigating</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon resolved">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="cases-resolved">0</h3>
-                            <p>Resolved</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="filter-section">
-                    <div class="filter-row">
-                        <div class="filter-group">
-                            <label><i class="fas fa-user"></i> Complainant</label>
-                            <input type="text" class="filter-input" id="case-filter-user" placeholder="Search by name...">
-                        </div>
-                        <div class="filter-group">
-                            <label><i class="fas fa-calendar"></i> From Date</label>
-                            <input type="date" class="filter-input" id="case-filter-from">
-                        </div>
-                        <div class="filter-group">
-                            <label><i class="fas fa-calendar"></i> To Date</label>
-                            <input type="date" class="filter-input" id="case-filter-to">
-                        </div>
-                        <div class="filter-group">
-                            <button class="btn btn-primary" onclick="applyCaseFilters()">
-                                <i class="fas fa-search"></i> Apply
-                            </button>
-                            <button class="btn btn-outline" onclick="clearCaseFilters()">
-                                <i class="fas fa-times"></i> Clear
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="table-container" id="cases-table-container">
-                        <div class="loading-spinner">
-                            <i class="fas fa-spinner fa-spin"></i> Loading cases...
                         </div>
                     </div>
                 </div>
@@ -688,6 +724,9 @@
     <!-- Leaflet CSS and JS for admin map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/src/js/admin-dashboard-new.js"></script>
+    <script src="/src/js/admin-analytics.js"></script>
 </body>
 </html>

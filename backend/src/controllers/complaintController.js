@@ -4,7 +4,9 @@ const fs = require('fs');
 const {
     findAdminByLocation,
     getOrCreateLocation,
-    getCategoryId
+    getCategoryId,
+    getCategoryIdNormalized,
+    getCategoryName
 } = require('../utils/helperUtils');
 
 // Submit Complaint
@@ -44,8 +46,8 @@ exports.submitComplaint = async (req, res) => {
         // Get or create location
         const locationId = await getOrCreateLocation(location, districtName);
 
-        // Get category ID
-        const categoryId = await getCategoryId(complaintType);
+        // Get category ID using 3NF normalized function (creates if not exists)
+        const categoryId = await getCategoryIdNormalized(complaintType);
 
         const formattedDate = new Date(incidentDate).toISOString().slice(0, 19).replace('T', ' ');
         const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');

@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabNavigation();
     initEventListeners();
     initSettings();
+    initSidebarScrollIndicator();
 });
 
 // ===== AUTHENTICATION =====
@@ -121,13 +122,6 @@ function updateStatsDisplay(stats) {
     document.getElementById('verifying-cases').textContent = stats.verifying || 0;
     document.getElementById('investigating-cases').textContent = stats.investigating || 0;
     document.getElementById('resolved-cases').textContent = stats.resolved || 0;
-
-    // Cases tab stats
-    document.getElementById('cases-total').textContent = stats.total || 0;
-    document.getElementById('cases-pending').textContent = stats.pending || 0;
-    document.getElementById('cases-verifying').textContent = stats.verifying || 0;
-    document.getElementById('cases-investigating').textContent = stats.investigating || 0;
-    document.getElementById('cases-resolved').textContent = stats.resolved || 0;
 }
 
 // ===== COMPLAINTS =====
@@ -315,76 +309,6 @@ function renderUsers() {
     `;
 }
 
-// ===== CASES =====
-async function refreshCases() {
-    try {
-        const response = await fetch('/get-admin-cases', { credentials: 'include' });
-        const data = await response.json();
-
-        if (data.success) {
-            renderCasesTable(data.cases);
-            if (data.analytics) {
-                updateStatsDisplay(data.analytics);
-            }
-            showToast('Cases refreshed', 'success');
-        }
-    } catch (error) {
-        console.error('Error refreshing cases:', error);
-        showToast('Error refreshing cases', 'error');
-    }
-}
-
-function renderCasesTable(cases) {
-    const container = document.getElementById('cases-table-container');
-
-    if (!cases || cases.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-briefcase"></i>
-                <h3>No Cases Found</h3>
-                <p>No cases match the current filters</p>
-            </div>
-        `;
-        return;
-    }
-
-    container.innerHTML = `
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Case ID</th>
-                    <th>Complainant</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th>Last Updated</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${cases.map(c => `
-                    <tr>
-                        <td>#${c.complaint_id}</td>
-                        <td>
-                            <strong>${c.complainant_fullname || c.complainant_username}</strong>
-                            ${c.complainant_fullname ? `<br><small>@${c.complainant_username}</small>` : ''}
-                        </td>
-                        <td>${c.complaint_type || 'General'}</td>
-                        <td><span class="status ${c.status}">${c.status}</span></td>
-                        <td>${new Date(c.created_at).toLocaleDateString()}</td>
-                        <td>${c.last_updated ? new Date(c.last_updated).toLocaleDateString() : '-'}</td>
-                        <td>
-                            <button class="btn btn-primary btn-sm" onclick="openStatusModal(${c.complaint_id}, '${c.status}')">
-                                <i class="fas fa-eye"></i> View
-                            </button>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-}
-
 // ===== FILTERS =====
 function applyFilters() {
     const status = document.getElementById('filter-status').value;
@@ -410,39 +334,6 @@ function clearFilters() {
     document.getElementById('filter-status').value = '';
     document.getElementById('filter-search').value = '';
     renderComplaints();
-}
-
-async function applyCaseFilters() {
-    const username = document.getElementById('case-filter-user').value;
-    const dateFrom = document.getElementById('case-filter-from').value;
-    const dateTo = document.getElementById('case-filter-to').value;
-
-    const params = new URLSearchParams();
-    if (username) params.append('username', username);
-    if (dateFrom) params.append('dateFrom', dateFrom);
-    if (dateTo) params.append('dateTo', dateTo);
-
-    try {
-        const response = await fetch('/get-admin-cases?' + params.toString(), { credentials: 'include' });
-        const data = await response.json();
-
-        if (data.success) {
-            renderCasesTable(data.cases);
-            if (data.analytics) {
-                updateStatsDisplay(data.analytics);
-            }
-        }
-    } catch (error) {
-        console.error('Error applying filters:', error);
-        showToast('Error applying filters', 'error');
-    }
-}
-
-function clearCaseFilters() {
-    document.getElementById('case-filter-user').value = '';
-    document.getElementById('case-filter-from').value = '';
-    document.getElementById('case-filter-to').value = '';
-    refreshCases();
 }
 
 // ===== MODALS =====
@@ -552,10 +443,11 @@ function renderEvidence(evidence) {
         const isVideo = ['mp4', 'webm', 'ogg'].includes(ext);
         const isAudio = ['mp3', 'wav', 'ogg'].includes(ext);
 
-        let filePath = e.file_path.includes('/') ? `/uploads/${e.file_path}` :
-            isImage ? `/uploads/images/${e.file_path}` :
-                isVideo ? `/uploads/videos/${e.file_path}` :
-                    isAudio ? `/uploads/audio/${e.file_path}` : `/uploads/${e.file_path}`;
+        // The file_path already includes the folder (images/, videos/, audio/)
+        const filePath = `/uploads/${e.file_path}`;
+        
+        console.log('Evidence file path:', e.file_path);
+        console.log('Full path:', filePath);
 
         let mediaHtml = '';
         if (isImage) {
@@ -1244,4 +1136,35 @@ function clearAnonFilters() {
     document.getElementById('anon-filter-status').value = '';
     document.getElementById('anon-filter-type').value = '';
     renderAnonymousReports();
+}
+
+// ===== SIDEBAR SCROLL INDICATOR =====
+function initSidebarScrollIndicator() {
+    const navLinks = document.querySelector('.nav-links');
+    if (!navLinks) return;
+
+    // Create scroll indicator
+    const scrollIndicator = document.createElement('div');
+    scrollIndicator.className = 'scroll-indicator';
+    scrollIndicator.innerHTML = '<i class="fas fa-chevron-down"></i>';
+    navLinks.appendChild(scrollIndicator);
+
+    // Function to check if scrolled to bottom
+    function updateScrollIndicator() {
+        const isScrollable = navLinks.scrollHeight > navLinks.clientHeight;
+        const isAtBottom = navLinks.scrollHeight - navLinks.scrollTop - navLinks.clientHeight < 5;
+        
+        if (isScrollable && !isAtBottom) {
+            scrollIndicator.classList.add('visible');
+        } else {
+            scrollIndicator.classList.remove('visible');
+        }
+    }
+
+    // Check on scroll
+    navLinks.addEventListener('scroll', updateScrollIndicator);
+
+    // Check on load and resize
+    setTimeout(updateScrollIndicator, 100);
+    window.addEventListener('resize', updateScrollIndicator);
 }

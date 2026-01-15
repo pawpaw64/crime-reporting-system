@@ -1,33 +1,6 @@
 -- Migration: Implement Secure District Admin Registration and Approval System
--- SAFE VERSION - Handles existing columns gracefully + 3NF Normalization
--- This migration adds Super Admin functionality, admin approval workflow, and audit logging
--- ALSO normalizes the admins table to follow 3NF principles
 
 USE `securevoice`;
-
--- =============================================================================
--- STEP 0: ANALYSIS OF CURRENT DATABASE STATE
--- =============================================================================
--- Current columns in admins table:
--- adminid, username, email, email_verified, email_verification_token, password,
--- password_reset_token, password_reset_expires, fullName, phone, designation,
--- official_id, created_at, request_date, approval_date, approved_by,
--- rejection_reason, district_name, status, is_active, dob, last_login
---
--- 3NF VIOLATIONS IDENTIFIED:
--- 1. Password reset tokens (temporary data) mixed with core identity
--- 2. Email verification tokens (temporary data) mixed with core identity  
--- 3. Registration approval workflow data mixed with admin profile
---
--- NORMALIZATION PLAN:
--- Keep in admins: adminid, username, email, password, fullName, phone,
---                 designation, official_id, district_name, is_active, 
---                 created_at, last_login, dob
--- Move to admin_verification_tokens: email_verified, email_verification_token,
---                                     password_reset_token, password_reset_expires
--- Move to admin_approval_workflow: status, request_date, approval_date,
---                                   approved_by, rejection_reason
--- =============================================================================
 
 -- =============================================================================
 -- 1. CREATE SUPER ADMINS TABLE
@@ -176,14 +149,6 @@ CALL DropColumnIfExists('admins', 'rejection_reason');
 -- Clean up procedure
 DROP PROCEDURE IF EXISTS DropColumnIfExists;
 
--- =============================================================================
--- 5. MODIFY ADMINS TABLE - ADD MISSING COLUMNS (IF ANY)
--- =============================================================================
--- =============================================================================
--- 5. MODIFY ADMINS TABLE - ADD MISSING COLUMNS (IF ANY)
--- =============================================================================
--- Using stored procedure to safely add columns (handles existing columns)
-
 DELIMITER $$
 
 DROP PROCEDURE IF EXISTS AddColumnIfNotExists$$
@@ -247,9 +212,6 @@ CREATE INDEX IF NOT EXISTS `idx_admin_is_active` ON `admins` (`is_active`);
 -- =============================================================================
 -- 7. CREATE ADMIN DOCUMENTS TABLE
 -- =============================================================================
--- =============================================================================
--- 7. CREATE ADMIN DOCUMENTS TABLE
--- =============================================================================
 CREATE TABLE IF NOT EXISTS `admin_documents` (
   `document_id` int NOT NULL AUTO_INCREMENT,
   `admin_username` varchar(50) NOT NULL,
@@ -263,9 +225,7 @@ CREATE TABLE IF NOT EXISTS `admin_documents` (
   CONSTRAINT `fk_admin_documents_admin` FOREIGN KEY (`admin_username`) REFERENCES `admins` (`username`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- =============================================================================
--- 8. CREATE ADMIN AUDIT LOGS TABLE
--- =============================================================================
+
 -- =============================================================================
 -- 8. CREATE ADMIN AUDIT LOGS TABLE
 -- =============================================================================
@@ -289,9 +249,7 @@ CREATE TABLE IF NOT EXISTS `admin_audit_logs` (
   CONSTRAINT `fk_audit_complaint` FOREIGN KEY (`complaint_id`) REFERENCES `complaint` (`complaint_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- =============================================================================
--- 9. CREATE OTP VERIFICATION TABLE FOR ADMIN LOGIN
--- =============================================================================
+
 -- =============================================================================
 -- 9. CREATE OTP VERIFICATION TABLE FOR ADMIN LOGIN
 -- =============================================================================
@@ -307,12 +265,6 @@ CREATE TABLE IF NOT EXISTS `admin_otp_verification` (
   KEY `idx_expires` (`expires_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- =============================================================================
--- 10. INSERT DEFAULT SUPER ADMIN
--- =============================================================================
--- =============================================================================
--- 10. INSERT DEFAULT SUPER ADMIN
--- =============================================================================
 
 -- =============================================================================
 -- 11. UPDATE EXISTING ADMINS (SET THEM AS APPROVED IN WORKFLOW TABLE)
@@ -342,65 +294,8 @@ WHERE `is_active` = 0 AND `username` IN (
 -- =============================================================================
 -- 12. CREATE INDEXES FOR PERFORMANCE
 -- =============================================================================
--- =============================================================================
--- 12. CREATE INDEXES FOR PERFORMANCE
--- =============================================================================
 CREATE INDEX IF NOT EXISTS `idx_admin_is_active` ON `admins` (`is_active`);
 CREATE INDEX IF NOT EXISTS `idx_admin_district` ON `admins` (`district_name`);
 CREATE INDEX IF NOT EXISTS `idx_workflow_status` ON `admin_approval_workflow` (`status`);
 CREATE INDEX IF NOT EXISTS `idx_workflow_request_date` ON `admin_approval_workflow` (`request_date`);
 
--- =============================================================================
--- 13. FINAL DATABASE STATE SUMMARY
--- =============================================================================
--- NORMALIZED STRUCTURE (3NF Compliant):
--- 
--- 1. admins (Core Identity - 13 columns):
---    adminid, username, email, password, fullName, phone, designation, 
---    official_id, district_name, is_active, created_at, last_login, dob
---
--- 2. admin_verification_tokens (Temporary Tokens - 7 columns):
---    id, admin_username, token_type, token_value, expires_at, is_used, created_at
---
--- 3. admin_approval_workflow (Registration Approval - 8 columns):
---    workflow_id, admin_username, status, request_date, approval_date, 
---    approved_by, rejection_reason, notes
---
--- 4. super_admins (Super Admin Accounts - 9 columns):
---    super_admin_id, username, email, password, fullName, phone, 
---    created_at, last_login, is_active
---
--- 5. admin_documents (Supporting Documents - 7 columns):
---    document_id, admin_username, document_type, document_name, 
---    file_path, file_size, uploaded_at
---
--- 6. admin_otp_verification (2FA OTP Codes - 6 columns):
---    id, admin_username, otp_code, expires_at, is_used, created_at
---
--- 7. admin_audit_logs (Activity Tracking - 10 columns):
---    log_id, admin_username, action, action_details, ip_address, 
---    user_agent, complaint_id, target_username, result, timestamp
---
--- =============================================================================
--- COLUMNS DROPPED FROM ADMINS TABLE (Moved to normalized tables):
--- =============================================================================
--- ❌ email_verified → Use admin_verification_tokens.is_used where token_type='email_verification'
--- ❌ email_verification_token → Moved to admin_verification_tokens.token_value
--- ❌ password_reset_token → Moved to admin_verification_tokens.token_value
--- ❌ password_reset_expires → Moved to admin_verification_tokens.expires_at
--- ❌ status → Moved to admin_approval_workflow.status
--- ❌ request_date → Moved to admin_approval_workflow.request_date
--- ❌ approval_date → Moved to admin_approval_workflow.approval_date
--- ❌ approved_by → Moved to admin_approval_workflow.approved_by
--- ❌ rejection_reason → Moved to admin_approval_workflow.rejection_reason
---
--- =============================================================================
--- VERIFICATION QUERIES (Run these to verify normalization succeeded):
--- =============================================================================
--- SELECT COUNT(*) as total_admins FROM admins;
--- SELECT COUNT(*) as total_tokens FROM admin_verification_tokens;
--- SELECT COUNT(*) as total_workflows FROM admin_approval_workflow;
--- SELECT COUNT(*) as total_super_admins FROM super_admins;
--- SHOW COLUMNS FROM admins;
--- SELECT * FROM admin_approval_workflow WHERE status = 'pending';
--- =============================================================================
