@@ -677,7 +677,11 @@ async function deleteComplaint(id) {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/complaints/${id}`, {
+        // Complaint routes are mounted at root, not under /api prefix
+        const hostname = window.location.hostname;
+        const baseUrl = `http://${hostname}:3000`;
+        
+        const response = await fetch(`${baseUrl}/delete-complaint/${id}`, {
             method: 'DELETE',
             credentials: 'include'
         });
@@ -686,7 +690,10 @@ async function deleteComplaint(id) {
         
         if (result.success) {
             alert('Complaint deleted successfully');
-            loadComplaints();
+            // Reload complaints to update the list
+            await loadComplaints();
+            // Switch to complaints tab to see updated list
+            switchTab('complaints');
         } else {
             alert(result.message || 'Failed to delete complaint');
         }
