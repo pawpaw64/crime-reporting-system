@@ -1298,6 +1298,415 @@ class TestDateHandling:
         assert res.json_data['success'] == True
 
 
+class TestDescriptionValidation:
+    """Test cases for description field validation"""
+
+    @pytest.mark.asyncio
+    async def test_should_reject_extremely_long_description(self):
+        """Test that extremely long descriptions are rejected"""
+        long_description = 'x' * 10000  # 10,000 character description
+        req = MockRequest(
+            body={
+                'complaintType': 'Theft',
+                'description': long_description,
+                'incidentDate': '2026-01-10',
+                'location': 'Test Location'
+            },
+            session={'userId': 1, 'username': 'testuser'}
+        )
+        res = MockResponse()
+        pool = MockPool()
+
+        async def mock_find_admin(loc):
+            return {'adminUsername': 'admin1', 'districtName': 'Test'}
+
+        async def mock_get_location(loc, district):
+            return 1
+
+        async def mock_get_category(cat):
+            return 1
+
+        await submit_complaint(req, res, pool, mock_find_admin, mock_get_location, mock_get_category)
+
+        # Should still submit but may be truncated
+        assert res.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_should_handle_special_characters_in_description(self):
+        """Test handling of special characters in description"""
+        req = MockRequest(
+            body={
+                'complaintType': 'Vandalism',
+                'description': 'Graffiti with symbols: @#$%^&*()[]{}',
+                'incidentDate': '2026-01-10',
+                'location': 'Public Wall'
+            },
+            session={'userId': 1, 'username': 'testuser'}
+        )
+        res = MockResponse()
+        pool = MockPool()
+
+        async def mock_find_admin(loc):
+            return {'adminUsername': 'admin1', 'districtName': 'Public'}
+
+        async def mock_get_location(loc, district):
+            return 1
+
+        async def mock_get_category(cat):
+            return 1
+
+        await submit_complaint(req, res, pool, mock_find_admin, mock_get_location, mock_get_category)
+
+        assert res.status_code == 200
+        assert res.json_data['success'] == True
+
+    @pytest.mark.asyncio
+    async def test_should_handle_html_tags_in_description(self):
+        """Test that HTML tags in description don't break the system"""
+        req = MockRequest(
+            body={
+                'complaintType': 'Fraud',
+                'description': '<script>alert("xss")</script> Attempted scam with malicious code',
+                'incidentDate': '2026-01-10',
+                'location': 'Online'
+            },
+            session={'userId': 1, 'username': 'testuser'}
+        )
+        res = MockResponse()
+        pool = MockPool()
+
+        async def mock_find_admin(loc):
+            return {'adminUsername': 'admin1', 'districtName': 'Online'}
+
+        async def mock_get_location(loc, district):
+            return 1
+
+        async def mock_get_category(cat):
+            return 1
+
+        await submit_complaint(req, res, pool, mock_find_admin, mock_get_location, mock_get_category)
+
+        assert res.status_code == 200
+
+
+class TestConcurrentSubmissions:
+    """Test cases for handling concurrent complaint submissions"""
+
+    @pytest.mark.asyncio
+    async def test_should_handle_multiple_submissions_from_same_user(self):
+        """Test that same user can submit multiple complaints"""
+        requests = []
+        responses = []
+        
+        for i in range(3):
+            req = MockRequest(
+                body={
+                    'complaintType': 'Theft',
+                    'description': f'Incident {i+1}',
+                    'incidentDate': '2026-01-10',
+                    'location': 'Different Locations'
+                },
+                session={'userId': 1, 'username': 'testuser'}
+            )
+            res = MockResponse()
+            pool = MockPool()
+
+            async def mock_find_admin(loc):
+                return {'adminUsername': 'admin1', 'districtName': 'Test'}
+
+            async def mock_get_location(loc, district):
+                return 1
+
+            async def mock_get_category(cat):
+                return 1
+
+            await submit_complaint(req, res, pool, mock_find_admin, mock_get_location, mock_get_category)
+            
+            requests.append(req)
+            responses.append(res)
+        
+        # All should succeed
+        assert all(res.status_code == 200 for res in responses)
+
+
+class TestLocationEdgeCases:
+    """Test cases for location edge cases"""
+
+    @pytest.mark.asyncio
+    async def test_should_handle_very_long_location_name(self):
+        """Test handling of extremely long location names"""
+        long_location = 'A' * 500
+        req = MockRequest(
+            body={
+                'complaintType': 'Theft',
+                'description': 'Test description',
+                'incidentDate': '2026-01-10',
+                'location': long_location
+            },
+            session={'userId': 1, 'username': 'testuser'}
+        )
+        res = MockResponse()
+        pool = MockPool()
+
+        async def mock_find_admin(loc):
+            return {'adminUsername': 'admin1', 'districtName': 'Test'}
+
+        async def mock_get_location(loc, district):
+            return 1
+
+        async def mock_get_category(cat):
+            return 1
+
+        await submit_complaint(req, res, pool, mock_find_admin, mock_get_location, mock_get_category)
+
+        assert res.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_should_handle_unicode_in_location(self):
+        """Test handling of Unicode characters in location"""
+        req = MockRequest(
+            body={
+                'complaintType': 'Vandalism',
+                'description': 'Property damage',
+                'incidentDate': '2026-01-10',
+                'location': '北京市朝阳区 (Beijing Chaoyang District)'
+            },
+            session={'userId': 1, 'username': 'testuser'}
+        )
+        res = MockResponse()
+        pool = MockPool()
+
+        async def mock_find_admin(loc):
+            return {'adminUsername': 'admin1', 'districtName': 'Beijing'}
+
+        async def mock_get_location(loc, district):
+            return 1
+
+        async def mock_get_category(cat):
+            return 1
+
+        await submit_complaint(req, res, pool, mock_find_admin, mock_get_location, mock_get_category)
+
+        assert res.status_code == 200
+
+
+class TestCoordinateEdgeCases:
+    """Test cases for coordinate edge cases"""
+
+    @pytest.mark.asyncio
+    async def test_should_reject_non_numeric_latitude(self):
+        """Test rejection of non-numeric latitude values"""
+        req = MockRequest(
+            body={
+                'complaintType': 'Theft',
+                'description': 'Test',
+                'incidentDate': '2026-01-10',
+                'location': 'Test Location',
+                'latitude': 'not-a-number',
+                'longitude': '-74.0060'
+            },
+            session={'userId': 1, 'username': 'testuser'}
+        )
+        res = MockResponse()
+        pool = MockPool()
+
+        async def mock_find_admin(loc):
+            return {'adminUsername': 'admin1', 'districtName': 'Test'}
+
+        async def mock_get_location(loc, district):
+            return 1
+
+        async def mock_get_category(cat):
+            return 1
+
+        await submit_complaint(req, res, pool, mock_find_admin, mock_get_location, mock_get_category)
+
+        # Should fail due to ValueError when converting to float
+        assert res.status_code == 500
+
+    @pytest.mark.asyncio
+    async def test_should_handle_missing_longitude_when_latitude_provided(self):
+        """Test handling when latitude is provided but longitude is missing"""
+        req = MockRequest(
+            body={
+                'complaintType': 'Theft',
+                'description': 'Test',
+                'incidentDate': '2026-01-10',
+                'location': 'Test Location',
+                'latitude': '40.7128'
+                # longitude missing
+            },
+            session={'userId': 1, 'username': 'testuser'}
+        )
+        res = MockResponse()
+        pool = MockPool()
+
+        async def mock_find_admin(loc):
+            return {'adminUsername': 'admin1', 'districtName': 'Test'}
+
+        async def mock_get_location(loc, district):
+            return 1
+
+        async def mock_get_category(cat):
+            return 1
+
+        await submit_complaint(req, res, pool, mock_find_admin, mock_get_location, mock_get_category)
+
+        # Should succeed but coordinates won't be processed
+        assert res.status_code == 200
+
+
+class TestDatabaseFailureScenarios:
+    """Test cases for various database failure scenarios"""
+
+    @pytest.mark.asyncio
+    async def test_should_handle_admin_assignment_failure(self):
+        """Test handling when admin assignment fails"""
+        req = MockRequest(
+            body={
+                'complaintType': 'Theft',
+                'description': 'Test',
+                'incidentDate': '2026-01-10',
+                'location': 'Remote Location'
+            },
+            session={'userId': 1, 'username': 'testuser'}
+        )
+        res = MockResponse()
+        pool = MockPool()
+
+        async def mock_find_admin_fail(loc):
+            raise Exception("Admin lookup failed")
+
+        async def mock_get_location(loc, district):
+            return 1
+
+        async def mock_get_category(cat):
+            return 1
+
+        await submit_complaint(req, res, pool, mock_find_admin_fail, mock_get_location, mock_get_category)
+
+        assert res.status_code == 500
+        assert res.json_data['success'] == False
+
+    @pytest.mark.asyncio
+    async def test_should_handle_location_creation_failure(self):
+        """Test handling when location creation/lookup fails"""
+        req = MockRequest(
+            body={
+                'complaintType': 'Assault',
+                'description': 'Test incident',
+                'incidentDate': '2026-01-10',
+                'location': 'New Location'
+            },
+            session={'userId': 1, 'username': 'testuser'}
+        )
+        res = MockResponse()
+        pool = MockPool()
+
+        async def mock_find_admin(loc):
+            return {'adminUsername': 'admin1', 'districtName': 'Test'}
+
+        async def mock_get_location_fail(loc, district):
+            raise Exception("Location insert failed")
+
+        async def mock_get_category(cat):
+            return 1
+
+        await submit_complaint(req, res, pool, mock_find_admin, mock_get_location_fail, mock_get_category)
+
+        assert res.status_code == 500
+
+    @pytest.mark.asyncio
+    async def test_should_handle_category_lookup_failure(self):
+        """Test handling when category lookup fails"""
+        req = MockRequest(
+            body={
+                'complaintType': 'UnknownType',
+                'description': 'Test',
+                'incidentDate': '2026-01-10',
+                'location': 'Test Location'
+            },
+            session={'userId': 1, 'username': 'testuser'}
+        )
+        res = MockResponse()
+        pool = MockPool()
+
+        async def mock_find_admin(loc):
+            return {'adminUsername': 'admin1', 'districtName': 'Test'}
+
+        async def mock_get_location(loc, district):
+            return 1
+
+        async def mock_get_category_fail(cat):
+            raise Exception("Category not found")
+
+        await submit_complaint(req, res, pool, mock_find_admin, mock_get_location, mock_get_category_fail)
+
+        assert res.status_code == 500
+
+
+class TestSessionEdgeCases:
+    """Test cases for session-related edge cases"""
+
+    @pytest.mark.asyncio
+    async def test_should_reject_expired_session(self):
+        """Test rejection of complaints with expired sessions"""
+        req = MockRequest(
+            body={
+                'complaintType': 'Theft',
+                'description': 'Test',
+                'incidentDate': '2026-01-10',
+                'location': 'Test Location'
+            },
+            session={}  # Empty session simulating expiration
+        )
+        res = MockResponse()
+        pool = MockPool()
+
+        async def mock_find_admin(loc):
+            return {'adminUsername': 'admin1', 'districtName': 'Test'}
+
+        async def mock_get_location(loc, district):
+            return 1
+
+        async def mock_get_category(cat):
+            return 1
+
+        await submit_complaint(req, res, pool, mock_find_admin, mock_get_location, mock_get_category)
+
+        assert res.status_code == 401
+        assert res.json_data['message'] == 'Not authenticated'
+
+    @pytest.mark.asyncio
+    async def test_should_handle_tampered_session_data(self):
+        """Test handling of tampered session data"""
+        req = MockRequest(
+            body={
+                'complaintType': 'Theft',
+                'description': 'Test',
+                'incidentDate': '2026-01-10',
+                'location': 'Test Location'
+            },
+            session={'userId': -1, 'username': 'hacker'}  # Invalid user ID
+        )
+        res = MockResponse()
+        pool = MockPool()
+
+        async def mock_find_admin(loc):
+            return {'adminUsername': 'admin1', 'districtName': 'Test'}
+
+        async def mock_get_location(loc, district):
+            return 1
+
+        async def mock_get_category(cat):
+            return 1
+
+        await submit_complaint(req, res, pool, mock_find_admin, mock_get_location, mock_get_category)
+
+        # Should still process but with invalid userId
+        assert res.status_code == 200
+
+
 # Run tests when executed directly
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

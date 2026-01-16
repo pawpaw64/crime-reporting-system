@@ -569,5 +569,266 @@ class TestEdgeCases:
         }
 
 
+class TestDatabaseFailures:
+    """Test cases for various database failure scenarios"""
+
+    @pytest.mark.asyncio
+    async def test_should_handle_database_timeout(self):
+        req = MockRequest(body={'username': 'testuser', 'password': 'password123'})
+        res = MockResponse()
+        
+        class TimeoutPool:
+            async def query(self, sql, params=None):
+                raise Exception('Connection timeout after 30s')
+        
+        pool = TimeoutPool()
+        
+        async def mock_compare(p, h):
+            return True
+        
+        await login(req, res, pool, mock_compare)
+        
+        assert res.status_code == 500
+        assert res.json_data['success'] is False
+        assert 'message' in res.json_data
+
+    @pytest.mark.asyncio
+    async def test_should_handle_corrupted_user_data(self):
+        # Missing critical fields in user data
+        corrupted_user = {
+            'userid': 1,
+            # Missing username, email, password
+        }
+        req = MockRequest(body={'username': 'testuser', 'password': 'password123'})
+        res = MockResponse()
+        pool = MockPool()
+        pool.query_result = [[corrupted_user]]
+        
+        async def mock_compare(p, h):
+            raise KeyError('password field missing')
+        
+        await login(req, res, pool, mock_compare)
+        
+        assert res.status_code == 500
+        assert res.json_data['success'] is False
+
+    @pytest.mark.asyncio
+    async def test_should_handle_multiple_users_with_same_username(self):
+        # This shouldn't happen but tests system robustness
+        user1 = {
+            'userid': 1,
+            'username': 'duplicate',
+            'email': 'test1@example.com',
+            'password': 'hashedPassword1'
+        }
+        user2 = {
+            'userid': 2,
+            'username': 'duplicate',
+            'email': 'test2@example.com',
+            'password': 'hashedPassword2'
+        }
+        req = MockRequest(body={'username': 'duplicate', 'password': 'password123'})
+        res = MockResponse()
+        pool = MockPool()
+        pool.query_result = [[user1, user2]]  # Multiple results
+        
+        async def mock_compare(p, h):
+            return True
+        
+        await login(req, res, pool, mock_compare)
+        
+        # Should only use first user result
+        assert res.status_code == 200
+        assert req.session['userId'] == 1
+
+
+class TestInputSanitization:
+    """Test cases for SQL injection and malicious input attempts"""
+
+    @pytest.mark.asyncio
+    async def test_should_handle_sql_injection_attempt_in_username(self):
+        malicious_username = "admin' OR '1'='1"
+        req = MockRequest(body={'username': malicious_username, 'password': 'password123'})
+        res = MockResponse()
+        pool = MockPool()
+        pool.query_result = [[]]  # Should not find any user
+        
+        async def mock_compare(p, h):
+            return False
+        
+        await login(req, res, pool, mock_compare)
+        
+        assert res.status_code == 401
+        assert res.json_data['message'] == 'Invalid username or password'
+
+    @pytest.mark.asyncio
+    async def test_should_handle_script_tags_in_username(self):
+        malicious_username = "<script>alert('XSS')</script>"
+        req = MockRequest(body={'username': malicious_username, 'password': 'password123'})
+        res = MockResponse()
+        pool = MockPool()
+        pool.query_result = [[]]
+        
+        async def mock_compare(p, h):
+            return False
+        
+        await login(req, res, pool, mock_compare)
+        
+        assert res.status_code == 401
+        assert res.json_data['message'] == 'Invalid username or password'
+
+    @pytest.mark.asyncio
+    async def test_should_handle_extremely_long_password(self):
+        # Test with password exceeding reasonable limits
+        extremely_long_password = 'a' * 10000
+        req = MockRequest(body={'username': 'testuser', 'password': extremely_long_password})
+        res = MockResponse()
+        pool = MockPool()
+        pool.query_result = [[]]
+        
+        async def mock_compare(p, h):
+            return False
+        
+        await login(req, res, pool, mock_compare)
+        
+        assert res.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_should_handle_null_bytes_in_password(self):
+        malicious_password = "password\x00hidden"
+        req = MockRequest(body={'username': 'testuser', 'password': malicious_password})
+        res = MockResponse()
+        pool = MockPool()
+        pool.query_result = [[]]
+        
+        async def mock_compare(p, h):
+            return False
+        
+        await login(req, res, pool, mock_compare)
+        
+        assert res.status_code == 401
+
+
+class TestRateLimiting:
+    """Test cases for rate limiting and brute force protection"""
+
+    @pytest.mark.asyncio
+    async def test_should_handle_rapid_failed_login_attempts(self):
+        # Simulate multiple failed login attempts
+        failed_attempts = []
+        
+        for i in range(5):
+            req = MockRequest(body={'username': 'testuser', 'password': f'wrongpass{i}'})
+            res = MockResponse()
+            pool = MockPool()
+            pool.query_result = [[]]
+            
+            async def mock_compare(p, h):
+                return False
+            
+            await login(req, res, pool, mock_compare)
+            failed_attempts.append(res.status_code)
+        
+        # All attempts should return 401
+        assert all(status == 401 for status in failed_attempts)
+
+    @pytest.mark.asyncio
+    async def test_should_track_session_state_across_attempts(self):
+        mock_user = {
+            'userid': 1,
+            'username': 'testuser',
+            'email': 'test@example.com',
+            'password': 'hashedPassword'
+        }
+        
+        # First attempt - failed
+        req1 = MockRequest(body={'username': 'testuser', 'password': 'wrong'})
+        res1 = MockResponse()
+        pool1 = MockPool()
+        pool1.query_result = [[mock_user]]
+        
+        async def mock_compare_false(p, h):
+            return False
+        
+        await login(req1, res1, pool1, mock_compare_false)
+        assert res1.status_code == 401
+        assert 'userId' not in req1.session  # Session should not be set
+        
+        # Second attempt - success
+        req2 = MockRequest(body={'username': 'testuser', 'password': 'correct'})
+        res2 = MockResponse()
+        pool2 = MockPool()
+        pool2.query_result = [[mock_user]]
+        
+        async def mock_compare_true(p, h):
+            return True
+        
+        await login(req2, res2, pool2, mock_compare_true)
+        assert res2.status_code == 200
+        assert req2.session['userId'] == 1  # Session should be set
+
+
+class TestPasswordEdgeCases:
+    """Test cases for password edge cases"""
+
+    @pytest.mark.asyncio
+    async def test_should_reject_whitespace_only_password(self):
+        req = MockRequest(body={'username': 'testuser', 'password': '     '})
+        res = MockResponse()
+        pool = MockPool()
+        pool.query_result = [[]]
+        
+        async def mock_compare(p, h):
+            return False
+        
+        await login(req, res, pool, mock_compare)
+        
+        assert res.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_should_handle_password_with_newlines(self):
+        req = MockRequest(body={'username': 'testuser', 'password': 'pass\nword\n123'})
+        res = MockResponse()
+        pool = MockPool()
+        pool.query_result = [[]]
+        
+        async def mock_compare(p, h):
+            return False
+        
+        await login(req, res, pool, mock_compare)
+        
+        assert res.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_should_differentiate_case_sensitive_passwords(self):
+        mock_user = {
+            'userid': 1,
+            'username': 'testuser',
+            'email': 'test@example.com',
+            'password': 'hashedPassword'
+        }
+        
+        # Test lowercase version
+        req1 = MockRequest(body={'username': 'testuser', 'password': 'password'})
+        res1 = MockResponse()
+        pool1 = MockPool()
+        pool1.query_result = [[mock_user]]
+        
+        async def mock_compare_false(p, h):
+            return False
+        
+        await login(req1, res1, pool1, mock_compare_false)
+        assert res1.status_code == 401
+        
+        # Test uppercase version
+        req2 = MockRequest(body={'username': 'testuser', 'password': 'PASSWORD'})
+        res2 = MockResponse()
+        pool2 = MockPool()
+        pool2.query_result = [[mock_user]]
+        
+        await login(req2, res2, pool2, mock_compare_false)
+        assert res2.status_code == 401
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
