@@ -21,6 +21,7 @@ pip install selenium pytest pytest-asyncio webdriver-manager
 Using webdriver-manager (recommended):
 ```bash
 pip install webdriver-manager
+pip install Pillow
 ```
 
 Then update the test file to use it:
@@ -55,7 +56,7 @@ Server should be running on `http://localhost:3000`
 ### **Step 2: Create Test User (If needed)**
 
 Make sure you have a test user in your database:
-- Username: `testuser`
+- Username: `testuser` change according to your username and pass in the main file
 - Password: `testpass123`
 
 Or update the credentials in the test file:
@@ -66,10 +67,8 @@ def login_user(self, driver, username="YOUR_USERNAME", password="YOUR_PASSWORD")
 ### **Step 3: Run Selenium Tests**
 
 ```bash
-cd backend/tests
-
-# Run all Selenium tests with visible browser:
-pytest complaints/test_complaint_selenium.py -v -s
+cd "D:\Study\SWE Lab\crime-reporting-system\backend\tests\complaints"
+pytest test_complaint_selenium.py -v -s
 
 # Run specific test:
 pytest complaints/test_complaint_selenium.py::TestComplaintSubmissionSelenium::test_02_submit_complaint_with_all_fields -v -s
