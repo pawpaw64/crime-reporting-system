@@ -33,7 +33,7 @@ exports.getHomepage = (req, res) => {
         if (isAdminAuthenticated) {
             modifiedData = modifiedData.replace(
                 '</head>',
-                '<link rel="stylesheet" href="src/css/adminAuth-header.css">\n<script src="src/js/adminAuth-handler.js"></script>\n</head>'
+                '<link rel="stylesheet" href="src/css/adminAuth-header.css">\n</head>'
             );
         } else if (isUserAuthenticated) {
             modifiedData = modifiedData.replace(

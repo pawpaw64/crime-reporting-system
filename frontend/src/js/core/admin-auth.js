@@ -3,17 +3,37 @@
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    if (typeof window.isAdmin === 'undefined') return;
-    
-    const headerIcons = document.querySelector('.header-icons');
-    if (!headerIcons) return;
-    
-    if (window.isAdmin && window.adminUsername) {
-        setupAdminUI(headerIcons);
-    } else {
+    checkAdminAuth();
+});
+
+async function checkAdminAuth() {
+    try {
+        const response = await fetch('/check-admin-auth', {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.isAuthenticated && data.admin) {
+                window.isAdmin = true;
+                window.adminUsername = data.admin.username || 'Admin';
+                
+                const headerIcons = document.querySelector('.header-icons');
+                if (headerIcons) {
+                    setupAdminUI(headerIcons);
+                }
+            } else {
+                cleanupAdminUI();
+            }
+        } else {
+            cleanupAdminUI();
+        }
+    } catch (error) {
+        console.error('Admin auth check failed:', error);
         cleanupAdminUI();
     }
-});
+}
 
 function setupAdminUI(headerIcons) {
     document.body.classList.add('admin-logged-in');
