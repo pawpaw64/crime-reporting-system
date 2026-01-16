@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import time
 import os
@@ -82,7 +83,7 @@ class TestComplaintSubmissionSelenium:
             pytest.fail(f"Could not access complaint form: {e}")
     
     def test_02_submit_complaint_with_all_fields(self, setup_browser):
-        #testing complete complaint submission with all fields..
+        #testing complaint submission with all fields
         driver = setup_browser
         wait = WebDriverWait(driver, 15)
         driver.get(f"{driver.base_url}/profile")
@@ -102,13 +103,25 @@ class TestComplaintSubmissionSelenium:
             time.sleep(1)
             location_field = driver.find_element(By.ID, "incident-location")
             location_field.clear()
-            location_field.send_keys("Downtown Shopping Mall, Parking Area B")
+            location_field.send_keys("Downtown Shopping Mall, Parking Area B,Dhaka")
             time.sleep(1)
-            #trying to set map coordinates..
+            #trying to set map coordinates
+            
             try:
                 open_map_btn = driver.find_element(By.ID, "open-map")
                 open_map_btn.click()
                 time.sleep(2)
+                
+                #finding and dragging the marker a little to trigger location selection
+                try:
+                    marker = driver.find_element(By.CLASS_NAME, "leaflet-marker-draggable")
+                    actions = ActionChains(driver)
+                    actions.click_and_hold(marker).move_by_offset(5, 5).release().perform()
+                    time.sleep(1)
+                    print("Marker dragged successfully")
+                except Exception as e:
+                    print(f"Could not drag marker: {e}")
+                
                 latitude_field = driver.find_element(By.ID, "incident-latitude")
                 driver.execute_script("arguments[0].value = '23.8103';", latitude_field)
                 longitude_field = driver.find_element(By.ID, "incident-longitude")
@@ -118,17 +131,34 @@ class TestComplaintSubmissionSelenium:
                 time.sleep(1)
             except NoSuchElementException:
                 print("Map buttons not found, skipping map interaction...")
-            submit_button = driver.find_element(By.ID, "submit-report-btn")
-            submit_button.click()
-            time.sleep(2)
-            #waiting for success modal to appear..
+            
+            #clicking submit button and handling any alerts..
+            try:
+                submit_button = driver.find_element(By.ID, "submit-report-btn")
+                submit_button.click()
+                time.sleep(2)
+            except Exception as e:
+                #checking if there's an alert about map location..
+                try:
+                    alert = driver.switch_to.alert
+                    alert_text = alert.text
+                    print(f"Alert detected: {alert_text}")
+                    alert.accept()  
+                    time.sleep(1)
+                    #trying to submit again without map coordinates..
+                    submit_button = driver.find_element(By.ID, "submit-report-btn")
+                    submit_button.click()
+                    time.sleep(2)
+                except Exception:
+                    raise e  #re-raising if it's not an alert issue..
+            #wait for success modal to appear
             try:
                 success_modal = wait.until(EC.presence_of_element_located((By.ID, "report-success-modal")))
                 wait.until(lambda d: "hidden" not in d.find_element(By.ID, "report-success-modal").get_attribute("class"))
                 print("✅ TEST PASSED: Complaint submitted successfully")
                 time.sleep(2)
             except TimeoutException:
-                #checking if error modal appeared instead..
+                #checking if error modal appeared instead
                 try:
                     error_modal = driver.find_element(By.ID, "report-error-modal")
                     if "hidden" not in error_modal.get_attribute("class"):
@@ -146,7 +176,7 @@ class TestComplaintSubmissionSelenium:
             pytest.fail(f"Complaint submission failed: {e}")
     
     def test_03_validation_missing_complaint_type(self, setup_browser):
-        #testing validation when complaint type is missing..
+        #testing validation when complaint type is missing
         driver = setup_browser
         wait = WebDriverWait(driver, 10)
         driver.get(f"{driver.base_url}/profile")
@@ -275,7 +305,7 @@ class TestComplaintSubmissionSelenium:
             pytest.fail(f"Validation test failed: {e}")
     
     def test_07_view_submitted_complaints(self, setup_browser):
-        #checking if user can view submitted complaints..
+        #checking if user can view submitted complaints
         driver = setup_browser
         wait = WebDriverWait(driver, 10)
         try:
@@ -293,7 +323,7 @@ class TestComplaintSubmissionSelenium:
             print(f"⚠️ Warning: Could not verify complaints list: {e}")
     
     def test_08_complaint_status_display(self, setup_browser):
-        #verifying complaint status is displayed correctly..
+        #verifying complaint status is displayed correctly
         driver = setup_browser
         wait = WebDriverWait(driver, 10)
         try:
@@ -510,7 +540,7 @@ class TestComplaintSubmissionSelenium:
             print(f"⚠️ Warning: All evidence types test failed: {e}")
     
     def test_14_upload_invalid_file_type(self, setup_browser):
-        #checking if invalid file types are rejected..
+        #checking if invalid file types are rejected
         driver = setup_browser
         wait = WebDriverWait(driver, 10)
         driver.get(f"{driver.base_url}/profile")
@@ -549,7 +579,7 @@ class TestComplaintSubmissionSelenium:
             print(f"⚠️ Warning: Invalid file type test failed: {e}")
     
     def test_15_logout_after_tests(self, setup_browser):
-        #testing logout functionality..
+        #testing logout functionality
         driver = setup_browser
         try:
             driver.get(f"{driver.base_url}/profile")

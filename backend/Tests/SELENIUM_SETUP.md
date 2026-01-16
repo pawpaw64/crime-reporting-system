@@ -68,10 +68,10 @@ def login_user(self, driver, username="YOUR_USERNAME", password="YOUR_PASSWORD")
 
 ```bash
 cd "D:\Study\SWE Lab\crime-reporting-system\backend\tests\complaints"
-pytest test_complaint_selenium.py -v -s
+Python -m pytest test_complaint_selenium.py -v -s
 
 # Run specific test:
-pytest complaints/test_complaint_selenium.py::TestComplaintSubmissionSelenium::test_02_submit_complaint_with_all_fields -v -s
+Python -m pytest complaints/test_complaint_selenium.py::TestComplaintSubmissionSelenium::test_02_submit_complaint_with_all_fields -v -s
 
 # Run in headless mode (no browser window):
 # Edit the test file and uncomment:
