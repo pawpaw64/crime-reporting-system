@@ -32,6 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initFilters();
     initEventDelegation();
     initSidebarScrollIndicator();
+    
+    // Set initial back button state
+    const activeTab = document.querySelector('.tab-content.active')?.id || 'dashboard';
+    updateBackButton(activeTab);
 });
 
 // ===== SIDEBAR SCROLL INDICATOR =====
@@ -506,6 +510,28 @@ function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.toggle('active', content.id === tabId);
     });
+    
+    // Update back button
+    updateBackButton(tabId);
+}
+
+function updateBackButton(currentTab) {
+    const backBtn = document.querySelector('.back-to-home');
+    if (!backBtn) return;
+    
+    if (currentTab === 'dashboard') {
+        // When on dashboard, show "Back to Home" and redirect to homepage
+        backBtn.innerHTML = '<i class="fas fa-home"></i> Back to Home';
+        backBtn.onclick = () => {
+            window.location.href = '/';
+        };
+    } else {
+        // When on other tabs, show "Back to Dashboard" and switch to dashboard
+        backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> Back to Dashboard';
+        backBtn.onclick = () => {
+            switchTab('dashboard');
+        };
+    }
 }
 
 // ===== MODALS =====
@@ -677,7 +703,11 @@ async function deleteComplaint(id) {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/complaints/${id}`, {
+        // Complaint routes are mounted at root, not under /api prefix
+        const hostname = window.location.hostname;
+        const baseUrl = `http://${hostname}:3000`;
+        
+        const response = await fetch(`${baseUrl}/delete-complaint/${id}`, {
             method: 'DELETE',
             credentials: 'include'
         });
@@ -686,7 +716,10 @@ async function deleteComplaint(id) {
         
         if (result.success) {
             alert('Complaint deleted successfully');
-            loadComplaints();
+            // Reload complaints to update the list
+            await loadComplaints();
+            // Switch to complaints tab to see updated list
+            switchTab('complaints');
         } else {
             alert(result.message || 'Failed to delete complaint');
         }
