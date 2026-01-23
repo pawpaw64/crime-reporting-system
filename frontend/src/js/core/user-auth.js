@@ -3,17 +3,44 @@
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    if (typeof window.isAuthenticated === 'undefined') return;
-    
+    checkUserAuth();
+});
+
+async function checkUserAuth() {
+    try {
+        const response = await fetch('/check-auth', {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.authenticated && data.user) {
+                window.isAuthenticated = true;
+                window.currentUser = data.user.username || data.user;
+                
+                const headerIcons = document.querySelector('.header-icons');
+                if (headerIcons) {
+                    setupAuthenticatedUI(headerIcons);
+                }
+            } else {
+                cleanupUserUI();
+            }
+        } else {
+            cleanupUserUI();
+        }
+    } catch (error) {
+        console.error('User auth check failed:', error);
+        cleanupUserUI();
+    }
+}
+
+function cleanupUserUI() {
     const headerIcons = document.querySelector('.header-icons');
-    if (!headerIcons) return;
-    
-    if (window.isAuthenticated && window.currentUser) {
-        setupAuthenticatedUI(headerIcons);
-    } else {
+    if (headerIcons) {
         setupUnauthenticatedUI(headerIcons);
     }
-});
+}
 
 function setupAuthenticatedUI(headerIcons) {
     // Check for existing auth container
