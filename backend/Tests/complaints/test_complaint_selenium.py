@@ -6,6 +6,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 import os
 from datetime import datetime
@@ -34,23 +36,32 @@ class TestComplaintSubmissionSelenium:
     
     @pytest.fixture(scope="class")
     def setup_browser(self):
-        #setting up chrome driver before tests start..
+        #setting up chrome driver before tests start with webdriver-manager
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument('--start-maximized')
-        driver = webdriver.Chrome(options=chrome_options)
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--window-size=1920,1080')
+        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging', 'enable-automation'])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
+        # Uncomment the next line to run in headless mode (no browser window)
+        # chrome_options.add_argument('--headless=new')
+        
+        # Use webdriver-manager to automatically download and use the correct ChromeDriver
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.implicitly_wait(10)
         driver.base_url = "http://localhost:3000"
         yield driver
         driver.quit()
     
-    def login_user(self, driver, username="milonnahid_mjttnj8h", password="Nill@12345678"):
+    def login_user(self, driver, username="sumaiya", password="1234abcd*A"):
         #logging in the test user..
         driver.get(f"{driver.base_url}/login")
         wait = WebDriverWait(driver, 10)
         try:
-            username_field = wait.until(EC.presence_of_element_located((By.ID, "login-username")))
+            username_field = driver.find_element(By.ID, "login-username")
             username_field.clear()
             username_field.send_keys(username)
             password_field = driver.find_element(By.ID, "login-password")
@@ -72,10 +83,10 @@ class TestComplaintSubmissionSelenium:
         driver.get(f"{driver.base_url}/profile")
         wait = WebDriverWait(driver, 10)
         try:
-            new_report_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[data-tab='new-report']")))
+            new_report_btn = driver.find_element(By.CSS_SELECTOR, "button[data-tab='new-report']")
             new_report_btn.click()
             time.sleep(1)
-            complaint_form = wait.until(EC.presence_of_element_located((By.ID, "report-form")))
+            complaint_form = driver.find_element(By.ID, "complaint-form")
             assert complaint_form.is_displayed(), "Complaint form not visible"
             print("✅ TEST PASSED: User can access complaint form")
         except Exception as e:

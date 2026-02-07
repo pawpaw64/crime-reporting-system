@@ -1,6 +1,6 @@
 const pool = require('../../db');
 const { sendEmail } = require('../../utils/emailUtils');
-const { sendError, sendSuccess, generateOTP, otpStore, EmailTemplates, CONFIG } = require('./common');
+const { sendError, sendSuccess, generateOTP, otpStore, EmailTemplates, CONFIG, createRegistrationSession } = require('./common');
 
 // Send OTP to email or phone during registration
 exports.sendOTP = async (req, res) => {
@@ -12,13 +12,19 @@ exports.sendOTP = async (req, res) => {
         if (phone) otpStore.set(phone, { otp, createdAt: Date.now() });
         if (email) otpStore.set(email, { otp, createdAt: Date.now() });
 
+        // Create a registration session
+        const sessionId = createRegistrationSession(phone, email);
+
         // In dev, log OTP. In prod, send via SMS gateway / email
         console.log('Generated OTP for', email || phone, otp);
         if (email) {
             try { await sendEmail(email, 'Your OTP Code', EmailTemplates.otp(otp)); } catch (e) { console.error('OTP email error:', e); }
         }
 
-        sendSuccess(res, 'OTP sent', { otp: process.env.NODE_ENV === 'development' ? otp : undefined });
+        sendSuccess(res, 'OTP sent', { 
+            otp: process.env.NODE_ENV === 'development' ? otp : undefined,
+            sessionId 
+        });
     } catch (err) {
         console.error('sendOTP error', err);
         sendError(res, 500, 'Failed to send OTP');
@@ -28,14 +34,15 @@ exports.sendOTP = async (req, res) => {
 // Verify OTP
 exports.verifyOTP = async (req, res) => {
     try {
-        const { key, otp } = req.body; // key can be email or phone
-        if (!key || !otp) return sendError(res, 400, 'Key and OTP are required');
-        const entry = otpStore.get(key);
-        if (!entry) return sendError(res, 400, 'No OTP found for this key');
+        const { key, otp, phone, email } = req.body; // key can be email or phone, or use phone/email directly
+        const identifier = key || phone || email;
+        if (!identifier || !otp) return sendError(res, 400, 'Key/phone/email and OTP are required');
+        const entry = otpStore.get(identifier);
+        if (!entry) return sendError(res, 400, 'No OTP found for this identifier');
         if (entry.otp !== otp) return sendError(res, 400, 'Invalid OTP');
         if (Date.now() - entry.createdAt > (5 * 60 * 1000)) return sendError(res, 400, 'OTP expired');
 
-        otpStore.delete(key);
+        otpStore.delete(identifier);
         sendSuccess(res, 'OTP verified');
     } catch (err) {
         console.error('verifyOTP error', err);
