@@ -143,25 +143,25 @@ class TestComplaintSubmissionSelenium:
             except NoSuchElementException:
                 print("Map buttons not found, skipping map interaction...")
             
-            #clicking submit button and handling any alerts..
+            #clicking submit button and handling any alerts
             try:
                 submit_button = driver.find_element(By.ID, "submit-report-btn")
                 submit_button.click()
                 time.sleep(2)
             except Exception as e:
-                #checking if there's an alert about map location..
+                #checking if there's an alert about map location
                 try:
                     alert = driver.switch_to.alert
                     alert_text = alert.text
                     print(f"Alert detected: {alert_text}")
                     alert.accept()  
                     time.sleep(1)
-                    #trying to submit again without map coordinates..
+                    #trying to submit again without map coordinates
                     submit_button = driver.find_element(By.ID, "submit-report-btn")
                     submit_button.click()
                     time.sleep(2)
                 except Exception:
-                    raise e  #re-raising if it's not an alert issue..
+                    raise e  #re-raising if it's not an alert issue
             #wait for success modal to appear
             try:
                 success_modal = wait.until(EC.presence_of_element_located((By.ID, "report-success-modal")))
@@ -218,7 +218,7 @@ class TestComplaintSubmissionSelenium:
             pytest.fail(f"Validation test failed: {e}")
     
     def test_04_validation_missing_description(self, setup_browser):
-        #testing validation when description is missing..
+        #testing validation when description is missing
         driver = setup_browser
         wait = WebDriverWait(driver, 10)
         driver.get(f"{driver.base_url}/profile")
@@ -250,7 +250,7 @@ class TestComplaintSubmissionSelenium:
             pytest.fail(f"Validation test failed: {e}")
     
     def test_05_validation_missing_date(self, setup_browser):
-        #testing validation when date is missing..
+        #testing validation when date is missing
         driver = setup_browser
         wait = WebDriverWait(driver, 10)
         driver.get(f"{driver.base_url}/profile")
@@ -283,7 +283,7 @@ class TestComplaintSubmissionSelenium:
             pytest.fail(f"Validation test failed: {e}")
     
     def test_06_validation_missing_location(self, setup_browser):
-        #testing validation when location is missing..
+        #testing validation when location is missing
         driver = setup_browser
         wait = WebDriverWait(driver, 10)
         driver.get(f"{driver.base_url}/profile")
@@ -355,7 +355,7 @@ class TestComplaintSubmissionSelenium:
             print(f"⚠️ Warning: Status check failed: {e}")
     
     def test_09_upload_image_evidence(self, setup_browser):
-        #testing image file upload..
+        #testing image file upload
         driver = setup_browser
         wait = WebDriverWait(driver, 10)
         driver.get(f"{driver.base_url}/profile")
@@ -392,7 +392,7 @@ class TestComplaintSubmissionSelenium:
             print(f"⚠️ Warning: Image upload test failed: {e}")
     
     def test_10_upload_multiple_images(self, setup_browser):
-        #testing multiple image uploads at once..
+        #testing multiple image uploads at once
         driver = setup_browser
         wait = WebDriverWait(driver, 10)
         driver.get(f"{driver.base_url}/profile")
@@ -438,7 +438,7 @@ class TestComplaintSubmissionSelenium:
             print(f"⚠️ Warning: Multiple images test failed: {e}")
     
     def test_11_upload_video_evidence(self, setup_browser):
-        #testing video file upload..
+        #testing video file upload
         driver = setup_browser
         wait = WebDriverWait(driver, 10)
         driver.get(f"{driver.base_url}/profile")
@@ -506,7 +506,7 @@ class TestComplaintSubmissionSelenium:
             print(f"⚠️ Warning: Audio upload test failed: {e}")
     
     def test_13_upload_all_evidence_types(self, setup_browser):
-        #testing upload of image video and audio together..
+        #testing upload of image video and audio together
         driver = setup_browser
         wait = WebDriverWait(driver, 10)
         driver.get(f"{driver.base_url}/profile")
