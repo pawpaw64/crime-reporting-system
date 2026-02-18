@@ -6,7 +6,10 @@
     <title>Email Verification | SecureVoice</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../css/i18n.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
@@ -109,27 +112,34 @@
 </head>
 <body>
     <div class="container">
+        <!-- Language Toggle -->
+        <div style="position: absolute; top: 20px; right: 20px;">
+            <button id="langToggle" class="lang-toggle-btn compact" onclick="toggleLanguage && toggleLanguage()">
+                <span class="lang-text">EN</span>
+            </button>
+        </div>
+        
         <div id="loading-state">
             <i class="fas fa-spinner icon loading"></i>
-            <h1>Verifying Your Email</h1>
-            <p>Please wait while we verify your email address...</p>
+            <h1 data-i18n="verify.verifyingEmail">Verifying Your Email</h1>
+            <p data-i18n="verify.pleaseWait">Please wait while we verify your email address...</p>
         </div>
 
         <div id="success-state" style="display: none;">
             <i class="fas fa-check-circle icon success"></i>
-            <h1>Email Verified Successfully!</h1>
-            <p>Your email has been verified. You can now login to your District Admin account.</p>
-            <a href="adminLogin.html" class="btn">Proceed to Login</a>
+            <h1 data-i18n="verify.emailVerifiedSuccess">Email Verified Successfully!</h1>
+            <p data-i18n="verify.canNowLogin">Your email has been verified. You can now login to your District Admin account.</p>
+            <a href="adminLogin.html" class="btn" data-i18n="verify.proceedToLogin">Proceed to Login</a>
             <div class="countdown">
-                Redirecting in <span id="countdown">5</span> seconds...
+                <span data-i18n="verify.redirectingIn">Redirecting in</span> <span id="countdown">5</span> <span data-i18n="verify.seconds">seconds...</span>
             </div>
         </div>
 
         <div id="error-state" style="display: none;">
             <i class="fas fa-times-circle icon error"></i>
-            <h1>Verification Failed</h1>
-            <p id="error-message">The verification link is invalid or has expired.</p>
-            <a href="adminLogin.html" class="btn">Back to Login</a>
+            <h1 data-i18n="verify.errorTitle">Verification Failed</h1>
+            <p id="error-message" data-i18n="verify.linkInvalid">The verification link is invalid or has expired.</p>
+            <a href="adminLogin.html" class="btn" data-i18n="auth.backToLogin">Back to Login</a>
         </div>
     </div>
 
@@ -198,5 +208,6 @@
             }, 1000);
         }
     </script>
+    <script src="../js/core/i18n.js"></script>
 </body>
 </html>

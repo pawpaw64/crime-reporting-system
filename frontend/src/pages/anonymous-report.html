@@ -7,9 +7,11 @@
     <title>Anonymous Crime Report - SecureVoice</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
     <link rel="stylesheet" href="../css/base.css">
     <link rel="stylesheet" href="../css/anonymous-report.css">
+    <link rel="stylesheet" href="../css/i18n.css">
 </head>
 <body>
     <!-- Disclaimer Modal -->
@@ -18,42 +20,42 @@
             <div class="modal-header">
                 <h2>
                     <i class="fas fa-shield-alt"></i>
-                    Important Information
+                    <span data-i18n="anon.importantInfo">Important Information</span>
                 </h2>
             </div>
             <div class="modal-body">
                 <div class="disclaimer-intro">
-                    <p>Before submitting an anonymous report, please understand the following:</p>
+                    <p data-i18n="anon.disclaimerIntro">Before submitting an anonymous report, please understand the following:</p>
                 </div>
                 <ul class="disclaimer-list">
                     <li>
-                        <strong><i class="fas fa-user-secret"></i> Complete Anonymity</strong>
-                        <p>We do not collect your name, email, phone number, or any personal information. Your IP address is hashed and cannot be traced back to you.</p>
+                        <strong><i class="fas fa-user-secret"></i> <span data-i18n="anon.completeAnonymity">Complete Anonymity</span></strong>
+                        <p data-i18n="anon.anonymityDesc">We do not collect your name, email, phone number, or any personal information. Your IP address is hashed and cannot be traced back to you.</p>
                     </li>
                     <li>
-                        <strong><i class="fas fa-file-alt"></i> Evidence Required</strong>
-                        <p>To ensure the validity of reports and reduce false submissions, at least one piece of evidence (photo, video, or document) is required.</p>
+                        <strong><i class="fas fa-file-alt"></i> <span data-i18n="anon.evidenceRequired">Evidence Required</span></strong>
+                        <p data-i18n="anon.evidenceDesc">To ensure the validity of reports and reduce false submissions, at least one piece of evidence (photo, video, or document) is required.</p>
                     </li>
                     <li>
-                        <strong><i class="fas fa-clock"></i> Rate Limited</strong>
-                        <p>To prevent abuse, you can submit up to 3 anonymous reports per day from your location.</p>
+                        <strong><i class="fas fa-clock"></i> <span data-i18n="anon.rateLimited">Rate Limited</span></strong>
+                        <p data-i18n="anon.rateLimitDesc">To prevent abuse, you can submit up to 3 anonymous reports per day from your location.</p>
                     </li>
                     <li>
-                        <strong><i class="fas fa-balance-scale"></i> Legal Responsibility</strong>
-                        <p>Filing false reports is a criminal offense. Only submit genuine reports about real incidents.</p>
+                        <strong><i class="fas fa-balance-scale"></i> <span data-i18n="anon.legalResponsibility">Legal Responsibility</span></strong>
+                        <p data-i18n="anon.legalDesc">Filing false reports is a criminal offense. Only submit genuine reports about real incidents.</p>
                     </li>
                     <li>
-                        <strong><i class="fas fa-id-badge"></i> Track Your Report</strong>
-                        <p>You will receive a unique Report ID. Save it to check the status of your report later.</p>
+                        <strong><i class="fas fa-id-badge"></i> <span data-i18n="anon.trackYourReport">Track Your Report</span></strong>
+                        <p data-i18n="anon.trackDesc">You will receive a unique Report ID. Save it to check the status of your report later.</p>
                     </li>
                 </ul>
             </div>
             <div class="modal-footer">
                 <button id="cancelDisclaimer" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> Cancel
+                    <i class="fas fa-times"></i> <span data-i18n="btn.cancel">Cancel</span>
                 </button>
                 <button id="acceptDisclaimer" class="btn btn-primary">
-                    <i class="fas fa-check"></i> I Understand, Continue
+                    <i class="fas fa-check"></i> <span data-i18n="anon.understandContinue">I Understand, Continue</span>
                 </button>
             </div>
         </div>
@@ -61,19 +63,22 @@
 
     <!-- Main Report Container -->
     <div id="reportContainer" class="container hidden">
+        <!-- Language Toggle -->
+        <button class="lang-toggle-btn floating" title="Switch Language">EN</button>
+        
         <!-- Back Button -->
         <a href="/" class="back-link">
             <i class="fas fa-arrow-left"></i>
-            Back to Home
+            <span data-i18n="anon.backToHome">Back to Home</span>
         </a>
 
         <header class="page-header">
             <div class="anonymous-badge">
                 <i class="fas fa-user-secret"></i>
-                <span>Anonymous Mode</span>
+                <span data-i18n="anon.anonymousMode">Anonymous Mode</span>
             </div>
-            <h1>Submit Anonymous Report</h1>
-            <p class="subtitle">Your identity is completely protected. No login required.</p>
+            <h1 data-i18n="anon.title">Submit Anonymous Report</h1>
+            <p class="subtitle" data-i18n="anon.subtitle">Your identity is completely protected. No login required.</p>
         </header>
 
         <form id="anonymousReportForm" enctype="multipart/form-data">
@@ -81,32 +86,32 @@
             <section class="form-section">
                 <div class="section-title">
                     <i class="fas fa-tag icon"></i>
-                    <h2>Incident Type</h2>
-                    <span class="required-badge">Required</span>
+                    <h2 data-i18n="anon.incidentType">Incident Type</h2>
+                    <span class="required-badge" data-i18n="form.required">Required</span>
                 </div>
 
                 <div class="form-group">
-                    <label for="crimeType">
+                    <label for="crimeType" data-i18n="anon.typeOfCrime">
                         Type of Crime *
                     </label>
                     <select id="crimeType" name="crimeType" required>
-                        <option value="">Select the type of crime</option>
-                        <option value="theft">Theft / Burglary / Robbery</option>
-                        <option value="assault">Assault / Physical Violence</option>
-                        <option value="fraud">Fraud / Scams</option>
-                        <option value="vandalism">Vandalism / Property Damage</option>
-                        <option value="harassment">Harassment / Stalking</option>
-                        <option value="drug_related">Drug Related Activity</option>
-                        <option value="cybercrime">Cybercrime / Online Fraud</option>
-                        <option value="domestic_violence">Domestic Violence</option>
-                        <option value="corruption">Corruption / Bribery</option>
-                        <option value="human_trafficking">Human Trafficking</option>
-                        <option value="environmental">Environmental Crime</option>
-                        <option value="organized_crime">Gang / Organized Crime</option>
-                        <option value="threat">Threats / Intimidation</option>
-                        <option value="public_safety">Public Safety Concern</option>
-                        <option value="traffic_violation">Serious Traffic Violation</option>
-                        <option value="other">Other</option>
+                        <option value="" data-i18n="anon.selectCrimeType">Select the type of crime</option>
+                        <option value="theft" data-i18n="crime.theft">Theft / Burglary / Robbery</option>
+                        <option value="assault" data-i18n="crime.assault">Assault / Physical Violence</option>
+                        <option value="fraud" data-i18n="crime.fraud">Fraud / Scams</option>
+                        <option value="vandalism" data-i18n="crime.vandalism">Vandalism / Property Damage</option>
+                        <option value="harassment" data-i18n="crime.harassment">Harassment / Stalking</option>
+                        <option value="drug_related" data-i18n="crime.drug">Drug Related Activity</option>
+                        <option value="cybercrime" data-i18n="crime.cyber">Cybercrime / Online Fraud</option>
+                        <option value="domestic_violence" data-i18n="crime.domestic">Domestic Violence</option>
+                        <option value="corruption" data-i18n="crime.corruption">Corruption / Bribery</option>
+                        <option value="human_trafficking" data-i18n="crime.trafficking">Human Trafficking</option>
+                        <option value="environmental" data-i18n="crime.environmental">Environmental Crime</option>
+                        <option value="organized_crime" data-i18n="crime.organized">Gang / Organized Crime</option>
+                        <option value="threat" data-i18n="crime.threat">Threats / Intimidation</option>
+                        <option value="public_safety" data-i18n="crime.publicSafety">Public Safety Concern</option>
+                        <option value="traffic_violation" data-i18n="crime.traffic">Serious Traffic Violation</option>
+                        <option value="other" data-i18n="crime.other">Other</option>
                     </select>
                     <span class="error-message" id="crimeTypeError"></span>
                 </div>
@@ -116,13 +121,13 @@
             <section class="form-section">
                 <div class="section-title">
                     <i class="fas fa-file-alt icon"></i>
-                    <h2>Incident Details</h2>
-                    <span class="required-badge">Required</span>
+                    <h2 data-i18n="anon.incidentDetails">Incident Details</h2>
+                    <span class="required-badge" data-i18n="form.required">Required</span>
                 </div>
 
                 <div class="form-group">
                     <label for="description">
-                        Description *
+                        <span data-i18n="anon.description">Description *</span>
                         <span class="char-count">
                             <span id="descCharCount">0</span>/5000
                         </span>
@@ -131,6 +136,7 @@
                         id="description" 
                         name="description" 
                         rows="6" 
+                        data-i18n-placeholder="anon.descPlaceholder"
                         placeholder="Describe the incident in detail. Include what happened, who was involved (without personal names if unknown), and any other relevant information. Minimum 50 characters required."
                         required
                         minlength="50"
@@ -141,7 +147,7 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="incidentDate">
+                        <label for="incidentDate" data-i18n="anon.dateOfIncident">
                             Date of Incident *
                         </label>
                         <input 
@@ -154,7 +160,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="incidentTime">
+                        <label for="incidentTime" data-i18n="anon.timeOfIncident">
                             Time of Incident *
                         </label>
                         <input 
@@ -169,20 +175,21 @@
 
                 <div class="form-group">
                     <label for="location">
-                        <i class="fas fa-map-marker-alt"></i> Location *
+                        <i class="fas fa-map-marker-alt"></i> <span data-i18n="anon.location">Location *</span>
                     </label>
                     <div class="location-input-group">
                         <input 
                             type="text" 
                             id="location" 
                             name="location" 
+                            data-i18n-placeholder="anon.locationPlaceholder"
                             placeholder="Enter address or location details"
                             required
                             minlength="10"
                             maxlength="500"
                         >
                         <button type="button" id="openMapBtn" class="btn btn-map">
-                            <i class="fas fa-map-marker-alt"></i> Use Map
+                            <i class="fas fa-map-marker-alt"></i> <span data-i18n="anon.useMap">Use Map</span>
                         </button>
                     </div>
                     <span class="error-message" id="locationError"></span>
@@ -459,6 +466,7 @@
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="../js/core/config.js"></script>
+    <script src="../js/core/i18n.js"></script>
     <script src="../js/anonymous-report.js"></script>
 </body>
 </html>

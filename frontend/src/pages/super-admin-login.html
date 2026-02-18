@@ -7,8 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../css/i18n.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
         
         * {
             margin: 0;
@@ -435,54 +436,61 @@
             <img src="../../images/auth/secureVOICE.png" alt="SecureVoice Logo">
         </a>
         <i class="fas fa-crown crown-icon"></i>
-        <h3>Super Administrator</h3>
-        <p>System-wide Control & Management</p>
+        <h3 data-i18n="superAdmin.title">Super Administrator</h3>
+        <p data-i18n="superAdmin.subtitle">System-wide Control & Management</p>
         
         <div class="access-features">
-            <h4><i class="fas fa-shield-alt"></i> System Privileges</h4>
+            <h4><i class="fas fa-shield-alt"></i> <span data-i18n="superAdmin.systemPrivileges">System Privileges</span></h4>
             <ul>
-                <li><i class="fas fa-check-circle"></i> Manage District Admins</li>
-                <li><i class="fas fa-check-circle"></i> Approve/Reject Requests</li>
-                <li><i class="fas fa-check-circle"></i> View Audit Logs</li>
-                <li><i class="fas fa-check-circle"></i> System Configuration</li>
+                <li><i class="fas fa-check-circle"></i> <span data-i18n="superAdmin.feature1">Manage District Admins</span></li>
+                <li><i class="fas fa-check-circle"></i> <span data-i18n="superAdmin.feature2">Approve/Reject Requests</span></li>
+                <li><i class="fas fa-check-circle"></i> <span data-i18n="superAdmin.feature3">View Audit Logs</span></li>
+                <li><i class="fas fa-check-circle"></i> <span data-i18n="superAdmin.feature4">System Configuration</span></li>
             </ul>
         </div>
     </div>
     
     <!-- Form Panel -->
     <div class="form-panel">
-        <a href="adminLogin.html" class="back-arrow" title="Back to Admin Login">
+        <a href="adminLogin.html" class="back-arrow" data-i18n-title="superAdmin.backToAdmin">
             <i class="fas fa-arrow-left"></i>
         </a>
+        
+        <!-- Language Toggle -->
+        <div style="position: absolute; top: 20px; right: 20px;">
+            <button id="langToggle" class="lang-toggle-btn compact" onclick="toggleLanguage && toggleLanguage()">
+                <span class="lang-text">EN</span>
+            </button>
+        </div>
         
         <div class="form-content">
             <div class="form-header">
                 <span class="super-admin-badge">
-                    <i class="fas fa-crown"></i> Super Administrator
+                    <i class="fas fa-crown"></i> <span data-i18n="superAdmin.badge">Super Administrator</span>
                 </span>
-                <h2><i class="fas fa-user-shield"></i> Secure Login</h2>
-                <p>Highest level administrative access</p>
+                <h2><i class="fas fa-user-shield"></i> <span data-i18n="superAdmin.secureLogin">Secure Login</span></h2>
+                <p data-i18n="superAdmin.highestAccess">Highest level administrative access</p>
             </div>
             
             <form id="super-admin-login-form">
                 <div class="input-group">
-                    <label for="username">Super Admin Username</label>
+                    <label for="username" data-i18n="superAdmin.usernameLabel">Super Admin Username</label>
                     <div class="input-wrapper">
                         <i class="fas fa-user-shield"></i>
-                        <input type="text" id="username" name="username" placeholder="Enter super admin username" required autofocus>
+                        <input type="text" id="username" name="username" data-i18n-placeholder="superAdmin.usernamePlaceholder" placeholder="Enter super admin username" required autofocus>
                     </div>
                 </div>
                 
                 <div class="input-group">
-                    <label for="password">Password</label>
+                    <label for="password" data-i18n="auth.password">Password</label>
                     <div class="input-wrapper">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                        <input type="password" id="password" name="password" data-i18n-placeholder="auth.passwordPlaceholder" placeholder="Enter your password" required>
                     </div>
                 </div>
                 
                 <button type="submit" class="submit-btn" id="login-btn">
-                    <i class="fas fa-sign-in-alt"></i> Secure Login
+                    <i class="fas fa-sign-in-alt"></i> <span data-i18n="superAdmin.loginBtn">Secure Login</span>
                 </button>
                 
                 <div class="message-box error" id="error-message">
@@ -491,13 +499,13 @@
                 </div>
                 
                 <div class="security-notice">
-                    <p><i class="fas fa-shield-alt"></i> This area requires highest level security clearance</p>
+                    <p><i class="fas fa-shield-alt"></i> <span data-i18n="superAdmin.securityNotice">This area requires highest level security clearance</span></p>
                 </div>
                 
                 <div class="links-section">
-                    <p><i class="fas fa-arrow-left"></i> Not a Super Admin?</p>
+                    <p><i class="fas fa-arrow-left"></i> <span data-i18n="superAdmin.notSuperAdmin">Not a Super Admin?</span></p>
                     <a href="adminLogin.html">
-                        <i class="fas fa-user"></i> Go to District Admin Login
+                        <i class="fas fa-user"></i> <span data-i18n="superAdmin.goToDistrictAdmin">Go to District Admin Login</span>
                     </a>
                 </div>
             </form>
@@ -571,5 +579,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+<script src="../js/core/i18n.js"></script>
 </body>
 </html>

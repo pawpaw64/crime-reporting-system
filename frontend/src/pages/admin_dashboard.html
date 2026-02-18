@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureVoice | Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap">
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
     <link rel="stylesheet" href="/src/css/adminDashboard.css">
+    <link rel="stylesheet" href="/src/css/i18n.css">
     <script src="/src/js/admin-dashboard-protection.js"></script>
 </head>
 <body>
@@ -17,57 +19,58 @@
                 <div class="logo">
                     <img src="/images/auth/secureVOICE.png" alt="SecureVoice" class="logo-img">
                 </div>
+                <button class="lang-toggle-btn admin-lang-toggle compact" title="Switch Language">EN</button>
             </div>
 
             <div class="admin-profile">
                 <div class="admin-avatar">
                     <i class="fas fa-user-shield"></i>
                 </div>
-                <h2 id="admin-fullname">Loading...</h2>
+                <h2 id="admin-fullname" data-i18n="admin.loading">Loading...</h2>
                 <span class="district-badge" id="admin-district">
-                    <i class="fas fa-map-marker-alt"></i> <span id="district-name">Loading...</span>
+                    <i class="fas fa-map-marker-alt"></i> <span id="district-name" data-i18n="admin.loading">Loading...</span>
                 </span>
             </div>
 
             <nav class="nav-links">
                 <button class="tab-btn active" data-tab="dashboard">
                     <i class="fas fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
+                    <span data-i18n="nav.dashboard">Dashboard</span>
                 </button>
                 <button class="tab-btn" data-tab="analytics">
                     <i class="fas fa-chart-bar"></i>
-                    <span>Case Analytics</span>
+                    <span data-i18n="admin.caseAnalytics">Case Analytics</span>
                 </button>
                 <button class="tab-btn" data-tab="profile">
                     <i class="fas fa-user"></i>
-                    <span>My Profile</span>
+                    <span data-i18n="admin.myProfile">My Profile</span>
                 </button>
                 <button class="tab-btn" data-tab="complaints">
                     <i class="fas fa-file-alt"></i>
-                    <span>Complaints</span>
+                    <span data-i18n="admin.complaints">Complaints</span>
                 </button>
                 <button class="tab-btn" data-tab="anonymous-reports">
                     <i class="fas fa-user-secret"></i>
-                    <span>Anonymous Reports</span>
+                    <span data-i18n="admin.anonymousReports">Anonymous Reports</span>
                 </button>
                 <button class="tab-btn" data-tab="users">
                     <i class="fas fa-users"></i>
-                    <span>Users</span>
+                    <span data-i18n="admin.users">Users</span>
                 </button>
                 <button class="tab-btn" data-tab="settings">
                     <i class="fas fa-cog"></i>
-                    <span>Settings</span>
+                    <span data-i18n="admin.settings">Settings</span>
                 </button>
             </nav>
 
             <div class="bottom-nav">
                 <a href="/homepage" class="home-btn">
                     <i class="fas fa-home"></i>
-                    <span>Home</span>
+                    <span data-i18n="admin.home">Home</span>
                 </a>
                 <button class="logout-btn" id="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+                    <span data-i18n="nav.logout">Logout</span>
                 </button>
             </div>
         </aside>
@@ -77,9 +80,9 @@
             <!-- Dashboard Tab -->
             <div class="tab-content active" id="dashboard">
                 <div class="header">
-                    <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+                    <h1><i class="fas fa-tachometer-alt"></i> <span data-i18n="admin.dashboard">Admin Dashboard</span></h1>
                     <div class="header-actions">
-                        <span class="welcome-text">Welcome, <span id="welcome-name">Admin</span>!</span>
+                        <span class="welcome-text" data-i18n="admin.welcome">Welcome</span>, <span id="welcome-name">Admin</span>!
                     </div>
                 </div>
 
@@ -91,7 +94,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="total-cases">0</h3>
-                            <p>Total Cases</p>
+                            <p data-i18n="admin.totalCases">Total Cases</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -100,7 +103,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="pending-cases">0</h3>
-                            <p>Pending</p>
+                            <p data-i18n="status.pending">Pending</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -109,7 +112,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="verifying-cases">0</h3>
-                            <p>Verifying</p>
+                            <p data-i18n="status.verifying">Verifying</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -118,7 +121,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="investigating-cases">0</h3>
-                            <p>Investigating</p>
+                            <p data-i18n="status.investigating">Investigating</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -127,7 +130,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="resolved-cases">0</h3>
-                            <p>Resolved</p>
+                            <p data-i18n="status.resolved">Resolved</p>
                         </div>
                     </div>
                 </div>
@@ -135,12 +138,12 @@
                 <!-- Recent Complaints -->
                 <div class="card">
                     <div class="card-header">
-                        <h3><i class="fas fa-history"></i> Recent Complaints</h3>
-                        <button class="btn btn-outline" data-action="switchTab" data-tab="complaints">View All</button>
+                        <h3><i class="fas fa-history"></i> <span data-i18n="admin.recentComplaints">Recent Complaints</span></h3>
+                        <button class="btn btn-outline" data-action="switchTab" data-tab="complaints" data-i18n="btn.viewAll">View All</button>
                     </div>
                     <div id="recent-complaints">
                         <div class="loading-spinner">
-                            <i class="fas fa-spinner fa-spin"></i> Loading recent complaints...
+                            <i class="fas fa-spinner fa-spin"></i> <span data-i18n="admin.loadingComplaints">Loading recent complaints...</span>
                         </div>
                     </div>
                 </div>
@@ -149,15 +152,15 @@
             <!-- Case Analytics Tab -->
             <div class="tab-content" id="analytics">
                 <div class="header">
-                    <h1><i class="fas fa-chart-bar"></i> Case Analytics</h1>
+                    <h1><i class="fas fa-chart-bar"></i> <span data-i18n="admin.caseAnalytics">Case Analytics</span></h1>
                     <div class="header-actions">
                         <select class="filter-input" id="analytics-period" style="width: auto;">
-                            <option value="7">Last 7 Days</option>
-                            <option value="30" selected>Last 30 Days</option>
-                            <option value="90">Last 90 Days</option>
+                            <option value="7" data-i18n="analytics.last7Days">Last 7 Days</option>
+                            <option value="30" selected data-i18n="analytics.last30Days">Last 30 Days</option>
+                            <option value="90" data-i18n="analytics.last90Days">Last 90 Days</option>
                         </select>
                         <button class="btn btn-primary" onclick="refreshAnalytics()">
-                            <i class="fas fa-sync-alt"></i> Refresh
+                            <i class="fas fa-sync-alt"></i> <span data-i18n="btn.refresh">Refresh</span>
                         </button>
                     </div>
                 </div>
@@ -170,7 +173,7 @@
                         </div>
                         <div class="summary-info">
                             <h3 id="analytics-total">0</h3>
-                            <p>Total Cases</p>
+                            <p data-i18n="admin.totalCases">Total Cases</p>
                         </div>
                     </div>
                     <div class="summary-card">
@@ -179,7 +182,7 @@
                         </div>
                         <div class="summary-info">
                             <h3 id="analytics-resolved">0</h3>
-                            <p>Resolved</p>
+                            <p data-i18n="status.resolved">Resolved</p>
                         </div>
                     </div>
                     <div class="summary-card">
@@ -188,7 +191,7 @@
                         </div>
                         <div class="summary-info">
                             <h3 id="resolution-rate">0%</h3>
-                            <p>Resolution Rate</p>
+                            <p data-i18n="analytics.resolutionRate">Resolution Rate</p>
                         </div>
                     </div>
                     <div class="summary-card">
@@ -197,7 +200,7 @@
                         </div>
                         <div class="summary-info">
                             <h3 id="avg-resolution-time">0</h3>
-                            <p>Avg. Days to Resolve</p>
+                            <p data-i18n="analytics.avgDaysResolve">Avg. Days to Resolve</p>
                         </div>
                     </div>
                 </div>
@@ -207,7 +210,7 @@
                     <!-- Trend Chart -->
                     <div class="card chart-card">
                         <div class="card-header">
-                            <h3><i class="fas fa-chart-area"></i> Case Trends</h3>
+                            <h3><i class="fas fa-chart-area"></i> <span data-i18n="analytics.caseTrends">Case Trends</span></h3>
                         </div>
                         <div class="chart-container">
                             <canvas id="trendChart"></canvas>
@@ -217,7 +220,7 @@
                     <!-- Crime Distribution Chart -->
                     <div class="card chart-card">
                         <div class="card-header">
-                            <h3><i class="fas fa-chart-pie"></i> Crime Distribution</h3>
+                            <h3><i class="fas fa-chart-pie"></i> <span data-i18n="analytics.crimeDistribution">Crime Distribution</span></h3>
                         </div>
                         <div class="chart-container">
                             <canvas id="crimeDistributionChart"></canvas>
@@ -227,7 +230,7 @@
                     <!-- Status Distribution Chart -->
                     <div class="card chart-card">
                         <div class="card-header">
-                            <h3><i class="fas fa-chart-bar"></i> Status Overview</h3>
+                            <h3><i class="fas fa-chart-bar"></i> <span data-i18n="analytics.statusOverview">Status Overview</span></h3>
                         </div>
                         <div class="chart-container">
                             <canvas id="statusChart"></canvas>
@@ -237,7 +240,7 @@
                     <!-- Resolution Time Chart -->
                     <div class="card chart-card">
                         <div class="card-header">
-                            <h3><i class="fas fa-clock"></i> Resolution Analysis</h3>
+                            <h3><i class="fas fa-clock"></i> <span data-i18n="analytics.resolutionAnalysis">Resolution Analysis</span></h3>
                         </div>
                         <div class="chart-container">
                             <canvas id="resolutionChart"></canvas>
@@ -248,24 +251,24 @@
                 <!-- Detailed Stats Table -->
                 <div class="card">
                     <div class="card-header">
-                        <h3><i class="fas fa-table"></i> Crime Type Statistics</h3>
+                        <h3><i class="fas fa-table"></i> <span data-i18n="admin.crimeTypeStats">Crime Type Statistics</span></h3>
                     </div>
                     <div class="table-container">
                         <table class="data-table analytics-table">
                             <thead>
                                 <tr>
-                                    <th>Crime Type</th>
-                                    <th>Total Cases</th>
-                                    <th>Resolved</th>
-                                    <th>Resolution Rate</th>
-                                    <th>Avg. Time</th>
-                                    <th>Trend</th>
+                                    <th data-i18n="complaintForm.crimeType">Crime Type</th>
+                                    <th data-i18n="admin.totalCases">Total Cases</th>
+                                    <th data-i18n="status.resolved">Resolved</th>
+                                    <th data-i18n="analytics.resolutionRate">Resolution Rate</th>
+                                    <th data-i18n="admin.avgTime">Avg. Time</th>
+                                    <th data-i18n="admin.trend">Trend</th>
                                 </tr>
                             </thead>
                             <tbody id="crime-stats-body">
                                 <tr>
                                     <td colspan="6" class="loading-spinner">
-                                        <i class="fas fa-spinner fa-spin"></i> Loading statistics...
+                                        <i class="fas fa-spinner fa-spin"></i> <span data-i18n="common.loadingStats">Loading statistics...</span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -277,9 +280,9 @@
             <!-- Profile Tab -->
             <div class="tab-content" id="profile">
                 <div class="header">
-                    <h1><i class="fas fa-user"></i> Admin Profile</h1>
+                    <h1><i class="fas fa-user"></i> <span data-i18n="admin.adminProfile">Admin Profile</span></h1>
                     <button class="btn btn-primary" id="edit-profile-btn">
-                        <i class="fas fa-edit"></i> Edit Profile
+                        <i class="fas fa-edit"></i> <span data-i18n="admin.editProfile">Edit Profile</span>
                     </button>
                 </div>
 
@@ -297,42 +300,42 @@
                 </div>
 
                 <div class="card">
-                    <h3><i class="fas fa-info-circle"></i> Profile Information</h3>
+                    <h3><i class="fas fa-info-circle"></i> <span data-i18n="admin.profileInfo">Profile Information</span></h3>
                     <div class="info-grid">
                         <div class="info-item">
-                            <label>Full Name</label>
+                            <label data-i18n="auth.fullName">Full Name</label>
                             <p id="info-fullname">-</p>
                         </div>
                         <div class="info-item">
-                            <label>Username</label>
+                            <label data-i18n="auth.username">Username</label>
                             <p id="info-username">-</p>
                         </div>
                         <div class="info-item">
-                            <label>Email</label>
+                            <label data-i18n="auth.email">Email</label>
                             <p id="info-email">-</p>
                         </div>
                         <div class="info-item">
-                            <label>Phone</label>
+                            <label data-i18n="auth.phone">Phone</label>
                             <p id="info-phone">-</p>
                         </div>
                         <div class="info-item">
-                            <label>Designation</label>
+                            <label data-i18n="admin.designation">Designation</label>
                             <p id="info-designation">-</p>
                         </div>
                         <div class="info-item">
-                            <label>Official ID</label>
+                            <label data-i18n="admin.officialId">Official ID</label>
                             <p id="info-official-id">-</p>
                         </div>
                         <div class="info-item">
-                            <label>District</label>
+                            <label data-i18n="auth.district">District</label>
                             <p id="info-district">-</p>
                         </div>
                         <div class="info-item">
-                            <label>Date of Birth</label>
+                            <label data-i18n="profile.dateOfBirth">Date of Birth</label>
                             <p id="info-dob">-</p>
                         </div>
                         <div class="info-item">
-                            <label>Account Created</label>
+                            <label data-i18n="admin.accountCreated">Account Created</label>
                             <p id="info-created">-</p>
                         </div>
                     </div>
@@ -342,32 +345,32 @@
             <!-- Complaints Tab -->
             <div class="tab-content" id="complaints">
                 <div class="header">
-                    <h1><i class="fas fa-file-alt"></i> Complaint Reports</h1>
-                    <span id="complaints-count">Total: 0 complaints</span>
+                    <h1><i class="fas fa-file-alt"></i> <span data-i18n="admin.complaintReports">Complaint Reports</span></h1>
+                    <span id="complaints-count"><span data-i18n="admin.total">Total:</span> 0 <span data-i18n="admin.complaints">complaints</span></span>
                 </div>
 
                 <div class="filter-section">
                     <div class="filter-row">
                         <div class="filter-group">
-                            <label><i class="fas fa-filter"></i> Status</label>
+                            <label><i class="fas fa-filter"></i> <span data-i18n="filter.status">Status</span></label>
                             <select class="filter-input" id="filter-status">
-                                <option value="">All Status</option>
-                                <option value="pending">Pending</option>
-                                <option value="verifying">Verifying</option>
-                                <option value="investigating">Investigating</option>
-                                <option value="resolved">Resolved</option>
+                                <option value="" data-i18n="filter.allStatus">All Status</option>
+                                <option value="pending" data-i18n="status.pending">Pending</option>
+                                <option value="verifying" data-i18n="status.verifying">Verifying</option>
+                                <option value="investigating" data-i18n="status.investigating">Investigating</option>
+                                <option value="resolved" data-i18n="status.resolved">Resolved</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label><i class="fas fa-search"></i> Search</label>
-                            <input type="text" class="filter-input" id="filter-search" placeholder="Search by user or type...">
+                            <label><i class="fas fa-search"></i> <span data-i18n="btn.search">Search</span></label>
+                            <input type="text" class="filter-input" id="filter-search" data-i18n-placeholder="admin.searchPlaceholder" placeholder="Search by user or type...">
                         </div>
                         <div class="filter-group">
                             <button class="btn btn-primary" onclick="applyFilters()">
-                                <i class="fas fa-search"></i> Apply
+                                <i class="fas fa-search"></i> <span data-i18n="filter.apply">Apply</span>
                             </button>
                             <button class="btn btn-outline" onclick="clearFilters()">
-                                <i class="fas fa-times"></i> Clear
+                                <i class="fas fa-times"></i> <span data-i18n="filter.clear">Clear</span>
                             </button>
                         </div>
                     </div>
@@ -376,7 +379,7 @@
                 <div class="card">
                     <div class="table-container" id="complaints-table-container">
                         <div class="loading-spinner">
-                            <i class="fas fa-spinner fa-spin"></i> Loading complaints...
+                            <i class="fas fa-spinner fa-spin"></i> <span data-i18n="admin.loadingComplaints">Loading complaints...</span>
                         </div>
                     </div>
                 </div>
@@ -385,8 +388,8 @@
             <!-- Anonymous Reports Tab -->
             <div class="tab-content" id="anonymous-reports">
                 <div class="header">
-                    <h1><i class="fas fa-user-secret"></i> Anonymous Reports</h1>
-                    <span id="anonymous-reports-count">Total: 0 reports</span>
+                    <h1><i class="fas fa-user-secret"></i> <span data-i18n="admin.anonymousReports">Anonymous Reports</span></h1>
+                    <span id="anonymous-reports-count"><span data-i18n="admin.total">Total:</span> 0 <span data-i18n="admin.reports">reports</span></span>
                 </div>
 
                 <!-- Anonymous Reports Stats -->
@@ -397,7 +400,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="anon-total">0</h3>
-                            <p>Total Anonymous</p>
+                            <p data-i18n="admin.totalAnonymous">Total Anonymous</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -406,7 +409,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="anon-pending">0</h3>
-                            <p>Pending Review</p>
+                            <p data-i18n="admin.pendingReview">Pending Review</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -415,7 +418,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="anon-investigating">0</h3>
-                            <p>Investigating</p>
+                            <p data-i18n="status.investigating">Investigating</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -424,7 +427,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="anon-resolved">0</h3>
-                            <p>Resolved</p>
+                            <p data-i18n="status.resolved">Resolved</p>
                         </div>
                     </div>
                 </div>
@@ -432,18 +435,18 @@
                 <div class="filter-section">
                     <div class="filter-row">
                         <div class="filter-group">
-                            <label><i class="fas fa-filter"></i> Status</label>
+                            <label><i class="fas fa-filter"></i> <span data-i18n="filter.status">Status</span></label>
                             <select class="filter-input" id="anon-filter-status">
-                                <option value="">All Status</option>
-                                <option value="pending">Pending</option>
-                                <option value="reviewing">Reviewing</option>
-                                <option value="investigating">Investigating</option>
-                                <option value="resolved">Resolved</option>
-                                <option value="dismissed">Dismissed</option>
+                                <option value="" data-i18n="filter.allStatus">All Status</option>
+                                <option value="pending" data-i18n="status.pending">Pending</option>
+                                <option value="reviewing" data-i18n="status.reviewing">Reviewing</option>
+                                <option value="investigating" data-i18n="status.investigating">Investigating</option>
+                                <option value="resolved" data-i18n="status.resolved">Resolved</option>
+                                <option value="dismissed" data-i18n="status.dismissed">Dismissed</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label><i class="fas fa-tag"></i> Crime Type</label>
+                            <label><i class="fas fa-tag"></i> <span data-i18n="complaintForm.crimeType">Crime Type</span></label>
                             <select class="filter-input" id="anon-filter-type">
                                 <option value="">All Types</option>
                                 <option value="theft">Theft / Burglary</option>
@@ -726,6 +729,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <!-- Chart.js for Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/src/js/core/i18n.js"></script>
     <script src="/src/js/admin-dashboard-new.js"></script>
     <script src="/src/js/admin-analytics.js"></script>
 </body>

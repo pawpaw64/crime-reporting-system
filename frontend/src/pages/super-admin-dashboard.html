@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin Dashboard | SecureVoice</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap">
     <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
     <link rel="stylesheet" href="../css/userDashboard.css">
+    <link rel="stylesheet" href="../css/i18n.css">
     <style>
         .super-admin-badge {
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
@@ -517,6 +519,7 @@
                 <div class="logo">
                     <img src="../../images/auth/secureVOICE.png" alt="SecureVoice" class="logo-img">
                 </div>
+                <button class="lang-toggle-btn admin-lang-toggle compact" title="Switch Language">EN</button>
             </div>
 
             <div class="profile">
@@ -531,29 +534,29 @@
 
             <nav class="nav-links">
                 <button class="tab-btn active" data-tab="dashboard">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                    <i class="fas fa-tachometer-alt"></i> <span data-i18n="nav.dashboard">Dashboard</span>
                 </button>
                 <button class="tab-btn" data-tab="pending-requests">
-                    <i class="fas fa-user-clock"></i> Pending Requests
+                    <i class="fas fa-user-clock"></i> <span data-i18n="superAdmin.pendingRequests">Pending Requests</span>
                     <span class="notification-count" id="pending-count-badge" style="display: none;">0</span>
                 </button>
                 <button class="tab-btn" data-tab="all-admins">
-                    <i class="fas fa-users-cog"></i> All Admins
+                    <i class="fas fa-users-cog"></i> <span data-i18n="superAdmin.allAdmins">All Admins</span>
                 </button>
                 <button class="tab-btn" data-tab="audit-logs">
-                    <i class="fas fa-history"></i> Audit Logs
+                    <i class="fas fa-history"></i> <span>Audit Logs</span>
                 </button>
                 <button class="tab-btn" data-tab="statistics">
-                    <i class="fas fa-chart-bar"></i> Statistics
+                    <i class="fas fa-chart-bar"></i> <span data-i18n="superAdmin.systemStats">Statistics</span>
                 </button>
                 <button class="tab-btn" data-tab="settings">
-                    <i class="fas fa-cog"></i> Settings
+                    <i class="fas fa-cog"></i> <span data-i18n="admin.settings">Settings</span>
                 </button>
             </nav>
 
             <div class="bottom-nav">
                 <button class="logout-btn" id="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                    <i class="fas fa-sign-out-alt"></i> <span data-i18n="nav.logout">Logout</span>
                 </button>
             </div>
         </aside>
@@ -565,7 +568,7 @@
                 <div class="header">
                     <h1><i class="fas fa-tachometer-alt"></i>Admin Dashboard</h1>
                     <div class="header-actions">
-                        <span class="welcome-text">Welcome, <span id="welcome-name">Administrator</span>!</span>
+                        <span class="welcome-text" data-i18n="admin.welcome">Welcome</span>, <span id="welcome-name">Administrator</span>!
                     </div>
                 </div>
 
@@ -577,7 +580,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="stat-pending">0</h3>
-                            <p>Pending Requests</p>
+                            <p data-i18n="superAdmin.pendingRequests">Pending Requests</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -586,7 +589,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="stat-approved">0</h3>
-                            <p>Approved Admins</p>
+                            <p data-i18n="superAdmin.approvedAdmins">Approved Admins</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -595,7 +598,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="stat-active">0</h3>
-                            <p>Active Admins</p>
+                            <p data-i18n="superAdmin.activeAdmins">Active Admins</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -604,7 +607,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="stat-suspended">0</h3>
-                            <p>Suspended Admins</p>
+                            <p data-i18n="superAdmin.suspendedAdmins">Suspended Admins</p>
                         </div>
                     </div>
                 </div>
@@ -612,8 +615,8 @@
                 <!-- Recent Activity -->
                 <div class="card">
                     <div class="card-header">
-                        <h3><i class="fas fa-history"></i> Recent Activity</h3>
-                        <button class="outline-btn" id="view-all-logs-btn">View All Logs</button>
+                        <h3><i class="fas fa-history"></i> <span data-i18n="superAdmin.recentActivity">Recent Activity</span></h3>
+                        <button class="outline-btn" id="view-all-logs-btn" data-i18n="superAdmin.viewAllLogs">View All Logs</button>
                     </div>
                     <div id="recent-activity">
                         <div class="loading-spinner">
@@ -626,9 +629,9 @@
             <!-- Pending Requests Tab -->
             <div class="tab-content" id="pending-requests">
                 <div class="header">
-                    <h1><i class="fas fa-user-clock"></i> Pending Admin Requests</h1>
+                    <h1><i class="fas fa-user-clock"></i> <span data-i18n="superAdmin.pendingAdminRequests">Pending Admin Requests</span></h1>
                     <button class="edit-btn" id="refresh-pending-btn">
-                        <i class="fas fa-sync"></i> Refresh
+                        <i class="fas fa-sync"></i> <span data-i18n="admin.refresh">Refresh</span>
                     </button>
                 </div>
 
@@ -644,28 +647,28 @@
             <!-- All Admins Tab -->
             <div class="tab-content" id="all-admins">
                 <div class="header">
-                    <h1><i class="fas fa-users-cog"></i> All District Admins</h1>
+                    <h1><i class="fas fa-users-cog"></i> <span data-i18n="superAdmin.allDistrictAdmins">All District Admins</span></h1>
                     <button class="edit-btn" id="refresh-admins-btn">
-                        <i class="fas fa-sync"></i> Refresh
+                        <i class="fas fa-sync"></i> <span data-i18n="admin.refresh">Refresh</span>
                     </button>
                 </div>
 
                 <div class="card">
                     <div class="filter-section">
                         <div class="filter-group">
-                            <label>Filter by Status</label>
+                            <label data-i18n="superAdmin.filterByStatus">Filter by Status</label>
                             <select id="filter-status">
-                                <option value="">All Statuses</option>
-                                <option value="approved">Approved</option>
-                                <option value="active">Active</option>
-                                <option value="suspended">Suspended</option>
-                                <option value="rejected">Rejected</option>
+                                <option value="" data-i18n="superAdmin.allStatuses">All Statuses</option>
+                                <option value="approved" data-i18n="superAdmin.approved">Approved</option>
+                                <option value="active" data-i18n="superAdmin.active">Active</option>
+                                <option value="suspended" data-i18n="superAdmin.suspended">Suspended</option>
+                                <option value="rejected" data-i18n="superAdmin.rejected">Rejected</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label>Filter by District</label>
+                            <label data-i18n="superAdmin.filterByDistrict">Filter by District</label>
                             <select id="filter-district">
-                                <option value="">All Districts</option>
+                                <option value="" data-i18n="superAdmin.allDistricts">All Districts</option>
                                 <option value="Dhaka">Dhaka</option>
                                 <option value="Rajshahi">Rajshahi</option>
                                 <option value="Barishal">Barishal</option>
@@ -677,8 +680,8 @@
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label>Search</label>
-                            <input type="text" id="search-admin" placeholder="Search by name or username...">
+                            <label data-i18n="admin.search">Search</label>
+                            <input type="text" id="search-admin" data-i18n-placeholder="superAdmin.searchPlaceholder" placeholder="Search by name or username...">
                         </div>
                     </div>
 
@@ -693,26 +696,26 @@
             <!-- Audit Logs Tab -->
             <div class="tab-content" id="audit-logs">
                 <div class="header">
-                    <h1><i class="fas fa-history"></i> Audit Logs</h1>
+                    <h1><i class="fas fa-history"></i> <span data-i18n="superAdmin.auditLogs">Audit Logs</span></h1>
                     <button class="edit-btn" id="refresh-logs-btn">
-                        <i class="fas fa-sync"></i> Refresh
+                        <i class="fas fa-sync"></i> <span data-i18n="admin.refresh">Refresh</span>
                     </button>
                 </div>
 
                 <div class="card">
                     <div class="filter-section">
                         <div class="filter-group">
-                            <label>Filter by Admin</label>
+                            <label data-i18n="superAdmin.filterByAdmin">Filter by Admin</label>
                             <select id="filter-audit-admin">
-                                <option value="">All Admins</option>
+                                <option value="" data-i18n="superAdmin.allAdmins">All Admins</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label>Date From</label>
+                            <label data-i18n="superAdmin.dateFrom">Date From</label>
                             <input type="date" id="filter-date-from">
                         </div>
                         <div class="filter-group">
-                            <label>Date To</label>
+                            <label data-i18n="superAdmin.dateTo">Date To</label>
                             <input type="date" id="filter-date-to">
                         </div>
                     </div>
@@ -728,7 +731,7 @@
             <!-- Statistics Tab -->
             <div class="tab-content" id="statistics">
                 <div class="header">
-                    <h1><i class="fas fa-chart-bar"></i> System Statistics</h1>
+                    <h1><i class="fas fa-chart-bar"></i> <span data-i18n="superAdmin.systemStats">System Statistics</span></h1>
                 </div>
 
                 <div class="stats-grid">
@@ -738,7 +741,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="total-admins">0</h3>
-                            <p>Total Admins</p>
+                            <p data-i18n="superAdmin.totalAdmins">Total Admins</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -747,7 +750,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="total-districts">8</h3>
-                            <p>Districts Covered</p>
+                            <p data-i18n="superAdmin.districtsCovered">Districts Covered</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -756,7 +759,7 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="avg-approval-time">0</h3>
-                            <p>Avg Approval Time (hrs)</p>
+                            <p data-i18n="superAdmin.avgApprovalTime">Avg Approval Time (hrs)</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -765,13 +768,13 @@
                         </div>
                         <div class="stat-info">
                             <h3 id="total-actions">0</h3>
-                            <p>Total Actions Logged</p>
+                            <p data-i18n="superAdmin.totalActionsLogged">Total Actions Logged</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h3><i class="fas fa-chart-pie"></i> District Distribution</h3>
+                    <h3><i class="fas fa-chart-pie"></i> <span data-i18n="superAdmin.districtDistribution">District Distribution</span></h3>
                     <div id="district-stats">
                         <div class="loading-spinner">
                             <i class="fas fa-spinner fa-spin"></i> Loading statistics...
@@ -783,16 +786,16 @@
             <!-- Settings Tab -->
             <div class="tab-content" id="settings">
                 <div class="header">
-                    <h1><i class="fas fa-cog"></i> Super Admin Settings</h1>
+                    <h1><i class="fas fa-cog"></i> <span data-i18n="superAdmin.superAdminSettings">Super Admin Settings</span></h1>
                 </div>
 
                 <div class="card">
-                    <h3><i class="fas fa-bell"></i> Notification Preferences</h3>
+                    <h3><i class="fas fa-bell"></i> <span data-i18n="admin.notificationPreferences">Notification Preferences</span></h3>
                     <div style="padding: 20px 0;">
                         <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 15px;">
                             <div>
-                                <h4 style="margin: 0 0 5px 0; color: #333;">New Admin Registration Notifications</h4>
-                                <p style="margin: 0; color: #666; font-size: 13px;">Get notified when a district admin submits a registration request</p>
+                                <h4 style="margin: 0 0 5px 0; color: #333;" data-i18n="superAdmin.newAdminNotifications">New Admin Registration Notifications</h4>
+                                <p style="margin: 0; color: #666; font-size: 13px;" data-i18n="superAdmin.newAdminNotificationsDesc">Get notified when a district admin submits a registration request</p>
                             </div>
                             <label class="toggle-switch">
                                 <input type="checkbox" id="notify-new-registration" checked>
@@ -802,8 +805,8 @@
 
                         <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 15px;">
                             <div>
-                                <h4 style="margin: 0 0 5px 0; color: #333;">Email Notifications</h4>
-                                <p style="margin: 0; color: #666; font-size: 13px;">Receive email alerts for new registration requests</p>
+                                <h4 style="margin: 0 0 5px 0; color: #333;" data-i18n="admin.emailNotifications">Email Notifications</h4>
+                                <p style="margin: 0; color: #666; font-size: 13px;" data-i18n="superAdmin.emailNotificationsDesc">Receive email alerts for new registration requests</p>
                             </div>
                             <label class="toggle-switch">
                                 <input type="checkbox" id="notify-email" checked>
@@ -813,8 +816,8 @@
 
                         <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 15px;">
                             <div>
-                                <h4 style="margin: 0 0 5px 0; color: #333;">Browser Notifications</h4>
-                                <p style="margin: 0; color: #666; font-size: 13px;">Show browser notifications when logged into dashboard</p>
+                                <h4 style="margin: 0 0 5px 0; color: #333;" data-i18n="admin.browserNotifications">Browser Notifications</h4>
+                                <p style="margin: 0; color: #666; font-size: 13px;" data-i18n="superAdmin.browserNotificationsDesc">Show browser notifications when logged into dashboard</p>
                             </div>
                             <label class="toggle-switch">
                                 <input type="checkbox" id="notify-browser">
@@ -825,18 +828,18 @@
 
                     <div style="margin-top: 20px;">
                         <button class="edit-btn" id="save-settings-btn">
-                            <i class="fas fa-save"></i> Save Settings
+                            <i class="fas fa-save"></i> <span data-i18n="admin.saveSettings">Save Settings</span>
                         </button>
                     </div>
                 </div>
 
                 <div class="card" style="margin-top: 20px;">
-                    <h3><i class="fas fa-shield-alt"></i> Security Settings</h3>
+                    <h3><i class="fas fa-shield-alt"></i> <span data-i18n="admin.securitySettings">Security Settings</span></h3>
                     <div style="padding: 20px 0;">
                         <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 15px;">
                             <div>
-                                <h4 style="margin: 0 0 5px 0; color: #333;">Auto-logout After Inactivity</h4>
-                                <p style="margin: 0; color: #666; font-size: 13px;">Automatically log out after 30 minutes of inactivity</p>
+                                <h4 style="margin: 0 0 5px 0; color: #333;" data-i18n="admin.autoLogout">Auto-logout After Inactivity</h4>
+                                <p style="margin: 0; color: #666; font-size: 13px;" data-i18n="admin.autoLogoutDesc">Automatically log out after 30 minutes of inactivity</p>
                             </div>
                             <label class="toggle-switch">
                                 <input type="checkbox" id="auto-logout" checked>
@@ -1011,6 +1014,7 @@
         </div>
     </div>
 
+    <script src="../js/core/i18n.js"></script>
     <script src="../js/super-admin-dashboard.js"></script>
 </body>
 </html>

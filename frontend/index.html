@@ -6,7 +6,9 @@
     <title>Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="src/css/base.css">
+    <link rel="stylesheet" href="src/css/i18n.css">
     <link rel="stylesheet" href="src/css/enhanced-header.css"> <!-- Fixed: baseenhanced-header.css -> enhanced-header.css -->
     <link rel="stylesheet" href="src/css/footer.css">
     <link rel="stylesheet" href="src/css/homepage-style.css">
@@ -35,36 +37,37 @@
 <ul class="navigation-menu">
     <button id="menu-close-btn" class="fas fa-times"></button>
     <li class="navigation-item navigation-active">
-        <a href="/" class="navigation-link navigation-link-active">Home</a>
+        <a href="/" class="navigation-link navigation-link-active" data-i18n="nav.home">Home</a>
     </li>
     <li class="navigation-item">
-        <a href="#how-it-works" class="navigation-link">How It Works</a>
+        <a href="#how-it-works" class="navigation-link" data-i18n="nav.howItWorks">How It Works</a>
     </li>
     <li class="navigation-item">
-        <a href="#cases-section" class="navigation-link">Cases We Handle</a>
+        <a href="#cases-section" class="navigation-link" data-i18n="nav.casesWeHandle">Cases We Handle</a>
     </li>
     <li class="navigation-item">
-        <a href="#track-anonymous-report" class="navigation-link">Track Report</a>
+        <a href="#track-anonymous-report" class="navigation-link" data-i18n="nav.trackReport">Track Report</a>
     </li>
     <li class="navigation-item">
-        <a href="src/pages/contact-us.html" class="navigation-link">Contact Us</a>
+        <a href="src/pages/contact-us.html" class="navigation-link" data-i18n="nav.contactUs">Contact Us</a>
     </li>
 </ul>
                     <button id="menu-open-btn" class="fas fa-bars"></button>
                 </div>
                 <div class="header-icons">
-                    <a href="src/pages/login.html" class="icon-items user"> <!-- Fixed path -->
+                    <button class="lang-toggle-btn header-lang-toggle compact" title="Switch Language">EN</button>
+                    <a href="src/pages/login.html" class="icon-items user">
                         <div class="icon-border">
                             <i class="fa-solid fa-user"></i>
                         </div>
-                        <span>User</span>
+                        <span data-i18n="nav.user">User</span>
                     </a>
-                    <a href="src/pages/adminLogin.html" class="icon-items admin"> <!-- Fixed path -->
+                    <!-- <a href="src/pages/adminLogin.html" class="icon-items admin"> 
                         <div class="icon-border">
                             <i class="fa-solid fa-user-tie"></i>
                         </div>
                         <span>Admin</span>
-                    </a>
+                    </a> -->
                 </div>
             </div>
         </div>
@@ -80,53 +83,53 @@
         <div class="map-controls">
             <button id="locateMe" class="map-btn">
                 <i class="fas fa-location-arrow"></i>
-                Find My Location
+                <span data-i18n="map.findMyLocation">Find My Location</span>
             </button>
             <button id="resetView" class="map-btn">
                 <i class="fas fa-sync-alt"></i>
-                Reset View
+                <span data-i18n="map.resetView">Reset View</span>
             </button>
             <button id="toggleHeatmap" class="map-btn">
                 <i class="fas fa-fire"></i>
-                Crime Heatmap
+                <span data-i18n="map.crimeHeatmap">Crime Heatmap</span>
             </button>
             <button id="toggleMarkers" class="map-btn">
                 <i class="fas fa-map-pin"></i>
-                Division Markers
+                <span data-i18n="map.divisionMarkers">Division Markers</span>
             </button>
         </div>
         
         <div class="report-crime-btn-container">
             <button id="anonymous-report-btn" class="anonymous-report-btn" onclick="handleAnonymousReport()">
                 <i class="fa-solid fa-user-secret"></i>
-                Anonymous Report
+                <span data-i18n="btn.anonymousReport">Anonymous Report</span>
             </button>
         </div>
         
         <!-- Heatmap Info Panel -->
         <div id="heatmapInfo" class="heatmap-info" style="display: none;">
             <div class="heatmap-legend">
-                <h4><i class="fas fa-fire"></i> Crime Heat Map</h4>
+                <h4><i class="fas fa-fire"></i> <span data-i18n="map.crimeHeatmap">Crime Heat Map</span></h4>
                 <div class="legend-items">
                     <div class="legend-item">
                         <div class="legend-color high"></div>
-                        <span>High Activity</span>
+                        <span data-i18n="map.highActivity">High Activity</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color medium"></div>
-                        <span>Medium Activity</span>
+                        <span data-i18n="map.mediumActivity">Medium Activity</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color low"></div>
-                        <span>Low Activity</span>
+                        <span data-i18n="map.lowActivity">Low Activity</span>
                     </div>
                 </div>
                 <div class="heatmap-stats">
                     <div id="totalComplaints" class="stat-item">
-                        <strong>0</strong> Total Reports
+                        <strong>0</strong> <span data-i18n="map.totalReports">Total Reports</span>
                     </div>
                     <div id="pendingComplaints" class="stat-item">
-                        <strong>0</strong> Pending
+                        <strong>0</strong> <span data-i18n="map.pending">Pending</span>
                     </div>
                 </div>
             </div>
@@ -151,22 +154,22 @@
                 <div class="track-icon">
                     <i class="fas fa-search-location"></i>
                 </div>
-                <h2>Track Your Anonymous Report</h2>
-                <p>Already submitted an anonymous report? Enter your Report ID to check its current status.</p>
+                <h2 data-i18n="track.title">Track Your Anonymous Report</h2>
+                <p data-i18n="track.description">Already submitted an anonymous report? Enter your Report ID to check its current status.</p>
             </div>
             
             <div class="track-report-form">
                 <div class="input-group">
                     <i class="fas fa-hashtag"></i>
-                    <input type="text" id="trackReportId" placeholder="Enter Report ID (e.g., SV-XXXXXXXX)" maxlength="20">
+                    <input type="text" id="trackReportId" data-i18n-placeholder="track.placeholder" placeholder="Enter Report ID (e.g., SV-XXXXXXXX)" maxlength="20">
                     <button id="trackReportBtn" class="track-btn">
                         <i class="fas fa-search"></i>
-                        <span>Track Status</span>
+                        <span data-i18n="btn.trackStatus">Track Status</span>
                     </button>
                 </div>
                 <p class="track-hint">
                     <i class="fas fa-info-circle"></i>
-                    Your Report ID was provided when you submitted your anonymous report. Keep it safe!
+                    <span data-i18n="track.hint">Your Report ID was provided when you submitted your anonymous report. Keep it safe!</span>
                 </p>
             </div>
             
@@ -184,29 +187,29 @@
 <!-- Start: How it works -->
 <section id="how-it-works">
     <div class="container">
-        <h1 class="title">How It Works</h1>
-        <p class="para">Our platform makes it easy to report crimes and track their investigation progress.</p>
+        <h1 class="title" data-i18n="howItWorks.title">How It Works</h1>
+        <p class="para" data-i18n="howItWorks.description">Our platform makes it easy to report crimes and track their investigation progress.</p>
         <div class="card-container">
             <div class="card">
                 <div class="icon-circle">
                     <i class="fa-regular fa-circle-user"></i>
                 </div>
-                <a href="src/pages/login.html">Create an Account</a> <!-- Fixed path -->
-                <p>Sign up with your personal details to create a secure account for reporting crimes.</p>
+                <a href="src/pages/login.html" data-i18n="howItWorks.step1.title">Create an Account</a>
+                <p data-i18n="howItWorks.step1.desc">Sign up with your personal details to create a secure account for reporting crimes.</p>
             </div>
             <div class="card">
                 <div class="icon-circle">
                     <i class="fas fa-file-alt"></i>
                 </div>
-                <a href="/profile?tab=new-report">Submit a Complaint</a>
-                <p>Provide details about the incident, including location, time, and any evidence you may have.</p>
+                <a href="/profile?tab=new-report" data-i18n="howItWorks.step2.title">Submit a Complaint</a>
+                <p data-i18n="howItWorks.step2.desc">Provide details about the incident, including location, time, and any evidence you may have.</p>
             </div>
             <div class="card">
                 <div class="icon-circle">
                     <i class="fa-solid fa-chart-simple"></i>
                 </div>
-                <a href="#">Track Project</a>
-                <p>Monitor the status of your complaint as it moves through verification, investigation, and resolution.</p>
+                <a href="#" data-i18n="howItWorks.step3.title">Track Progress</a>
+                <p data-i18n="howItWorks.step3.desc">Monitor the status of your complaint as it moves through verification, investigation, and resolution.</p>
             </div>
         </div>
     </div>
@@ -216,100 +219,100 @@
 <!-- Start: Cases Section -->
 <section id="cases-section">
     <div class="container">
-        <h1 class="title">Cases We Handle</h1>
-        <p class="para">We handle a wide range of criminal complaints with utmost care and confidentiality.</p>
+        <h1 class="title" data-i18n="cases.title">Cases We Handle</h1>
+        <p class="para" data-i18n="cases.description">We handle a wide range of criminal complaints with utmost care and confidentiality.</p>
 
         <div class="cases-grid">
             <div class="case-type-card">
                 <div class="case-icon">
                     <i class="fas fa-user-shield"></i>
                 </div>
-                <h3>Personal Safety</h3>
-                <p>Harassment, assault, domestic violence, stalking, and threats to personal safety. We ensure your voice is heard and action is taken promptly.</p>
+                <h3 data-i18n="cases.personalSafety">Personal Safety</h3>
+                <p data-i18n="cases.personalSafety.desc">Harassment, assault, domestic violence, stalking, and threats to personal safety. We ensure your voice is heard and action is taken promptly.</p>
             </div>
 
             <div class="case-type-card">
                 <div class="case-icon">
                     <i class="fas fa-home"></i>
                 </div>
-                <h3>Property Crimes</h3>
-                <p>Theft, burglary, vandalism, property damage, and trespassing. Report property-related incidents with detailed evidence support.</p>
+                <h3 data-i18n="cases.propertyCrimes">Property Crimes</h3>
+                <p data-i18n="cases.propertyCrimes.desc">Theft, burglary, vandalism, property damage, and trespassing. Report property-related incidents with detailed evidence support.</p>
             </div>
 
             <div class="case-type-card">
                 <div class="case-icon">
                     <i class="fas fa-credit-card"></i>
                 </div>
-                <h3>Financial Fraud</h3>
-                <p>Online scams, identity theft, credit card fraud, and financial crimes.</p>
+                <h3 data-i18n="cases.financialFraud">Financial Fraud</h3>
+                <p data-i18n="cases.financialFraud.desc">Online scams, identity theft, credit card fraud, and financial crimes.</p>
             </div>
 
             <div class="case-type-card">
                 <div class="case-icon">
                     <i class="fas fa-globe"></i>
                 </div>
-                <h3>Cyber Crimes</h3>
-                <p>Online harassment, cyberbullying, hacking, data breaches, and digital threats.</p>
+                <h3 data-i18n="cases.cyberCrimes">Cyber Crimes</h3>
+                <p data-i18n="cases.cyberCrimes.desc">Online harassment, cyberbullying, hacking, data breaches, and digital threats.</p>
             </div>
 
             <div class="case-type-card">
                 <div class="case-icon">
                     <i class="fas fa-car"></i>
                 </div>
-                <h3>Traffic Violations</h3>
-                <p>Reckless driving, hit-and-run incidents, traffic accidents, and road rage. Quick response and proper documentation.</p>
+                <h3 data-i18n="cases.trafficViolations">Traffic Violations</h3>
+                <p data-i18n="cases.trafficViolations.desc">Reckless driving, hit-and-run incidents, traffic accidents, and road rage. Quick response and proper documentation.</p>
             </div>
 
             <div class="case-type-card">
                 <div class="case-icon">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <h3>Public Safety</h3>
-                <p>Public disturbances, noise complaints, Building safer neighborhoods together.</p>
+                <h3 data-i18n="cases.publicSafety">Public Safety</h3>
+                <p data-i18n="cases.publicSafety.desc">Public disturbances, noise complaints. Building safer neighborhoods together.</p>
             </div>
         </div>
 
         <div class="security-features">
-            <h3>How We Ensure Secure Complaints</h3>
-            <p>Your safety and privacy are our top priorities. We use advanced security measures to protect your identity and information.</p>
+            <h3 data-i18n="security.title">How We Ensure Secure Complaints</h3>
+            <p data-i18n="security.description">Your safety and privacy are our top priorities. We use advanced security measures to protect your identity and information.</p>
             
             <div class="security-grid">
                 <div class="security-row">
                     <div class="security-item">
                         <i class="fas fa-lock"></i>
-                        <h4>End-to-End Encryption</h4>
-                        <p>Military-grade security protocols</p>
+                        <h4 data-i18n="security.encryption">End-to-End Encryption</h4>
+                        <p data-i18n="security.encryption.desc">Military-grade security protocols</p>
                     </div>
                     <div class="security-item">
                         <i class="fas fa-user-secret"></i>
-                        <h4>Anonymous Reporting</h4>
-                        <p>Complete anonymity option</p>
+                        <h4 data-i18n="security.anonymous">Anonymous Reporting</h4>
+                        <p data-i18n="security.anonymous.desc">Complete anonymity option</p>
                     </div>
                 </div>
                 
                 <div class="security-row">
                     <div class="security-item">
                         <i class="fas fa-shield-alt"></i>
-                        <h4>Secure Storage</h4>
-                        <p>Protected servers with backups</p>
+                        <h4 data-i18n="security.storage">Secure Storage</h4>
+                        <p data-i18n="security.storage.desc">Protected servers with backups</p>
                     </div>
                     <div class="security-item">
                         <i class="fas fa-eye-slash"></i>
-                        <h4>Privacy Protection</h4>
-                        <p>Strict confidentiality policies</p>
+                        <h4 data-i18n="security.privacy">Privacy Protection</h4>
+                        <p data-i18n="security.privacy.desc">Strict confidentiality policies</p>
                     </div>
                 </div>
                 
                 <div class="security-row">
                     <div class="security-item">
                         <i class="fas fa-clock"></i>
-                        <h4>24/7 Monitoring</h4>
-                        <p>Round-the-clock security</p>
+                        <h4 data-i18n="security.monitoring">24/7 Monitoring</h4>
+                        <p data-i18n="security.monitoring.desc">Round-the-clock security</p>
                     </div>
                     <div class="security-item">
                         <i class="fas fa-certificate"></i>
-                        <h4>Verified Officials</h4>
-                        <p>Authenticated law enforcement</p>
+                        <h4 data-i18n="security.verified">Verified Officials</h4>
+                        <p data-i18n="security.verified.desc">Authenticated law enforcement</p>
                     </div>
                 </div>
             </div>
@@ -321,11 +324,11 @@
 <!-- Start: Explore Us -->
     <div class="explore-us">
         <video autoplay muted loop playsinline class="explore-us-video">
-            <source src="public/videos/explore-us.mp4" type="video/mp4"> <!-- Fixed path -->
+            <source src="public/videos/explore-us.mp4" type="video/mp4">
             If the video is not showing, then it might be because your browser is outdated. please update it to view this video.
         </video>
         <div class="explore-us-content">
-            <a href="#" class="explore-us-btn">Explore Us</a>
+            <a href="#" class="explore-us-btn" data-i18n="btn.exploreUs">Explore Us</a>
         </div>
     </div>
 <!-- End: Explore Us -->
@@ -334,10 +337,10 @@
     <section id="ready-to-get-started">
         <div class="container">
             <div class="rtgs-area">
-                <h1 class="title">Ready to Get Started?</h1>
-                <p class="para">Join our platform today to report incidents to help make your community safer.</p>
+                <h1 class="title" data-i18n="getStarted.title">Ready to Get Started?</h1>
+                <p class="para" data-i18n="getStarted.description">Join our platform today to report incidents to help make your community safer.</p>
                 <div class="buttons">
-                    <a href="src/pages/login.html" class="btn">Create an account</a> <!-- Fixed path -->
+                    <a href="src/pages/login.html" class="btn" data-i18n="btn.createAccount">Create an account</a>
                 </div>
             </div>
         </div>
@@ -354,32 +357,30 @@
                         <p class="footer-title">SECURE VOICE</p>
                     </div>
                     <div class="footer-links">
-                        <h4>LINKS</h4>
-                      <!-- In footer navigation, replace the footer-nav with: -->
+                        <h4 data-i18n="footer.links">LINKS</h4>
 <ul class="footer-nav">
     <li class="footer-nav-items active">
-        <a href="/" class="footer-nav-links active">Home</a>
+        <a href="/" class="footer-nav-links active" data-i18n="nav.home">Home</a>
     </li>
     <li class="footer-nav-items">
-        <a href="#how-it-works" class="footer-nav-links">How It Works</a>
+        <a href="#how-it-works" class="footer-nav-links" data-i18n="nav.howItWorks">How It Works</a>
     </li>
     <li class="footer-nav-items">
-      <!---  <a href="#cases-section" class="footer-nav-links">Cases We Handle</a>-->
     </li>
     <li class="footer-nav-items">
-        <a href="#ready-to-get-started" class="footer-nav-links">About Us</a>
+        <a href="#ready-to-get-started" class="footer-nav-links" data-i18n="nav.aboutUs">About Us</a>
     </li>
     <li class="footer-nav-items">
-        <a href="src/pages/contact-us.html" class="footer-nav-links">Contact Us</a>
+        <a href="src/pages/contact-us.html" class="footer-nav-links" data-i18n="nav.contactUs">Contact Us</a>
     </li>
 </ul>
                     </div>
                     <div class="footer-contact">
-                        <h4>CONTACT</h4>
+                        <h4 data-i18n="footer.contact">CONTACT</h4>
                         <ul class="footer-contact-info">
                             <div class="contact">
                                 <i class="fas fa-map-marker-alt"></i>
-                                <li>Dhaka, Bangladesh</li>
+                                <li data-i18n="footer.location">Dhaka, Bangladesh</li>
                             </div>
                             <div class="contact">
                                 <i class="fas fa-envelope"></i>
@@ -391,7 +392,7 @@
                             </div>
                             <div class="contact">
                                 <i class="fas fa-clock"></i>
-                                <li>Open 24/7</li>
+                                <li data-i18n="footer.open24">Open 24/7</li>
                             </div>
                         </ul>
                     </div>
@@ -400,10 +401,10 @@
                     <div class="footer-copy">
                         <div class="copyright-title">
                             <i class="fas fa-shield-alt"></i>
-                            <span>Crime Reporting System</span>
+                            <span data-i18n="brand.tagline">Crime Reporting System</span>
                         </div>
                         <div class="copyright-text">
-                            <span>
+                            <span data-i18n="footer.copyright">
                                 &copy; 2025, Secure Voice - Crime Reporting System. All rights reserved.
                             </span>
                         </div>
@@ -443,6 +444,7 @@
 </script>
 
 <script src="src/js/core/config.js"></script>
+<script src="src/js/core/i18n.js"></script>
 <script src="src/js/pages/homepage.js"></script>
 <script src="src/js/core/navigation.js"></script>
 <script src="src/js/core/user-auth.js" defer></script>

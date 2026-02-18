@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Us - SecureVoice</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
     <link rel="stylesheet" href="../css/base.css">
     <link rel="stylesheet" href="../css/enhanced-header.css">
@@ -12,6 +15,7 @@
     <link rel="stylesheet" href="../css/contact-us-style.css">
     <link rel="stylesheet" href="../css/contact-us-responsive.css">
     <link rel="stylesheet" href="../css/auth-header.css">
+    <link rel="stylesheet" href="../css/i18n.css">
 </head>
 <body>
 
@@ -22,42 +26,43 @@
             <div class="logo">
                 <a href="../../index.html">
                     <div class="logo-text">SecureVoice</div>
-                    <div class="logo-subtitle">Crime Reporting System</div>
+                    <div class="logo-subtitle" data-i18n="nav.subtitle">Crime Reporting System</div>
                 </a>
             </div>
             <div class="navigation">
                 <ul class="navigation-menu">
                     <button id="menu-close-btn" class="fas fa-times"></button>
                     <li class="navigation-item">
-                        <a href="../../index.html" class="navigation-link">Home</a>
+                        <a href="../../index.html" class="navigation-link" data-i18n="nav.home">Home</a>
                     </li>
                     <li class="navigation-item">
-                        <a href="../../index.html#how-it-works" class="navigation-link">Services</a>
+                        <a href="../../index.html#how-it-works" class="navigation-link" data-i18n="nav.services">Services</a>
                     </li>
                     <li class="navigation-item">
-                        <a href="#" class="navigation-link" onclick="window.alert('Not Done Yet')">Cases</a>
+                        <a href="#" class="navigation-link" onclick="window.alert('Not Done Yet')" data-i18n="nav.cases">Cases</a>
                     </li>
                     <li class="navigation-item">
-                        <a href="../../index.html#ready-to-get-started" class="navigation-link">About Us</a>
+                        <a href="../../index.html#ready-to-get-started" class="navigation-link" data-i18n="nav.aboutUs">About Us</a>
                     </li>
                     <li class="navigation-item navigation-active">
-                        <a href="#" class="navigation-link navigation-link-active">Contact Us</a>
+                        <a href="#" class="navigation-link navigation-link-active" data-i18n="nav.contactUs">Contact Us</a>
                     </li>
                 </ul>
                 <button id="menu-open-btn" class="fas fa-bars"></button>
             </div>
             <div class="header-icons">
+                <button class="lang-toggle-btn header-lang-toggle compact" title="Switch Language">EN</button>
                 <a href="login.html" class="icon-items user">
                     <div class="icon-border">
                         <i class="fa-solid fa-user"></i>
                     </div>
-                    <span>User</span>
+                    <span data-i18n="nav.user">User</span>
                 </a>
                 <a href="adminLogin.html" class="icon-items admin">
                     <div class="icon-border">
                         <i class="fa-solid fa-user-tie"></i>
                     </div>
-                    <span>Admin</span>
+                    <span data-i18n="nav.admin">Admin</span>
                 </a>
             </div>
         </div>
@@ -69,16 +74,16 @@
 <section id="contact-us">
     <div class="contactus-area">
         <div class="contact-information">
-            <h3 class="contact-information-title">Drop your voice</h3>
+            <h3 class="contact-information-title" data-i18n="contact.dropYourVoice">Drop your voice</h3>
             <p class="contact-information-text">
-                <q>
+                <q data-i18n="contact.welcomeMessage">
                     Got something to report or ask? We're here to listen. At secureVOICE, your voice matters — whether it's a concern, a suggestion, or a critical complaint. Our team is committed to creating a safer Bangladesh by making communication easier, faster, and more secure. Reach out with confidence, and let us take it from here. Together, we can build a more transparent and responsive system for all
                 </q>
             </p>
             <div class="information-about-securevoice">
                 <div class="information">
                     <i class="fas fa-map-marker-alt"></i>
-                    <p>Dhaka, Bangladesh</p>
+                    <p data-i18n="footer.location">Dhaka, Bangladesh</p>
                 </div>
                 <div class="information">
                     <i class="fas fa-envelope"></i>
@@ -90,7 +95,7 @@
                 </div>
             </div>
             <div class="social-media-icons">
-                <p>Connect with us :</p>
+                <p data-i18n="contact.connectWithUs">Connect with us :</p>
                 <div class="social-icons">
                     <a href="#">
                         <i class="fab fa-facebook-f"></i>
@@ -110,33 +115,33 @@
 
         <div class="contact-form">
             <form action="#" autocomplete="off">
-                <h2 class="title">Contact us</h2>
+                <h2 class="title" data-i18n="contact.title">Contact us</h2>
 
                 <div class="input-container">
                     <input type="text" name="name" class="input" required>
-                    <label for="username" id="username">Username</label>
-                    <span>Username</span>
+                    <label for="username" id="username" data-i18n="contact.username">Username</label>
+                    <span data-i18n="contact.username">Username</span>
                 </div>
 
                 <div class="input-container">
                     <input type="email" name="email" class="input" required>
-                    <label for="email" id="email">Email</label>
-                    <span>Email</span>
+                    <label for="email" id="email" data-i18n="auth.email">Email</label>
+                    <span data-i18n="auth.email">Email</span>
                 </div>
 
                 <div class="input-container">
                     <input type="tel" name="phone" class="input" required pattern="[0-9]{11}" title="Please enter a valid 11-digit Bangladeshi phone number">
-                    <label for="phone" id="phone">Phone</label>
-                    <span>Phone</span>
+                    <label for="phone" id="phone" data-i18n="auth.phone">Phone</label>
+                    <span data-i18n="auth.phone">Phone</span>
                 </div>
 
                 <div class="input-container textarea">
                     <textarea name="message" class="input" maxlength="200"></textarea>
-                    <label for="message" id="message">Message</label>
-                    <span>Message</span>
+                    <label for="message" id="message" data-i18n="contact.message">Message</label>
+                    <span data-i18n="contact.message">Message</span>
                 </div>
 
-                <input type="submit" value="Send" class="btn" />
+                <input type="submit" data-i18n-value="contact.sendMessage" value="Send" class="btn" />
             </form>
         </div>
     </div>
@@ -153,23 +158,23 @@
                     <p class="footer-title">SECURE VOICE</p>
                 </div>
                 <div class="footer-links">
-                    <h4>LINKS</h4>
+                    <h4 data-i18n="footer.links">LINKS</h4>
                     <ul class="footer-nav">
                         <li class="footer-nav-items">
-                            <a href="../../index.html" class="footer-nav-links">Home</a>
+                            <a href="../../index.html" class="footer-nav-links" data-i18n="nav.home">Home</a>
                         </li>
-                        <li class="footer-nav-items"><a href="#" class="footer-nav-links">Services</a></li>
-                        <li class="footer-nav-items"><a href="#" class="footer-nav-links">Cases</a></li>
-                        <li class="footer-nav-items"><a href="#" class="footer-nav-links">About Us</a></li>
-                        <li class="footer-nav-items active"><a href="#" class="footer-nav-links active">Contact Us</a></li>
+                        <li class="footer-nav-items"><a href="#" class="footer-nav-links" data-i18n="nav.services">Services</a></li>
+                        <li class="footer-nav-items"><a href="#" class="footer-nav-links" data-i18n="nav.cases">Cases</a></li>
+                        <li class="footer-nav-items"><a href="#" class="footer-nav-links" data-i18n="nav.aboutUs">About Us</a></li>
+                        <li class="footer-nav-items active"><a href="#" class="footer-nav-links active" data-i18n="nav.contactUs">Contact Us</a></li>
                     </ul>
                 </div>
                 <div class="footer-contact">
-                    <h4>CONTACT</h4>
+                    <h4 data-i18n="footer.contact">CONTACT</h4>
                     <ul class="footer-contact-info">
                         <div class="contact">
                             <i class="fas fa-map-marker-alt"></i>
-                            <li>Dhaka, Bangladesh</li>
+                            <li data-i18n="footer.location">Dhaka, Bangladesh</li>
                         </div>
                         <div class="contact">
                             <i class="fas fa-envelope"></i>
@@ -181,7 +186,7 @@
                         </div>
                         <div class="contact">
                             <i class="fas fa-clock"></i>
-                            <li>Open 24/7</li>
+                            <li data-i18n="footer.open24">Open 24/7</li>
                         </div>
                     </ul>
                 </div>
@@ -190,10 +195,10 @@
                 <div class="footer-copy">
                     <div class="copyright-title">
                         <i class="fas fa-shield-alt"></i>
-                        <span>Crime Reporting System</span>
+                        <span data-i18n="nav.subtitle">Crime Reporting System</span>
                     </div>
                     <div class="copyright-text">
-                        <span>
+                        <span data-i18n="footer.copyright">
                             &copy; 2025, Secure Voice - Crime Reporting Platform. All rights reserved.
                         </span>
                     </div>
@@ -222,6 +227,7 @@
 <!-- End: Footer --> 
 
     <script src="../js/core/config.js"></script>
+    <script src="../js/core/i18n.js"></script>
     <script src="../js/core/navigation.js"></script>
     <script src="../js/core/user-auth.js" defer></script>
     <script src="../js/contact-us.js"></script>

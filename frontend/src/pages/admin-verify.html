@@ -6,8 +6,9 @@
     <title>SecureVoice | Email Verification</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../css/i18n.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
         
         * {
             margin: 0;
@@ -195,6 +196,13 @@
 </head>
 <body>
     <div class="verify-container">
+        <!-- Language Toggle -->
+        <div style="position: absolute; top: 20px; right: 20px;">
+            <button id="langToggle" class="lang-toggle-btn compact" onclick="toggleLanguage && toggleLanguage()">
+                <span class="lang-text">EN</span>
+            </button>
+        </div>
+        
         <a href="/">
             <img src="../../images/auth/secureVOICE.png" alt="SecureVoice" class="logo">
         </a>
@@ -204,8 +212,8 @@
             <div class="status-icon loading">
                 <i class="fas fa-spinner spinner"></i>
             </div>
-            <h2>Verifying Your Email</h2>
-            <p class="message">Please wait while we verify your email address...</p>
+            <h2 data-i18n="verify.verifyingEmail">Verifying Your Email</h2>
+            <p class="message" data-i18n="verify.pleaseWait">Please wait while we verify your email address...</p>
         </div>
         
         <!-- Success State -->
@@ -213,23 +221,23 @@
             <div class="status-icon success">
                 <i class="fas fa-check"></i>
             </div>
-            <h2>Email Verified Successfully! 🎉</h2>
-            <p class="message">Your email address has been verified. Your account is now pending Super Admin approval.</p>
+            <h2 data-i18n="verify.successTitle">Email Verified Successfully! 🎉</h2>
+            <p class="message" data-i18n="verify.successMessage">Your email address has been verified. Your account is now pending Super Admin approval.</p>
             
             <div class="info-box">
-                <h4><i class="fas fa-info-circle"></i> What happens next?</h4>
+                <h4><i class="fas fa-info-circle"></i> <span data-i18n="verify.whatNext">What happens next?</span></h4>
                 <ul>
-                    <li><i class="fas fa-clock"></i> Super Admin will review your request (2-3 business days)</li>
-                    <li><i class="fas fa-envelope"></i> You'll receive an email once approved</li>
-                    <li><i class="fas fa-sign-in-alt"></i> After approval, you can login with your credentials</li>
+                    <li><i class="fas fa-clock"></i> <span data-i18n="verify.next1">Super Admin will review your request (2-3 business days)</span></li>
+                    <li><i class="fas fa-envelope"></i> <span data-i18n="verify.next2">You'll receive an email once approved</span></li>
+                    <li><i class="fas fa-sign-in-alt"></i> <span data-i18n="verify.next3">After approval, you can login with your credentials</span></li>
                 </ul>
             </div>
             
             <a href="/adminLogin" class="btn btn-primary">
-                <i class="fas fa-sign-in-alt"></i> Go to Admin Login
+                <i class="fas fa-sign-in-alt"></i> <span data-i18n="verify.goToLogin">Go to Admin Login</span>
             </a>
             <a href="/" class="btn btn-secondary">
-                <i class="fas fa-home"></i> Back to Home
+                <i class="fas fa-home"></i> <span data-i18n="common.backToHome">Back to Home</span>
             </a>
         </div>
         
@@ -238,14 +246,14 @@
             <div class="status-icon error">
                 <i class="fas fa-times"></i>
             </div>
-            <h2>Verification Failed</h2>
-            <p class="message" id="error-message">Unable to verify your email. The link may be invalid or expired.</p>
+            <h2 data-i18n="verify.errorTitle">Verification Failed</h2>
+            <p class="message" id="error-message" data-i18n="verify.errorMessage">Unable to verify your email. The link may be invalid or expired.</p>
             
             <a href="/admin-registration" class="btn btn-primary">
-                <i class="fas fa-user-plus"></i> Register Again
+                <i class="fas fa-user-plus"></i> <span data-i18n="verify.registerAgain">Register Again</span>
             </a>
             <a href="/contact-us" class="btn btn-secondary">
-                <i class="fas fa-headset"></i> Contact Support
+                <i class="fas fa-headset"></i> <span data-i18n="common.contactSupport">Contact Support</span>
             </a>
         </div>
     </div>
@@ -297,5 +305,6 @@
             }
         });
     </script>
+    <script src="../js/core/i18n.js"></script>
 </body>
 </html>

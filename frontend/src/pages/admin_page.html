@@ -9,12 +9,13 @@
     <!-- Version: 2.1 - Analytics Removed -->
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="../css/i18n.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="../js/admin-dashboard-protection.js"></script>
 
     <style>
         /* Professional Admin Dashboard CSS */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
 
         * {
             padding: 0;
@@ -1375,14 +1376,18 @@
 <div class="admin-page">
     <!-- Header -->
     <header class="admin-header">
-        <h1 class="title">Admin Dashboard</h1>
+        <h1 class="title" data-i18n="admin.dashboard">Admin Dashboard</h1>
         <div class="sub-title">
             <div class="location">
                 <i class="fas fa-map-marker-alt"></i>
                 <select id="district">
-                    <option value="" id="district-option">Loading...</option>
+                    <option value="" id="district-option" data-i18n="common.loading">Loading...</option>
                 </select>
             </div>
+            <!-- Language Toggle -->
+            <button id="langToggle" class="lang-toggle-btn compact admin-lang-toggle" onclick="toggleLanguage && toggleLanguage()">
+                <span class="lang-text">EN</span>
+            </button>
             <div class="profile-area"></div>
         </div>
     </header>
@@ -1394,30 +1399,30 @@
             <div class="buttons">
                 <button class="btn-organize active" data-section="profile">
                     <i class="fas fa-user"></i>
-                    <span>Profile</span>
+                    <span data-i18n="nav.profile">Profile</span>
                 </button>
                 <button class="btn-organize" data-section="reports">
                     <i class="fas fa-file-alt"></i>
-                    <span>Reports</span>
+                    <span data-i18n="nav.reports">Reports</span>
                 </button>
                 <button class="btn-organize" data-section="users">
                     <i class="fas fa-users"></i>
-                    <span>Users</span>
+                    <span data-i18n="nav.users">Users</span>
                 </button>
                 <button class="btn-organize" data-section="settings">
                     <i class="fas fa-cog"></i>
-                    <span>Settings</span>
+                    <span data-i18n="nav.settings">Settings</span>
                 </button>
             </div>
 
             <div class="action-buttons">
                 <a href="/homepage" class="home-btn">
                     <i class="fas fa-home"></i>
-                    <span>Home</span>
+                    <span data-i18n="nav.home">Home</span>
                 </a>
                 <button onclick="logoutAdmin()" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+                    <span data-i18n="nav.logout">Logout</span>
                 </button>
             </div>
         </nav>
@@ -1430,48 +1435,48 @@
             <section id="profile" class="panel-section profile-section">
                 <div class="profile-container">
                     <div class="profile-header">
-                        <h2 class="profile-title">Admin Profile</h2>
+                        <h2 class="profile-title" data-i18n="admin.adminProfile">Admin Profile</h2>
                         <button class="edit-profile-btn" onclick="toggleEditMode()">
                             <i class="fas fa-edit"></i>
-                            Edit Profile
+                            <span data-i18n="profile.editProfile">Edit Profile</span>
                         </button>
                         <button class="save-profile-btn" onclick="saveProfile()">
                             <i class="fas fa-save"></i>
-                            Save Changes
+                            <span data-i18n="common.saveChanges">Save Changes</span>
                         </button>
                     </div>
 
                     <div class="form-content-container">
                         <div class="form-content">
-                            <label>Full Name</label>
-                            <span id="fullNameDisplay">Loading...</span>
+                            <label data-i18n="profile.fullName">Full Name</label>
+                            <span id="fullNameDisplay" data-i18n="common.loading">Loading...</span>
                             <input type="text" id="fullNameEdit" class="editable-field" value="">
                         </div>
 
                         <div class="form-content">
-                            <label>Date of Birth</label>
-                            <span id="dobDisplay">Loading...</span>
+                            <label data-i18n="profile.dateOfBirth">Date of Birth</label>
+                            <span id="dobDisplay" data-i18n="common.loading">Loading...</span>
                             <input type="date" id="dobEdit" class="editable-field" value="">
                         </div>
 
                         <div class="form-content">
-                            <label>Username</label>
-                            <span id="usernameDisplay">Loading...</span>
+                            <label data-i18n="auth.username">Username</label>
+                            <span id="usernameDisplay" data-i18n="common.loading">Loading...</span>
                         </div>
 
                         <div class="form-content">
-                            <label>Email</label>
-                            <span id="emailDisplay">Loading...</span>
+                            <label data-i18n="profile.emailAddress">Email</label>
+                            <span id="emailDisplay" data-i18n="common.loading">Loading...</span>
                         </div>
 
                         <div class="form-content">
-                            <label>District</label>
-                            <span id="districtDisplay">Loading...</span>
+                            <label data-i18n="profile.district">District</label>
+                            <span id="districtDisplay" data-i18n="common.loading">Loading...</span>
                         </div>
 
                         <div class="form-content">
-                            <label>Account Created</label>
-                            <span id="createdAtDisplay">Loading...</span>
+                            <label data-i18n="admin.accountCreated">Account Created</label>
+                            <span id="createdAtDisplay" data-i18n="common.loading">Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -1483,15 +1488,15 @@
                     <div class="table-header">
                         <h2 class="table-title">
                             <i class="fas fa-file-alt"></i>
-                            Complaint Reports
+                            <span data-i18n="admin.complaintReports">Complaint Reports</span>
                         </h2>
-                        <span id="complaints-count">Total: Loading...</span>
+                        <span id="complaints-count"><span data-i18n="admin.total">Total</span>: <span data-i18n="common.loading">Loading...</span></span>
                     </div>
 
                     <div class="table-container" id="complaints-table-container">
                         <div class="empty-state">
                             <i class="fas fa-spinner fa-spin"></i>
-                            <h3>Loading Complaints...</h3>
+                            <h3 data-i18n="admin.loadingComplaints">Loading Complaints...</h3>
                         </div>
                     </div>
                 </div>
@@ -1503,15 +1508,15 @@
                     <div class="table-header">
                         <h2 class="table-title">
                             <i class="fas fa-users"></i>
-                            Complainant Users
+                            <span data-i18n="admin.complainantUsers">Complainant Users</span>
                         </h2>
-                        <span id="users-count">Total: Loading...</span>
+                        <span id="users-count"><span data-i18n="admin.total">Total</span>: <span data-i18n="common.loading">Loading...</span></span>
                     </div>
 
                     <div class="table-container" id="users-table-container">
                         <div class="empty-state">
                             <i class="fas fa-spinner fa-spin"></i>
-                            <h3>Loading Users...</h3>
+                            <h3 data-i18n="admin.loadingUsers">Loading Users...</h3>
                         </div>
                     </div>
                 </div>
@@ -1524,22 +1529,22 @@
                     <div class="settings-container">
                         <h2 class="settings-title">
                             <i class="fas fa-cog"></i>
-                            Admin Settings
+                            <span data-i18n="admin.adminSettings">Admin Settings</span>
                         </h2>
-                        <p class="settings-description">
+                        <p class="settings-description" data-i18n="admin.settingsDescription">
                             Customize your admin dashboard experience and notification preferences.
                         </p>
 
                         <div class="settings-group">
-                            <h3 class="settings-title">Appearance</h3>
-                            <p class="settings-description">
+                            <h3 class="settings-title" data-i18n="admin.appearance">Appearance</h3>
+                            <p class="settings-description" data-i18n="admin.appearanceDescription">
                                 Customize the look and feel of your dashboard.
                             </p>
 
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
-                                    <strong class="strong">Dark Mode</strong>
-                                    <p style="font-size: var(--font-sm); color: var(--text-light); margin-top: 4px;">
+                                    <strong class="strong" data-i18n="admin.darkMode">Dark Mode</strong>
+                                    <p style="font-size: var(--font-sm); color: var(--text-light); margin-top: 4px;" data-i18n="admin.darkModeDescription">
                                         Switch between light and dark themes
                                     </p>
                                 </div>
@@ -2893,5 +2898,6 @@
 
 
 </script>
+<script src="../js/core/i18n.js"></script>
 </body>
 </html>

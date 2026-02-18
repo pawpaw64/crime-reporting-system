@@ -1,0 +1,183 @@
+/* ============================================
+   LANGUAGE TOGGLE BUTTON STYLES
+   ============================================ */
+
+/* Base toggle button styles */
+.lang-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 36px;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #2d3a4a 0%, #1a2332 100%);
+    color: #fff;
+    border: 2px solid #4a90a4;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.lang-toggle-btn:hover {
+    background: linear-gradient(135deg, #4a90a4 0%, #2d6a7a 100%);
+    border-color: #5fb5c8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 164, 0.3);
+}
+
+.lang-toggle-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Bangla text styling when in Bangla mode */
+.lang-toggle-btn[data-lang="bn"] {
+    font-family: 'Noto Sans Bengali', 'Hind Siliguri', sans-serif;
+}
+
+/* Header toggle button - next to user icon */
+.header-lang-toggle {
+    margin-right: 15px;
+}
+
+/* Sidebar/Logo area toggle button */
+.sidebar-lang-toggle {
+    margin-top: 10px;
+}
+
+/* Language toggle container for header */
+.lang-toggle-container {
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+}
+
+/* Animated language icon (optional) */
+.lang-toggle-btn::before {
+    content: '🌐';
+    margin-right: 6px;
+    font-size: 14px;
+}
+
+/* Compact version without icon */
+.lang-toggle-btn.compact::before {
+    display: none;
+}
+
+/* Dark theme variant */
+.lang-toggle-btn.dark {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-color: #0f3460;
+}
+
+.lang-toggle-btn.dark:hover {
+    background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
+    border-color: #e94560;
+}
+
+/* Light theme variant */
+.lang-toggle-btn.light {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    color: #212529;
+    border-color: #dee2e6;
+}
+
+.lang-toggle-btn.light:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    border-color: #adb5bd;
+}
+
+/* Floating toggle button (fixed position) */
+.lang-toggle-btn.floating {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.lang-toggle-btn.floating::before {
+    margin-right: 0;
+}
+
+/* Admin sidebar toggle */
+.admin-lang-toggle {
+    width: 100%;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    padding: 10px 15px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .lang-toggle-btn {
+        min-width: 36px;
+        height: 32px;
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+    
+    .lang-toggle-btn::before {
+        font-size: 12px;
+        margin-right: 4px;
+    }
+    
+    .header-lang-toggle {
+        margin-right: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .lang-toggle-btn::before {
+        display: none;
+    }
+    
+    .lang-toggle-btn {
+        min-width: 32px;
+        padding: 4px 8px;
+    }
+}
+
+/* Animation for language change */
+@keyframes langSwitch {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+.lang-toggle-btn.switching {
+    animation: langSwitch 0.3s ease;
+}
+
+/* Bangla font import - add to head or here */
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+
+/* Global Bangla font application when language is Bangla */
+html[lang="bn"] body {
+    font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+}
+
+html[lang="bn"] h1, 
+html[lang="bn"] h2, 
+html[lang="bn"] h3, 
+html[lang="bn"] h4, 
+html[lang="bn"] h5, 
+html[lang="bn"] h6 {
+    font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+}
+
+html[lang="bn"] button,
+html[lang="bn"] input,
+html[lang="bn"] select,
+html[lang="bn"] textarea {
+    font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+}
