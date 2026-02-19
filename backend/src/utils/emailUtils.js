@@ -26,12 +26,13 @@ transporter.verify(function(error, success) {
 module.exports = {
     transporter,
     
-    sendEmail: async (to, subject, html) => {
+    sendEmail: async (to, subject, html, attachments = []) => {
         const mailOptions = {
             from: config.email.auth.user,
             to,
             subject,
-            html
+            html,
+            attachments
         };
         
         return transporter.sendMail(mailOptions);

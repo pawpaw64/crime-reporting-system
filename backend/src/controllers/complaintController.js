@@ -8,6 +8,13 @@ const {
     getCategoryIdNormalized,
     getCategoryName
 } = require('../utils/helperUtils');
+const { sendEmail } = require('../utils/emailUtils');
+const { 
+    generateTrackingToken, 
+    generateTrackingQRCode,
+    generateTrackingQRCodeBuffer, 
+    generateTrackingEmailTemplate 
+} = require('../utils/qrUtils');
 
 // Submit Complaint
 exports.submitComplaint = async (req, res) => {
@@ -79,15 +86,18 @@ exports.submitComplaint = async (req, res) => {
             }
         }
 
-        // Insert complaint with location coordinates
+        // Generate unique tracking token for QR code tracking
+        const trackingToken = generateTrackingToken();
+
+        // Insert complaint with location coordinates and tracking token
         const [complaintResult] = await pool.query(
             `INSERT INTO complaint (
                 description, created_at, status, username, admin_username, 
                 location_id, complaint_type, location_address, category_id,
-                latitude, longitude, location_accuracy_radius
-            ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                latitude, longitude, location_accuracy_radius, tracking_token
+            ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [description, formattedDate, username, adminUsername, locationId, 
-             complaintType, location, categoryId, lat, lng, radius]
+             complaintType, location, categoryId, lat, lng, radius, trackingToken]
         );
 
         const complaintId = complaintResult.insertId;
@@ -119,10 +129,59 @@ exports.submitComplaint = async (req, res) => {
             }
         }
 
+        // Get user email for sending tracking QR code
+        try {
+            const [[userDetails]] = await pool.query(
+                `SELECT email, fullName FROM users WHERE username = ?`,
+                [username]
+            );
+
+            if (userDetails && userDetails.email) {
+                // Generate QR code for complaint tracking
+                console.log(`📧 Generating tracking QR code for complaint #${complaintId}, token: ${trackingToken}`);
+                const qrCodeBuffer = await generateTrackingQRCodeBuffer(trackingToken);
+                console.log(`✅ QR code generated successfully as attachment`);
+                
+                // Prepare email template with CID reference
+                const emailHtml = generateTrackingEmailTemplate({
+                    complaintId,
+                    trackingToken,
+                    complaintType,
+                    location,
+                    createdAt: formattedDate,
+                    userName: userDetails.fullName || username
+                }, true); // true = use CID reference
+
+                // Prepare QR code as embedded attachment (CID)
+                const attachments = [{
+                    filename: 'tracking-qr.png',
+                    content: qrCodeBuffer,
+                    contentType: 'image/png',
+                    cid: 'complaint-qr' // Content-ID for embedding in HTML
+                }];
+
+                // Send tracking email with QR code attachment (async - don't wait)
+                sendEmail(
+                    userDetails.email,
+                    `SecureVoice - Complaint #${complaintId} Tracking Information`,
+                    emailHtml,
+                    attachments
+                ).then(() => {
+                    console.log(`✅ Tracking QR code email sent to ${userDetails.email} for complaint #${complaintId}`);
+                }).catch(err => {
+                    console.error(`❌ Failed to send tracking email for complaint #${complaintId}:`, err.message);
+                });
+            }
+        } catch (emailError) {
+            // Don't fail the complaint submission if email fails
+            console.error('Error sending tracking email:', emailError);
+        }
+
         res.json({
             success: true,
             message: "Complaint submitted successfully!",
             complaintId: complaintId,
+            trackingToken: trackingToken,
             complaint: {
                 id: complaintId,
                 type: complaintType,
@@ -742,5 +801,116 @@ exports.getComplaintHeatmapData = async (req, res) => {
     } catch (err) {
         console.error("Get complaint heatmap data error:", err);
         res.status(500).json({ success: false, message: "Database error" });
+    }
+};
+
+// Track Complaint by Token (No authentication required)
+exports.trackComplaintByToken = async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        if (!token) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Tracking token is required" 
+            });
+        }
+
+        // Get complaint details with tracking token
+        const [complaints] = await pool.query(
+            `SELECT 
+                c.complaint_id,
+                c.tracking_token,
+                c.complaint_type,
+                c.description,
+                c.status,
+                c.created_at,
+                c.location_address,
+                c.latitude,
+                c.longitude,
+                l.location_name,
+                l.district_name,
+                cat.name AS category_name,
+                cat.description AS category_description,
+                u.username,
+                u.fullName AS user_fullname
+            FROM complaint c
+            LEFT JOIN location l ON c.location_id = l.location_id
+            LEFT JOIN category cat ON c.category_id = cat.category_id
+            LEFT JOIN users u ON c.username = u.username
+            WHERE c.tracking_token = ?`,
+            [token]
+        );
+
+        if (complaints.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Complaint not found. Please check your tracking token." 
+            });
+        }
+
+        const complaint = complaints[0];
+
+        // Get evidence/attachments for the complaint
+        const [evidence] = await pool.query(
+            `SELECT evidence_id, file_type, file_path, uploaded_at
+             FROM evidence
+             WHERE complaint_id = ?
+             ORDER BY uploaded_at DESC`,
+            [complaint.complaint_id]
+        );
+
+        // Get status history (from chat messages for now)
+        const [statusUpdates] = await pool.query(
+            `SELECT 
+                sender_type,
+                sender_username,
+                message,
+                sent_at
+            FROM complaint_chat
+            WHERE complaint_id = ?
+            ORDER BY sent_at ASC
+            LIMIT 10`,
+            [complaint.complaint_id]
+        );
+
+        // Format response
+        res.json({
+            success: true,
+            complaint: {
+                id: complaint.complaint_id,
+                trackingToken: complaint.tracking_token,
+                type: complaint.complaint_type,
+                category: complaint.category_name,
+                description: complaint.description,
+                status: complaint.status,
+                location: {
+                    address: complaint.location_address,
+                    name: complaint.location_name,
+                    district: complaint.district_name,
+                    latitude: complaint.latitude,
+                    longitude: complaint.longitude
+                },
+                submittedDate: complaint.created_at,
+                evidence: evidence.map(e => ({
+                    id: e.evidence_id,
+                    type: e.file_type,
+                    path: e.file_path,
+                    uploadedAt: e.uploaded_at
+                })),
+                recentUpdates: statusUpdates.map(update => ({
+                    type: update.sender_type,
+                    sender: update.sender_username,
+                    message: update.message,
+                    timestamp: update.sent_at
+                }))
+            }
+        });
+    } catch (err) {
+        console.error("Track complaint by token error:", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error retrieving complaint information" 
+        });
     }
 };

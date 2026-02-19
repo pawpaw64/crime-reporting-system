@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Tracking Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .qr-display {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .qr-display img {
+            max-width: 300px;
+            border: 2px solid #124E66;
+            padding: 10px;
+            background: white;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button {
+            background: #124E66;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #2E3944;
+        }
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #124E66;
+            margin: 20px 0;
+        }
+        .error {
+            background: #ffe7e7;
+            padding: 15px;
+            border-left: 4px solid #dc3545;
+            margin: 20px 0;
+        }
+        .success {
+            background: #e7ffe7;
+            padding: 15px;
+            border-left: 4px solid #28a745;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 QR Code Tracking Test Page</h1>
+    
+    <div class="info">
+        <strong>Purpose:</strong> This page tests the QR code tracking feature without requiring email.
+        <br><strong>Instructions:</strong> Enter a tracking token to generate a QR code and test the tracking page.
+    </div>
+
+    <div class="test-section">
+        <h2>Test QR Code Generation</h2>
+        <div>
+            <label>Tracking Token:</label>
+            <input type="text" id="token-input" placeholder="Enter tracking token or leave blank for test token" style="width: 400px;">
+            <button onclick="generateTestQR()">Generate QR Code</button>
+        </div>
+        <div id="qr-result" class="qr-display"></div>
+        <div id="message"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Tracking API</h2>
+        <div>
+            <label>API Base URL:</label>
+            <input type="text" id="api-url" value="http://localhost:3000" style="width: 300px;">
+            <button onclick="testTrackingAPI()">Test API</button>
+        </div>
+        <div id="api-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Quick Access</h2>
+        <p>If you have a tracking token, use these links:</p>
+        <div>
+            <input type="text" id="quick-token" placeholder="Paste tracking token" style="width: 400px;">
+            <button onclick="openTrackingPage()">Open Tracking Page</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <script>
+        async function generateTestQR() {
+            const tokenInput = document.getElementById('token-input');
+            const token = tokenInput.value.trim() || 'd9a31c01-2fd9-4829-a058-a3050f27ee20'; // Use provided token as default
+            const resultDiv = document.getElementById('qr-result');
+            const messageDiv = document.getElementById('message');
+
+            try {
+                // Generate tracking URL
+                const trackingUrl = `http://localhost:5500/src/pages/track-complaint.html?token=${token}`;
+                
+                // Generate QR code
+                const qrDataUrl = await QRCode.toDataURL(trackingUrl, {
+                    errorCorrectionLevel: 'H',
+                    type: 'image/png',
+                    quality: 0.95,
+                    margin: 1,
+                    color: {
+                        dark: '#124E66',
+                        light: '#FFFFFF'
+                    },
+                    width: 300
+                });
+
+                resultDiv.innerHTML = `
+                    <h3>Generated QR Code</h3>
+                    <img src="${qrDataUrl}" alt="QR Code">
+                    <p><strong>Tracking URL:</strong><br><a href="${trackingUrl}" target="_blank">${trackingUrl}</a></p>
+                    <p><small>Token: ${token}</small></p>
+                `;
+
+                messageDiv.innerHTML = '<div class="success">✅ QR Code generated successfully! Scan with your phone to test.</div>';
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testTrackingAPI() {
+            const apiUrl = document.getElementById('api-url').value;
+            const token = document.getElementById('token-input').value.trim() || 'd9a31c01-2fd9-4829-a058-a3050f27ee20';
+            const resultDiv = document.getElementById('api-result');
+
+            try {
+                resultDiv.innerHTML = '<p>🔄 Testing API connection...</p>';
+                
+                const response = await fetch(`${apiUrl}/api/track/${token}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ API Working!</h4>
+                            <p><strong>Complaint ID:</strong> ${data.complaint.id}</p>
+                            <p><strong>Status:</strong> ${data.complaint.status}</p>
+                            <p><strong>Type:</strong> ${data.complaint.type}</p>
+                            <p><strong>Location:</strong> ${data.complaint.location.address}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ API Error: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ API Connection Failed</h4>
+                        <p>${error.message}</p>
+                        <p><small>Make sure your backend server is running on port 3000</small></p>
+                    </div>
+                `;
+            }
+        }
+
+        function openTrackingPage() {
+            const token = document.getElementById('quick-token').value.trim();
+            if (!token) {
+                alert('Please enter a tracking token');
+                return;
+            }
+            window.open(`http://localhost:5500/src/pages/track-complaint.html?token=${token}`, '_blank');
+        }
+
+        // Auto-load with default token
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            if (token) {
+                document.getElementById('token-input').value = token;
+                generateTestQR();
+            }
+        });
+    </script>
+</body>
+</html>

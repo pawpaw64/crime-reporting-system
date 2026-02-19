@@ -5,6 +5,7 @@ const userAuth = require('../controllers/auth/userAuth');
 const otpController = require('../controllers/auth/otp');
 const registrationController = require('../controllers/auth/registrationSteps');
 const sessionController = require('../controllers/auth/session');
+const complaintController = require('../controllers/complaintController');
 const authMiddleware = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 const helperUtils = require('../utils/helperUtils');
@@ -149,6 +150,9 @@ router.post('/complaints', authMiddleware.requireUser, upload.array('evidence', 
         res.status(500).json({ success: false, message: 'Error submitting complaint' });
     }
 });
+
+// Public tracking route (no authentication required)
+router.get('/track/:token', complaintController.trackComplaintByToken);
 
 // Admin routes (placeholder)
 router.post('/admin/login', (req, res) => res.json({ success: false, message: 'Admin login not implemented yet' }));

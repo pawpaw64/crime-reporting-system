@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Complaint - SecureVoice</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/track-complaint.css">
+</head>
+<body>
+    <div class="tracking-container">
+        <!-- Header -->
+        <header class="tracking-header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <div>
+                        <div class="logo-text">SecureVoice</div>
+                        <div class="logo-subtitle">Complaint Tracking</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading complaint details...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="error-state" style="display: none;">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <h2>Complaint Not Found</h2>
+            <p id="error-message">The tracking token you provided is invalid or the complaint does not exist.</p>
+            <a href="/" class="btn-primary">Return to Home</a>
+        </div>
+
+        <!-- Complaint Details -->
+        <div id="complaint-details" class="complaint-details" style="display: none;">
+            <!-- Status Timeline -->
+            <div class="status-section">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-line"></i>
+                    Complaint Status
+                </h2>
+                <div class="status-timeline">
+                    <div class="status-item" data-status="pending">
+                        <div class="status-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="status-content">
+                            <h3>Pending</h3>
+                            <p>Complaint received and queued</p>
+                        </div>
+                    </div>
+                    <div class="status-item" data-status="verifying">
+                        <div class="status-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="status-content">
+                            <h3>Verifying</h3>
+                            <p>Details being verified</p>
+                        </div>
+                    </div>
+                    <div class="status-item" data-status="investigating">
+                        <div class="status-icon">
+                            <i class="fas fa-user-secret"></i>
+                        </div>
+                        <div class="status-content">
+                            <h3>Investigating</h3>
+                            <p>Under active investigation</p>
+                        </div>
+                    </div>
+                    <div class="status-item" data-status="resolved">
+                        <div class="status-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="status-content">
+                            <h3>Resolved</h3>
+                            <p>Complaint resolved</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Complaint Information -->
+            <div class="info-section">
+                <h2 class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Complaint Information
+                </h2>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-label">
+                            <i class="fas fa-hashtag"></i>
+                            Complaint ID
+                        </div>
+                        <div class="info-value" id="complaint-id">-</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">
+                            <i class="fas fa-calendar-alt"></i>
+                            Submitted On
+                        </div>
+                        <div class="info-value" id="complaint-date">-</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">
+                            <i class="fas fa-tag"></i>
+                            Type
+                        </div>
+                        <div class="info-value" id="complaint-type">-</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">
+                            <i class="fas fa-layer-group"></i>
+                            Category
+                        </div>
+                        <div class="info-value" id="complaint-category">-</div>
+                    </div>
+                    <div class="info-card full-width">
+                        <div class="info-label">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Location
+                        </div>
+                        <div class="info-value" id="complaint-location">-</div>
+                    </div>
+                    <div class="info-card full-width">
+                        <div class="info-label">
+                            <i class="fas fa-file-alt"></i>
+                            Description
+                        </div>
+                        <div class="info-value description" id="complaint-description">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Updates -->
+            <div id="updates-section" class="updates-section" style="display: none;">
+                <h2 class="section-title">
+                    <i class="fas fa-comments"></i>
+                    Recent Updates
+                </h2>
+                <div id="updates-list" class="updates-list">
+                    <!-- Updates will be populated here -->
+                </div>
+            </div>
+
+            <!-- Evidence -->
+            <div id="evidence-section" class="evidence-section" style="display: none;">
+                <h2 class="section-title">
+                    <i class="fas fa-paperclip"></i>
+                    Attached Evidence
+                </h2>
+                <div id="evidence-list" class="evidence-list">
+                    <!-- Evidence will be populated here -->
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="help-section">
+                <div class="help-card">
+                    <i class="fas fa-question-circle"></i>
+                    <h3>Need Help?</h3>
+                    <p>If you have any questions about your complaint, please contact us through our website.</p>
+                    <a href="/" class="btn-secondary">Visit Website</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="tracking-footer">
+            <p>&copy; 2026 SecureVoice Crime Reporting System. All rights reserved.</p>
+            <p class="footer-note">This page is automatically updated. No login required.</p>
+        </footer>
+    </div>
+
+    <script src="../js/core/config.js"></script>
+    <script src="../js/track-complaint.js"></script>
+</body>
+</html>

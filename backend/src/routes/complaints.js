@@ -41,4 +41,7 @@ router.delete('/delete-complaint/:id', requireUser, complaintController.deleteCo
 router.get('/dashboard-stats', requireUser, complaintController.getDashboardStats);
 router.get('/complaint-heatmap-data', complaintController.getComplaintHeatmapData);
 
+// Public tracking route (no authentication required)
+router.get('/track/:token', complaintController.trackComplaintByToken);
+
 module.exports = router;
