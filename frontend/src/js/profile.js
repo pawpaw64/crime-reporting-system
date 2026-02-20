@@ -657,6 +657,9 @@ function viewComplaint(id) {
     const modal = document.getElementById('complaint-detail-modal');
     const content = document.getElementById('complaint-detail-content');
 
+    // Build evidence section HTML
+    const evidenceHtml = buildEvidenceSection(complaint.evidence);
+
     content.innerHTML = `
         <div class="complaint-detail">
             <div class="detail-header">
@@ -681,6 +684,8 @@ function viewComplaint(id) {
                 </div>
             </div>
             
+            ${evidenceHtml}
+            
             <div class="detail-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--light-grey); display: flex; gap: 10px; flex-wrap: wrap;">
                 <button class="primary-btn" data-action="openChat" data-id="${complaint.complaint_id}">
                     <i class="fas fa-comments"></i> Message Admin
@@ -694,7 +699,128 @@ function viewComplaint(id) {
         </div>
     `;
 
+    // Add click handlers for image lightbox
+    content.querySelectorAll('.evidence-image').forEach(img => {
+        img.addEventListener('click', () => openImageLightbox(img.src));
+    });
+
     modal.style.display = 'flex';
+}
+
+// Build evidence section HTML
+function buildEvidenceSection(evidence) {
+    if (!evidence || evidence.length === 0) {
+        return '';
+    }
+
+    const images = evidence.filter(e => e.file_type === 'image');
+    const videos = evidence.filter(e => e.file_type === 'video');
+    const audios = evidence.filter(e => e.file_type === 'audio');
+
+    const hostname = window.location.hostname;
+    const baseUrl = `http://${hostname}:3000`;
+
+    let html = `
+        <div class="evidence-section" style="margin: 20px 0; padding: 15px; background: var(--bg-blue, #f0f4f8); border-radius: 10px;">
+            <label style="display: block; margin-bottom: 15px; font-weight: 600; color: var(--dark-blue, #1a365d);">
+                <i class="fas fa-paperclip"></i> Evidence Attached
+            </label>
+    `;
+
+    // Images
+    if (images.length > 0) {
+        html += `
+            <div class="evidence-images" style="margin-bottom: 15px;">
+                <p style="font-size: 0.85rem; color: var(--muted-blue, #64748b); margin-bottom: 10px;">
+                    <i class="fas fa-image"></i> Images (${images.length})
+                </p>
+                <div class="evidence-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;">
+                    ${images.map(img => `
+                        <div class="evidence-thumb" style="position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 1; cursor: pointer;">
+                            <img src="${baseUrl}/uploads/${img.file_path}" 
+                                 alt="Evidence" 
+                                 class="evidence-image"
+                                 style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s;"
+                                 onerror="this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;background:#e2e8f0;color:#64748b;\\'>Image unavailable</div>'"
+                            />
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Videos
+    if (videos.length > 0) {
+        html += `
+            <div class="evidence-videos" style="margin-bottom: 15px;">
+                <p style="font-size: 0.85rem; color: var(--muted-blue, #64748b); margin-bottom: 10px;">
+                    <i class="fas fa-video"></i> Videos (${videos.length})
+                </p>
+                <div class="evidence-video-list" style="display: flex; flex-direction: column; gap: 10px;">
+                    ${videos.map(vid => `
+                        <video controls style="width: 100%; max-height: 300px; border-radius: 8px; background: #000;">
+                            <source src="${baseUrl}/uploads/${vid.file_path}" type="video/mp4">
+                            Your browser does not support video playback.
+                        </video>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Audio
+    if (audios.length > 0) {
+        html += `
+            <div class="evidence-audios" style="margin-bottom: 10px;">
+                <p style="font-size: 0.85rem; color: var(--muted-blue, #64748b); margin-bottom: 10px;">
+                    <i class="fas fa-microphone"></i> Audio (${audios.length})
+                </p>
+                <div class="evidence-audio-list" style="display: flex; flex-direction: column; gap: 10px;">
+                    ${audios.map(aud => `
+                        <audio controls style="width: 100%;">
+                            <source src="${baseUrl}/uploads/${aud.file_path}">
+                            Your browser does not support audio playback.
+                        </audio>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    html += '</div>';
+    return html;
+}
+
+// Open image in lightbox
+function openImageLightbox(src) {
+    // Remove existing lightbox if any
+    const existingLightbox = document.getElementById('image-lightbox');
+    if (existingLightbox) existingLightbox.remove();
+
+    const lightbox = document.createElement('div');
+    lightbox.id = 'image-lightbox';
+    lightbox.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        cursor: pointer;
+    `;
+    lightbox.innerHTML = `
+        <button style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">
+            <i class="fas fa-times"></i>
+        </button>
+        <img src="${src}" style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px;">
+    `;
+    lightbox.addEventListener('click', () => lightbox.remove());
+    document.body.appendChild(lightbox);
 }
 
 async function deleteComplaint(id) {

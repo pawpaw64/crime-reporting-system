@@ -93,10 +93,20 @@ router.post('/mark-all-notifications-read', authMiddleware.requireUser, async (r
     }
 });
 
-// Get complaints
+// Get complaints with evidence
 router.get('/my-complaints', authMiddleware.requireUser, async (req, res) => {
     try {
         const [complaints] = await db.query('SELECT * FROM complaint WHERE username = ? ORDER BY created_at DESC', [req.session.username]);
+        
+        // Fetch evidence for each complaint
+        for (let complaint of complaints) {
+            const [evidence] = await db.query(
+                'SELECT evidence_id, file_type, file_path, uploaded_at FROM evidence WHERE complaint_id = ?',
+                [complaint.complaint_id]
+            );
+            complaint.evidence = evidence;
+        }
+        
         res.json({ success: true, complaints });
     } catch (error) {
         console.error('Complaints fetch error:', error);
