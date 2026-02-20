@@ -2,6 +2,19 @@ const pool = require('../db');
 const { hashPassword } = require('../utils/passwordUtils');
 const { sendEmail } = require('../utils/emailUtils');
 const { logAdminAction, getAllAuditLogs } = require('../utils/auditUtils');
+const {
+    getActiveAlertsSummary,
+    getAdminAlertCount,
+    getAllAlerts,
+    getAlertById,
+    acknowledgeAlert,
+    acknowledgeAllAlertsForAdmin,
+    resolveAlert,
+    generateAlerts,
+    getAlertConfig,
+    updateAlertConfig,
+    getAlertStatistics
+} = require('../utils/alertUtils');
 const crypto = require('crypto');
 
 // ========== SUPER ADMIN LOGIN ==========
@@ -810,6 +823,389 @@ exports.saveSuperAdminSettings = async (req, res) => {
         });
     } catch (err) {
         console.error("Error saving settings:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// ========== ADMIN ALERT SYSTEM ==========
+
+// Get all alerts with optional filters
+exports.getAllAdminAlerts = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        const { 
+            includeResolved = false, 
+            adminUsername, 
+            priorityLevel, 
+            limit 
+        } = req.query;
+
+        const alerts = await getAllAlerts({
+            includeResolved: includeResolved === 'true',
+            adminUsername,
+            priorityLevel,
+            limit: limit ? parseInt(limit) : null
+        });
+
+        res.json({
+            success: true,
+            alerts: alerts
+        });
+
+    } catch (err) {
+        console.error("Error fetching admin alerts:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// Get alert summary (counts per admin)
+exports.getAdminAlertSummary = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        const summary = await getActiveAlertsSummary();
+
+        res.json({
+            success: true,
+            summary: summary
+        });
+
+    } catch (err) {
+        console.error("Error fetching alert summary:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// Get alert count for specific admin
+exports.getAdminAlertCountById = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        const { adminUsername } = req.params;
+
+        if (!adminUsername) {
+            return res.status(400).json({
+                success: false,
+                message: "Admin username is required"
+            });
+        }
+
+        const alertCount = await getAdminAlertCount(adminUsername);
+
+        res.json({
+            success: true,
+            alertCount: alertCount
+        });
+
+    } catch (err) {
+        console.error("Error fetching admin alert count:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// Get specific alert details
+exports.getAlertDetails = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        const { alertId } = req.params;
+
+        if (!alertId) {
+            return res.status(400).json({
+                success: false,
+                message: "Alert ID is required"
+            });
+        }
+
+        const alert = await getAlertById(parseInt(alertId));
+
+        if (!alert) {
+            return res.status(404).json({
+                success: false,
+                message: "Alert not found"
+            });
+        }
+
+        res.json({
+            success: true,
+            alert: alert
+        });
+
+    } catch (err) {
+        console.error("Error fetching alert details:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// Acknowledge an alert
+exports.acknowledgeAlert = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        const { alertId } = req.body;
+
+        if (!alertId) {
+            return res.status(400).json({
+                success: false,
+                message: "Alert ID is required"
+            });
+        }
+
+        const success = await acknowledgeAlert(parseInt(alertId));
+
+        if (!success) {
+            return res.status(404).json({
+                success: false,
+                message: "Alert not found or already acknowledged"
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Alert acknowledged successfully"
+        });
+
+    } catch (err) {
+        console.error("Error acknowledging alert:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// Acknowledge all alerts for an admin
+exports.acknowledgeAllAlertsForAdmin = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        const { adminUsername } = req.body;
+
+        if (!adminUsername) {
+            return res.status(400).json({
+                success: false,
+                message: "Admin username is required"
+            });
+        }
+
+        const count = await acknowledgeAllAlertsForAdmin(adminUsername);
+
+        res.json({
+            success: true,
+            message: `${count} alert(s) acknowledged successfully`,
+            count: count
+        });
+
+    } catch (err) {
+        console.error("Error acknowledging all alerts:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// Resolve an alert manually
+exports.resolveAlert = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        const { alertId } = req.body;
+
+        if (!alertId) {
+            return res.status(400).json({
+                success: false,
+                message: "Alert ID is required"
+            });
+        }
+
+        const success = await resolveAlert(parseInt(alertId));
+
+        if (!success) {
+            return res.status(404).json({
+                success: false,
+                message: "Alert not found or already resolved"
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Alert resolved successfully"
+        });
+
+    } catch (err) {
+        console.error("Error resolving alert:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// Manually trigger alert generation
+exports.generateAlerts = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        const result = await generateAlerts();
+
+        res.json({
+            success: true,
+            message: result.message
+        });
+
+    } catch (err) {
+        console.error("Error generating alerts:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// Get alert configuration
+exports.getAlertConfig = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        const config = await getAlertConfig();
+
+        res.json({
+            success: true,
+            config: config
+        });
+
+    } catch (err) {
+        console.error("Error fetching alert config:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// Update alert configuration
+exports.updateAlertConfig = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        const { priorityLevel, thresholdMinutes, isActive } = req.body;
+
+        if (!priorityLevel || thresholdMinutes === undefined || isActive === undefined) {
+            return res.status(400).json({
+                success: false,
+                message: "Priority level, threshold minutes, and active status are required"
+            });
+        }
+
+        const success = await updateAlertConfig(priorityLevel, thresholdMinutes, isActive);
+
+        if (!success) {
+            return res.status(404).json({
+                success: false,
+                message: "Configuration not found"
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Alert configuration updated successfully"
+        });
+
+    } catch (err) {
+        console.error("Error updating alert config:", err);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+// Get alert statistics
+exports.getAlertStatistics = async (req, res) => {
+    try {
+        if (!req.session.isSuperAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access"
+            });
+        }
+
+        const stats = await getAlertStatistics();
+
+        res.json({
+            success: true,
+            statistics: stats
+        });
+
+    } catch (err) {
+        console.error("Error fetching alert statistics:", err);
         res.status(500).json({
             success: false,
             message: "Server error"

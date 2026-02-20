@@ -3,6 +3,7 @@ const pool = require('./db');
 const config = require('./config/config');
 const { exec } = require('child_process');
 const os = require('os');
+const { initializeAlertSchedulers } = require('./utils/alertScheduler');
 require('dotenv').config();
 
 // Use centralized config for port (ensure it's a number)
@@ -16,6 +17,11 @@ const server = app.listen(PORT, () => {
     console.log(`✅ Server running on port ${PORT}`);
     console.log(`📍 Access: http://localhost:${PORT}`);
     const localIP = getLocalIP();
+    
+    // Initialize alert schedulers
+    console.log('🔔 Initializing admin alert schedulers...');
+    initializeAlertSchedulers();
+    
     // Auto-open browser in development
     if (process.env.NODE_ENV !== 'production') {
         autoOpenBrowser(URL);
