@@ -9,6 +9,7 @@ const complaintController = require('../controllers/complaintController');
 const authMiddleware = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 const helperUtils = require('../utils/helperUtils');
+const { detectPriority, isUrgentPriority } = require('../utils/priorityUtils');
 
 // DB helper
 const db = require('../db');
@@ -128,7 +129,24 @@ router.post('/complaints', authMiddleware.requireUser, upload.array('evidence', 
         if (incident_time) incidentDateTime = `${incident_date} ${incident_time}`;
         const formattedDate = new Date(incidentDateTime).toISOString().slice(0, 19).replace('T', ' ');
         const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
-        const [complaintResult] = await db.query(`INSERT INTO complaint (description, created_at, status, username, admin_username, location_id, complaint_type, location_address, category_id) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?)`, [description, formattedDate, username, adminUsername, locationId, complaint_type, location_address, categoryId]);
+        
+        // Detect priority based on complaint content
+        const priorityResult = await detectPriority({
+            description,
+            complaintType: complaint_type
+        });
+        const priority = priorityResult.priority;
+        const priorityKeywords = priorityResult.matchedKeywords.length > 0 
+            ? priorityResult.matchedKeywords.join(', ') 
+            : null;
+
+        // Log if urgent priority detected
+        if (isUrgentPriority(priority)) {
+            console.log(`🚨 URGENT: ${priority.toUpperCase()} priority complaint detected!`);
+            console.log(`   Keywords matched: ${priorityKeywords || 'none'}`);
+        }
+        
+        const [complaintResult] = await db.query(`INSERT INTO complaint (description, created_at, status, username, admin_username, location_id, complaint_type, location_address, category_id, priority, priority_keywords_matched) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?)`, [description, formattedDate, username, adminUsername, locationId, complaint_type, location_address, categoryId, priority, priorityKeywords]);
         const complaintId = complaintResult.insertId;
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
@@ -144,7 +162,7 @@ router.post('/complaints', authMiddleware.requireUser, upload.array('evidence', 
                 await db.query(`INSERT INTO evidence (uploaded_at, file_type, file_path, complaint_id) VALUES (?, ?, ?, ?)`, [createdAt, fileType, relativePath, complaintId]);
             }
         }
-        res.json({ success: true, message: 'Complaint submitted successfully!', complaintId, complaint: { id: complaintId, type: complaint_type, status: 'pending', location: location_address, createdAt } });
+        res.json({ success: true, message: 'Complaint submitted successfully!', complaintId, priority, complaint: { id: complaintId, type: complaint_type, status: 'pending', priority, location: location_address, createdAt } });
     } catch (err) {
         console.error('Submit complaint error:', err);
         res.status(500).json({ success: false, message: 'Error submitting complaint' });

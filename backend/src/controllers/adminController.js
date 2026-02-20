@@ -266,7 +266,7 @@ exports.getAdminCases = async (req, res) => {
         }
 
         const adminUsername = req.session.adminUsername;
-        const { username, dateFrom, dateTo } = req.query;
+        const { username, dateFrom, dateTo, priority } = req.query;
 
         let casesQuery = `
             SELECT 
@@ -279,6 +279,8 @@ exports.getAdminCases = async (req, res) => {
                 cat.crime_code,
                 c.created_at,
                 c.status,
+                c.priority,
+                c.priority_keywords_matched,
                 COALESCE(c.description, '') as description,
                 COALESCE(c.location_address, '') as location_address,
                 COALESCE(ac.last_updated, c.created_at) as last_updated
@@ -307,7 +309,13 @@ exports.getAdminCases = async (req, res) => {
             queryParams.push(dateTo);
         }
 
-        casesQuery += ' ORDER BY c.created_at DESC';
+        if (priority && priority.trim() !== '') {
+            casesQuery += ' AND c.priority = ?';
+            queryParams.push(priority);
+        }
+
+        // Sort by priority (critical first) then by date
+        casesQuery += ' ORDER BY FIELD(c.priority, \'critical\', \'high\', \'medium\', \'low\'), c.created_at DESC';
 
         const [results] = await pool.query(casesQuery, queryParams);
 
@@ -319,7 +327,14 @@ exports.getAdminCases = async (req, res) => {
             resolved: results.filter(c => c.status === 'resolved').length
         };
 
-        res.json({ success: true, cases: results, analytics: analytics });
+        const priorityStats = {
+            critical: results.filter(c => c.priority === 'critical').length,
+            high: results.filter(c => c.priority === 'high').length,
+            medium: results.filter(c => c.priority === 'medium').length,
+            low: results.filter(c => c.priority === 'low').length
+        };
+
+        res.json({ success: true, cases: results, analytics: analytics, priorityStats: priorityStats });
     } catch (err) {
         console.error("Get cases error:", err);
         res.status(500).json({ success: false, message: "Error fetching cases" });
@@ -498,17 +513,30 @@ exports.getAdminComplaints = async (req, res) => {
                 c.location_address,
                 c.status,
                 c.created_at,
+                c.priority,
+                c.priority_keywords_matched,
                 COALESCE(u.fullName, 'N/A') as user_fullname
             FROM complaint c
             LEFT JOIN users u ON c.username = u.username
             WHERE c.admin_username = ? AND (c.is_discarded IS NULL OR c.is_discarded = FALSE)
-            ORDER BY c.created_at DESC`,
+            ORDER BY 
+                FIELD(c.priority, 'critical', 'high', 'medium', 'low'),
+                c.created_at DESC`,
             [adminUsername]
         );
 
+        // Calculate priority stats
+        const priorityStats = {
+            critical: complaints.filter(c => c.priority === 'critical').length,
+            high: complaints.filter(c => c.priority === 'high').length,
+            medium: complaints.filter(c => c.priority === 'medium').length,
+            low: complaints.filter(c => c.priority === 'low').length
+        };
+
         res.json({
             success: true,
-            complaints: complaints
+            complaints: complaints,
+            priorityStats: priorityStats
         });
     } catch (err) {
         console.error("Get admin complaints error:", err);
@@ -562,7 +590,7 @@ exports.getDashboardStats = async (req, res) => {
         const adminUsername = req.session.adminUsername;
 
         const [complaints] = await pool.query(
-            'SELECT status FROM complaint WHERE admin_username = ? AND (is_discarded IS NULL OR is_discarded = FALSE)',
+            'SELECT status, priority FROM complaint WHERE admin_username = ? AND (is_discarded IS NULL OR is_discarded = FALSE)',
             [adminUsername]
         );
 
@@ -574,9 +602,24 @@ exports.getDashboardStats = async (req, res) => {
             resolved: complaints.filter(c => c.status === 'resolved').length
         };
 
+        const priorityStats = {
+            critical: complaints.filter(c => c.priority === 'critical').length,
+            high: complaints.filter(c => c.priority === 'high').length,
+            medium: complaints.filter(c => c.priority === 'medium').length,
+            low: complaints.filter(c => c.priority === 'low').length
+        };
+
+        // Count urgent (critical + high) pending complaints
+        const urgentPending = complaints.filter(c => 
+            (c.priority === 'critical' || c.priority === 'high') && 
+            c.status === 'pending'
+        ).length;
+
         res.json({
             success: true,
-            stats: stats
+            stats: stats,
+            priorityStats: priorityStats,
+            urgentPending: urgentPending
         });
     } catch (err) {
         console.error("Get dashboard stats error:", err);

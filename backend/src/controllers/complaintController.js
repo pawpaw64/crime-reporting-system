@@ -15,6 +15,7 @@ const {
     generateTrackingQRCodeBuffer, 
     generateTrackingEmailTemplate 
 } = require('../utils/qrUtils');
+const { detectPriority, isUrgentPriority } = require('../utils/priorityUtils');
 
 // Submit Complaint
 exports.submitComplaint = async (req, res) => {
@@ -89,15 +90,33 @@ exports.submitComplaint = async (req, res) => {
         // Generate unique tracking token for QR code tracking
         const trackingToken = generateTrackingToken();
 
-        // Insert complaint with location coordinates and tracking token
+        // Detect priority based on complaint content
+        const priorityResult = await detectPriority({
+            description,
+            complaintType
+        });
+        const priority = priorityResult.priority;
+        const priorityKeywords = priorityResult.matchedKeywords.length > 0 
+            ? priorityResult.matchedKeywords.join(', ') 
+            : null;
+
+        // Log if urgent priority detected
+        if (isUrgentPriority(priority)) {
+            console.log(`🚨 URGENT: ${priority.toUpperCase()} priority complaint detected!`);
+            console.log(`   Keywords matched: ${priorityKeywords || 'none'}`);
+        }
+
+        // Insert complaint with location coordinates, tracking token, and priority
         const [complaintResult] = await pool.query(
             `INSERT INTO complaint (
                 description, created_at, status, username, admin_username, 
                 location_id, complaint_type, location_address, category_id,
-                latitude, longitude, location_accuracy_radius, tracking_token
-            ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                latitude, longitude, location_accuracy_radius, tracking_token,
+                priority, priority_keywords_matched
+            ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [description, formattedDate, username, adminUsername, locationId, 
-             complaintType, location, categoryId, lat, lng, radius, trackingToken]
+             complaintType, location, categoryId, lat, lng, radius, trackingToken,
+             priority, priorityKeywords]
         );
 
         const complaintId = complaintResult.insertId;

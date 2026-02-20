@@ -86,6 +86,17 @@
                     </div>
                 </div>
 
+                <!-- Urgent Alert Container (dynamically populated) -->
+                <div id="urgent-alert-container" style="display: none;"></div>
+
+                <!-- Priority Stats Section -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h3><i class="fas fa-exclamation-triangle"></i> <span data-i18n="admin.priorityOverview">Priority Overview</span></h3>
+                    </div>
+                    <div id="priority-stats-container"></div>
+                </div>
+
                 <!-- Stats Grid -->
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -359,6 +370,17 @@
                                 <option value="verifying" data-i18n="status.verifying">Verifying</option>
                                 <option value="investigating" data-i18n="status.investigating">Investigating</option>
                                 <option value="resolved" data-i18n="status.resolved">Resolved</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label><i class="fas fa-exclamation-triangle"></i> <span data-i18n="filter.priority">Priority</span></label>
+                            <select class="filter-input" id="filter-priority">
+                                <option value="">All Priorities</option>
+                                <option value="urgent">🚨 Urgent (Critical + High)</option>
+                                <option value="critical">🚨 Critical</option>
+                                <option value="high">⚠️ High</option>
+                                <option value="medium">📋 Medium</option>
+                                <option value="low">ℹ️ Low</option>
                             </select>
                         </div>
                         <div class="filter-group">

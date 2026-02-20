@@ -15,6 +15,7 @@ const {
     getCategoryName,
     getAllCategories 
 } = require('../utils/helperUtils');
+const { detectPriority, isUrgentPriority } = require('../utils/priorityUtils');
 
 // Configuration
 const IP_HASH_SALT = process.env.IP_HASH_SALT || 'securevoice-anonymous-salt-2026';
@@ -372,13 +373,33 @@ exports.submitAnonymousReport = async (req, res) => {
             console.error('Category lookup error:', categoryError);
         }
         
-        // Insert anonymous report with assigned admin and category_id (3NF normalized)
+        // Detect priority based on report content
+        const priorityResult = await detectPriority({
+            description: sanitizedDescription,
+            complaintType: crimeType,
+            additionalNotes: sanitizedNotes,
+            suspectDescription: sanitizedSuspect
+        });
+        const priority = priorityResult.priority;
+        const priorityKeywords = priorityResult.matchedKeywords.length > 0 
+            ? priorityResult.matchedKeywords.join(', ') 
+            : null;
+
+        // Log if urgent priority detected
+        if (isUrgentPriority(priority)) {
+            console.log(`🚨 URGENT: ${priority.toUpperCase()} priority anonymous report detected!`);
+            console.log(`   Report ID: ${reportId}`);
+            console.log(`   Keywords matched: ${priorityKeywords || 'none'}`);
+        }
+        
+        // Insert anonymous report with assigned admin, category_id, and priority (3NF normalized)
         const [result] = await pool.query(
             `INSERT INTO anonymous_reports (
                 report_id, crime_type, category_id, description, incident_date, incident_time,
                 location_address, latitude, longitude, district_name, assigned_admin,
-                suspect_description, additional_notes, ip_hash, content_hash
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                suspect_description, additional_notes, ip_hash, content_hash,
+                priority, priority_keywords_matched
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 reportId,
                 crimeType.toLowerCase(),
@@ -394,7 +415,9 @@ exports.submitAnonymousReport = async (req, res) => {
                 sanitizedSuspect || null,
                 sanitizedNotes || null,
                 ipHash,
-                contentHash
+                contentHash,
+                priority,
+                priorityKeywords
             ]
         );
         
@@ -574,6 +597,7 @@ exports.getAnonymousReports = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         const status = req.query.status || null;
+        const priorityFilter = req.query.priority || null;
         const offset = (page - 1) * limit;
         
         let query = `
@@ -592,6 +616,8 @@ exports.getAnonymousReports = async (req, res) => {
                 ar.district_name,
                 ar.assigned_admin,
                 ar.status,
+                ar.priority,
+                ar.priority_keywords_matched,
                 ar.is_flagged,
                 ar.submitted_at,
                 ar.reviewed_at,
@@ -608,8 +634,14 @@ exports.getAnonymousReports = async (req, res) => {
             query += ' AND ar.status = ?';
             params.push(status);
         }
+
+        if (priorityFilter) {
+            query += ' AND ar.priority = ?';
+            params.push(priorityFilter);
+        }
         
-        query += ' ORDER BY ar.submitted_at DESC LIMIT ? OFFSET ?';
+        // Sort by priority first (critical first), then by date
+        query += ' ORDER BY FIELD(ar.priority, \'critical\', \'high\', \'medium\', \'low\'), ar.submitted_at DESC LIMIT ? OFFSET ?';
         params.push(limit, offset);
         
         const [reports] = await pool.query(query, params);
@@ -625,11 +657,38 @@ exports.getAnonymousReports = async (req, res) => {
             countQuery += ' AND status = ?';
             countParams.push(status);
         }
+
+        if (priorityFilter) {
+            countQuery += ' AND priority = ?';
+            countParams.push(priorityFilter);
+        }
         const [countResult] = await pool.query(countQuery, countParams);
+
+        // Calculate priority stats for anonymous reports
+        const [priorityResults] = await pool.query(
+            `SELECT priority, COUNT(*) as count FROM anonymous_reports 
+             WHERE (assigned_admin = ? OR district_name = ? OR (assigned_admin IS NULL AND district_name IS NULL))
+             GROUP BY priority`,
+            [adminUsername, adminDistrict]
+        );
+        
+        const priorityStats = {
+            critical: 0,
+            high: 0,
+            medium: 0,
+            low: 0
+        };
+        
+        priorityResults.forEach(row => {
+            if (priorityStats.hasOwnProperty(row.priority)) {
+                priorityStats[row.priority] = row.count;
+            }
+        });
         
         res.json({
             success: true,
             reports,
+            priorityStats,
             pagination: {
                 page,
                 limit,

@@ -9,6 +9,9 @@ let anonymousReportsData = [];
 let currentComplaintId = null;
 let currentAnonReportId = null;
 let anonDetailMap = null;
+let priorityStats = { critical: 0, high: 0, medium: 0, low: 0 };
+let anonPriorityStats = { critical: 0, high: 0, medium: 0, low: 0 };
+let urgentPendingCount = 0;
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -109,6 +112,18 @@ async function loadDashboardStats() {
 
         if (data.success) {
             updateStatsDisplay(data.stats);
+            
+            // Update priority stats if available
+            if (data.priorityStats) {
+                priorityStats = data.priorityStats;
+                updatePriorityStatsDisplay();
+            }
+            
+            // Update urgent pending count
+            if (data.urgentPending !== undefined) {
+                urgentPendingCount = data.urgentPending;
+                showUrgentAlert();
+            }
         }
     } catch (error) {
         console.error('Error loading stats:', error);
@@ -124,6 +139,91 @@ function updateStatsDisplay(stats) {
     document.getElementById('resolved-cases').textContent = stats.resolved || 0;
 }
 
+function updatePriorityStatsDisplay() {
+    // Create or update priority stats display if container exists
+    const container = document.getElementById('priority-stats-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="priority-stats">
+                <div class="priority-stat critical">
+                    <span class="priority-count">${priorityStats.critical || 0}</span>
+                    <span class="priority-label">Critical</span>
+                </div>
+                <div class="priority-stat high">
+                    <span class="priority-count">${priorityStats.high || 0}</span>
+                    <span class="priority-label">High</span>
+                </div>
+                <div class="priority-stat medium">
+                    <span class="priority-count">${priorityStats.medium || 0}</span>
+                    <span class="priority-label">Medium</span>
+                </div>
+                <div class="priority-stat low">
+                    <span class="priority-count">${priorityStats.low || 0}</span>
+                    <span class="priority-label">Low</span>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function showUrgentAlert() {
+    // Show urgent alert if there are critical or high priority pending complaints
+    let alertContainer = document.getElementById('urgent-alert-container');
+    
+    if (!alertContainer) {
+        // Create the alert container if it doesn't exist
+        alertContainer = document.createElement('div');
+        alertContainer.id = 'urgent-alert-container';
+        const mainContent = document.querySelector('.main-content') || document.querySelector('.dashboard-content');
+        if (mainContent) {
+            mainContent.insertBefore(alertContainer, mainContent.firstChild);
+        }
+    }
+    
+    if (urgentPendingCount > 0) {
+        alertContainer.innerHTML = `
+            <div class="urgent-alert" onclick="filterByUrgent()">
+                <div class="urgent-alert-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="urgent-alert-content">
+                    <strong>Urgent Attention Required!</strong>
+                    <p>You have <span class="urgent-count">${urgentPendingCount}</span> high-priority complaint${urgentPendingCount > 1 ? 's' : ''} pending. These cases require immediate action.</p>
+                </div>
+                <button class="urgent-alert-btn" onclick="event.stopPropagation(); filterByUrgent()">
+                    View Urgent Cases <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        `;
+        alertContainer.style.display = 'block';
+    } else {
+        alertContainer.style.display = 'none';
+    }
+}
+
+function filterByUrgent() {
+    // Switch to complaints tab and filter by critical/high priority
+    switchTab('complaints');
+    const priorityFilter = document.getElementById('filter-priority');
+    if (priorityFilter) {
+        priorityFilter.value = 'urgent';
+    }
+    applyFilters();
+}
+
+// Priority badge helper function
+function getPriorityBadge(priority) {
+    const priorityInfo = {
+        critical: { class: 'priority-critical', icon: '🚨', label: 'CRITICAL' },
+        high: { class: 'priority-high', icon: '⚠️', label: 'HIGH' },
+        medium: { class: 'priority-medium', icon: '📋', label: 'MEDIUM' },
+        low: { class: 'priority-low', icon: 'ℹ️', label: 'LOW' }
+    };
+    
+    const info = priorityInfo[priority] || priorityInfo.medium;
+    return `<span class="priority-badge ${info.class}" title="Priority: ${info.label}">${info.icon} ${info.label}</span>`;
+}
+
 // ===== COMPLAINTS =====
 async function loadComplaints() {
     try {
@@ -132,9 +232,26 @@ async function loadComplaints() {
 
         if (data.success) {
             complaintsData = data.complaints;
+            
+            // Update priority stats if available
+            if (data.priorityStats) {
+                priorityStats = data.priorityStats;
+                updatePriorityStatsDisplay();
+            }
+            
             renderComplaints();
             renderRecentComplaints();
             document.getElementById('complaints-count').textContent = `Total: ${complaintsData.length} complaints`;
+            
+            // Show alert for urgent complaints
+            const urgentCount = complaintsData.filter(c => 
+                (c.priority === 'critical' || c.priority === 'high') && 
+                c.status === 'pending'
+            ).length;
+            if (urgentCount > 0) {
+                urgentPendingCount = urgentCount;
+                showUrgentAlert();
+            }
         }
     } catch (error) {
         console.error('Error loading complaints:', error);
@@ -169,6 +286,7 @@ function renderRecentComplaints() {
                 <thead>
                     <tr>
                         <th>ID</th>
+                        <th>Priority</th>
                         <th>User</th>
                         <th>Type</th>
                         <th>Status</th>
@@ -177,8 +295,9 @@ function renderRecentComplaints() {
                 </thead>
                 <tbody>
                     ${recent.map(c => `
-                        <tr style="cursor: pointer;" onclick="switchTab('complaints')">
+                        <tr style="cursor: pointer;" onclick="switchTab('complaints')" class="${c.priority === 'critical' || c.priority === 'high' ? 'urgent-row' : ''}">
                             <td>#${c.complaint_id}</td>
+                            <td>${getPriorityBadge(c.priority)}</td>
                             <td>${c.username}</td>
                             <td>${c.complaint_type || 'General'}</td>
                             <td><span class="status ${c.status}">${c.status}</span></td>
@@ -211,6 +330,7 @@ function renderComplaints(filteredData = null) {
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Priority</th>
                     <th>User</th>
                     <th>Type</th>
                     <th>Date</th>
@@ -221,8 +341,9 @@ function renderComplaints(filteredData = null) {
             </thead>
             <tbody>
                 ${complaints.map(c => `
-                    <tr>
+                    <tr class="${c.priority === 'critical' || c.priority === 'high' ? 'urgent-row' : ''}">
                         <td>#${c.complaint_id}</td>
+                        <td>${getPriorityBadge(c.priority)}</td>
                         <td>${c.username}</td>
                         <td>${c.complaint_type || 'General'}</td>
                         <td>${new Date(c.created_at).toLocaleDateString()}</td>
@@ -313,6 +434,7 @@ function renderUsers() {
 function applyFilters() {
     const status = document.getElementById('filter-status').value;
     const search = document.getElementById('filter-search').value.toLowerCase();
+    const priorityFilter = document.getElementById('filter-priority')?.value || '';
 
     let filtered = complaintsData;
 
@@ -327,13 +449,38 @@ function applyFilters() {
         );
     }
 
+    // Priority filter
+    if (priorityFilter) {
+        if (priorityFilter === 'urgent') {
+            // Urgent = critical or high priority
+            filtered = filtered.filter(c => c.priority === 'critical' || c.priority === 'high');
+        } else {
+            filtered = filtered.filter(c => c.priority === priorityFilter);
+        }
+    }
+
     renderComplaints(filtered);
+    
+    // Update count display
+    const countDisplay = document.getElementById('complaints-count');
+    if (countDisplay) {
+        countDisplay.textContent = `Showing: ${filtered.length} of ${complaintsData.length} complaints`;
+    }
 }
 
 function clearFilters() {
     document.getElementById('filter-status').value = '';
     document.getElementById('filter-search').value = '';
+    const priorityFilter = document.getElementById('filter-priority');
+    if (priorityFilter) {
+        priorityFilter.value = '';
+    }
     renderComplaints();
+    
+    const countDisplay = document.getElementById('complaints-count');
+    if (countDisplay) {
+        countDisplay.textContent = `Total: ${complaintsData.length} complaints`;
+    }
 }
 
 // ===== MODALS =====
@@ -776,6 +923,12 @@ async function loadAnonymousReports() {
 
         if (data.success) {
             anonymousReportsData = data.reports || [];
+            
+            // Update priority stats if available
+            if (data.priorityStats) {
+                anonPriorityStats = data.priorityStats;
+            }
+            
             renderAnonymousReports();
             updateAnonymousStats();
             document.getElementById('anonymous-reports-count').textContent = `Total: ${anonymousReportsData.length} reports`;
@@ -801,6 +954,17 @@ function updateAnonymousStats() {
     document.getElementById('anon-pending').textContent = pending;
     document.getElementById('anon-investigating').textContent = investigating;
     document.getElementById('anon-resolved').textContent = resolved;
+    
+    // Update urgent anonymous reports count
+    const urgentAnon = anonymousReportsData.filter(r => 
+        (r.priority === 'critical' || r.priority === 'high') && 
+        (r.status === 'pending' || r.status === 'reviewing')
+    ).length;
+    
+    const urgentAnonElement = document.getElementById('anon-urgent');
+    if (urgentAnonElement) {
+        urgentAnonElement.textContent = urgentAnon;
+    }
 }
 
 function renderAnonymousReports(filteredData = null) {
@@ -823,6 +987,7 @@ function renderAnonymousReports(filteredData = null) {
             <thead>
                 <tr>
                     <th>Report ID</th>
+                    <th>Priority</th>
                     <th>Crime Type</th>
                     <th>Incident Date</th>
                     <th>Location</th>
@@ -833,8 +998,9 @@ function renderAnonymousReports(filteredData = null) {
             </thead>
             <tbody>
                 ${reports.map(r => `
-                    <tr>
+                    <tr class="${r.priority === 'critical' || r.priority === 'high' ? 'urgent-row' : ''}">
                         <td><strong>${r.report_id}</strong></td>
+                        <td>${getPriorityBadge(r.priority)}</td>
                         <td>${formatCrimeType(r.crime_type)}</td>
                         <td>${new Date(r.incident_date).toLocaleDateString()}</td>
                         <td>${truncateText(r.location_address || 'Not specified', 30)}</td>
