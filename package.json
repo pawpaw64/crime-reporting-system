@@ -2,11 +2,11 @@
   "name": "crime-reporting-system",
   "version": "1.0.0",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev": "cd backend && npm run dev",
+    "start": "cd backend && npm start",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
-    "start": "cd backend && npm start",
     "db:import": "mysql -u root -p < backend/database/schema.sql",
     "db:reset": "mysql -u root -p -e \"DROP DATABASE IF EXISTS securevoice; CREATE DATABASE securevoice; USE securevoice;\" < backend/database/schema.sql"
   },

@@ -16,8 +16,8 @@ const generateTrackingToken = () => {
  */
 const generateTrackingQRCode = async (trackingToken) => {
     try {
-        // Construct tracking URL
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5500';
+        // Construct tracking URL - use backend URL since it serves the frontend
+        const frontendUrl = process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || 3000}`;
         const trackingUrl = `${frontendUrl}/src/pages/track-complaint.html?token=${trackingToken}`;
         
         // Generate QR code as data URL
@@ -47,8 +47,8 @@ const generateTrackingQRCode = async (trackingToken) => {
  */
 const generateTrackingQRCodeBuffer = async (trackingToken) => {
     try {
-        // Construct tracking URL
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5500';
+        // Construct tracking URL - use backend URL since it serves the frontend
+        const frontendUrl = process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || 3000}`;
         const trackingUrl = `${frontendUrl}/src/pages/track-complaint.html?token=${trackingToken}`;
         
         // Generate QR code as buffer
@@ -78,7 +78,7 @@ const generateTrackingQRCodeBuffer = async (trackingToken) => {
  */
 const generateTrackingEmailTemplate = (complaintDetails, useCid = true) => {
     const { complaintId, trackingToken, complaintType, location, createdAt, userName } = complaintDetails;
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5500';
+    const frontendUrl = process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || 3000}`;
     const trackingUrl = `${frontendUrl}/src/pages/track-complaint.html?token=${trackingToken}`;
     
     return `

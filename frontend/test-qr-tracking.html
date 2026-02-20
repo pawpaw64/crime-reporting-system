@@ -102,6 +102,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <script>
+        // Use current origin (works with backend serving frontend on port 3000)
+        const baseUrl = window.location.origin || 'http://localhost:3000';
+        
         async function generateTestQR() {
             const tokenInput = document.getElementById('token-input');
             const token = tokenInput.value.trim() || 'd9a31c01-2fd9-4829-a058-a3050f27ee20'; // Use provided token as default
@@ -109,8 +112,8 @@
             const messageDiv = document.getElementById('message');
 
             try {
-                // Generate tracking URL
-                const trackingUrl = `http://localhost:5500/src/pages/track-complaint.html?token=${token}`;
+                // Generate tracking URL using current origin
+                const trackingUrl = `${baseUrl}/src/pages/track-complaint.html?token=${token}`;
                 
                 // Generate QR code
                 const qrDataUrl = await QRCode.toDataURL(trackingUrl, {
@@ -179,7 +182,7 @@
                 alert('Please enter a tracking token');
                 return;
             }
-            window.open(`http://localhost:5500/src/pages/track-complaint.html?token=${token}`, '_blank');
+            window.open(`${baseUrl}/src/pages/track-complaint.html?token=${token}`, '_blank');
         }
 
         // Auto-load with default token
