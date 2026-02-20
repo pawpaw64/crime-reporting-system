@@ -439,6 +439,74 @@ exports.updateComplaintStatus = async (req, res) => {
     }
 };
 
+// Update Complaint Priority
+exports.updateComplaintPriority = async (req, res) => {
+    try {
+        if (!req.session.adminId) {
+            return res.status(401).json({ success: false, message: "Unauthorized access" });
+        }
+
+        const { complaintId, newPriority } = req.body;
+        const adminUsername = req.session.adminUsername;
+
+        if (!complaintId || !newPriority) {
+            return res.status(400).json({ success: false, message: "Missing required fields" });
+        }
+
+        const validPriorities = ['critical', 'high', 'medium', 'low'];
+        if (!validPriorities.includes(newPriority)) {
+            return res.status(400).json({ success: false, message: "Invalid priority level" });
+        }
+
+        const complaintIdInt = parseInt(complaintId);
+        if (isNaN(complaintIdInt)) {
+            return res.status(400).json({ success: false, message: "Invalid complaint_id format" });
+        }
+
+        // Verify complaint belongs to this admin
+        const [results] = await pool.query(
+            'SELECT admin_username, username, priority FROM complaint WHERE complaint_id = ?',
+            [complaintIdInt]
+        );
+
+        if (results.length === 0) {
+            return res.status(404).json({ success: false, message: 'Complaint not found' });
+        }
+
+        if (results[0].admin_username !== adminUsername) {
+            await logAdminAction(adminUsername, 'priority_update_denied', {
+                result: 'failure',
+                actionDetails: 'Attempted to update complaint from different admin',
+                complaintId: complaintIdInt,
+                ipAddress: req.ip
+            });
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+
+        const oldPriority = results[0].priority;
+
+        // Update complaint priority
+        await pool.query(
+            'UPDATE complaint SET priority = ? WHERE complaint_id = ?',
+            [newPriority, complaintIdInt]
+        );
+
+        // Log priority update action
+        await logAdminAction(adminUsername, 'priority_update', {
+            result: 'success',
+            actionDetails: JSON.stringify({ oldPriority, newPriority }),
+            complaintId: complaintIdInt,
+            targetUsername: results[0].username,
+            ipAddress: req.ip
+        });
+
+        res.json({ success: true, message: 'Complaint priority updated successfully' });
+    } catch (err) {
+        console.error("Update priority error:", err);
+        res.status(500).json({ success: false, message: "Error updating priority" });
+    }
+};
+
 // Get Admin's Audit Logs
 exports.getAdminLogs = async (req, res) => {
     try {

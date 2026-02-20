@@ -351,16 +351,19 @@ function renderComplaints(filteredData = null) {
                         <td><span class="status ${c.status}">${c.status}</span></td>
                         <td>
                             <div class="action-btns">
-                                <button class="btn btn-primary btn-sm" onclick="openStatusModal(${c.complaint_id}, '${c.status}')">
+                                <button class="btn btn-primary btn-sm" onclick="openStatusModal(${c.complaint_id}, '${c.status}')" title="Update Status">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn btn-secondary btn-sm" onclick="viewEvidence(${c.complaint_id})">
+                                <button class="btn btn-danger btn-sm" onclick="openPriorityModal(${c.complaint_id}, '${c.priority || 'medium'}')" title="Change Priority">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="viewEvidence(${c.complaint_id})" title="View Evidence">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button class="btn btn-warning btn-sm" onclick="viewDescription(${c.complaint_id}, '${escapeHtml(c.description || 'No description')}')">
+                                <button class="btn btn-warning btn-sm" onclick="viewDescription(${c.complaint_id}, '${escapeHtml(c.description || 'No description')}')" title="View Description">
                                     <i class="fas fa-file-alt"></i>
                                 </button>
-                                <button class="btn btn-success btn-sm" onclick="openChat(${c.complaint_id}, '${c.username}')">
+                                <button class="btn btn-success btn-sm" onclick="openChat(${c.complaint_id}, '${c.username}')" title="Chat with User">
                                     <i class="fas fa-comments"></i>
                                 </button>
                             </div>
@@ -527,6 +530,59 @@ async function updateComplaintStatus() {
     } catch (error) {
         console.error('Error updating status:', error);
         showToast('Error updating status', 'error');
+    }
+}
+
+// ===== PRIORITY MODAL =====
+function openPriorityModal(complaintId, currentPriority) {
+    currentComplaintId = complaintId;
+    document.getElementById('priority-modal-complaint-id').textContent = complaintId;
+    
+    // Priority info for badge display
+    const priorityInfo = {
+        critical: { class: 'priority-critical', icon: '🚨', label: 'CRITICAL' },
+        high: { class: 'priority-high', icon: '⚠️', label: 'HIGH' },
+        medium: { class: 'priority-medium', icon: '📋', label: 'MEDIUM' },
+        low: { class: 'priority-low', icon: 'ℹ️', label: 'LOW' }
+    };
+    
+    // Update current priority badge
+    const currentBadge = document.getElementById('priority-modal-current');
+    const info = priorityInfo[currentPriority] || priorityInfo.medium;
+    currentBadge.className = `priority-badge ${info.class}`;
+    currentBadge.textContent = `${info.icon} ${info.label}`;
+    
+    document.getElementById('priority-modal-new').value = currentPriority;
+    openModal('priorityModal');
+}
+
+async function updateComplaintPriority() {
+    const newPriority = document.getElementById('priority-modal-new').value;
+
+    try {
+        const response = await fetch('/update-complaint-priority', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                complaintId: currentComplaintId,
+                newPriority: newPriority
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            closeModal('priorityModal');
+            showToast('Priority updated successfully', 'success');
+            await loadComplaints();
+            await loadDashboardStats();
+        } else {
+            showToast(data.message || 'Error updating priority', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating priority:', error);
+        showToast('Error updating priority', 'error');
     }
 }
 

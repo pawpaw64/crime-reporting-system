@@ -24,6 +24,7 @@ router.post('/admin-send-chat-message', adminController.sendAdminChatMessage);
 router.get('/get-complaint-evidence/:complaintId', adminController.getComplaintEvidence);
 router.get('/get-admin-cases', adminController.getAdminCases);
 router.post('/update-complaint-status', adminController.updateComplaintStatus);
+router.post('/update-complaint-priority', adminController.updateComplaintPriority);
 router.get('/get-admin-logs', adminController.getAdminLogs);
 router.get('/get-admin-profile', adminController.getAdminProfile);
 router.get('/get-admin-complaints', adminController.getAdminComplaints);
