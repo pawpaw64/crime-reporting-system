@@ -46,7 +46,7 @@ exports.saveAddress = async (req, res) => {
 
 exports.verifyNID = async (req, res) => {
     try {
-        const { sessionId, nid } = req.body;
+        const { sessionId, nid, dob, nameEn, nameBn, fatherName, motherName } = req.body;
         if (!sessionId || !nid) return sendError(res, 400, 'Session id and NID are required');
         const session = registrationSessions.get(sessionId);
         if (!session) return sendError(res, 404, 'Session not found');
@@ -54,7 +54,16 @@ exports.verifyNID = async (req, res) => {
         const [exists] = await pool.query('SELECT userid FROM users WHERE nid = ?', [nid]);
         if (exists.length > 0) return sendError(res, 400, 'This NID is already registered');
 
-        session.data = { ...session.data, nid };
+        // Save all NID verification data to session
+        session.data = { 
+            ...session.data, 
+            nid, 
+            dob, 
+            fullName: nameEn, 
+            nameBn, 
+            fatherName, 
+            motherName 
+        };
         updateRegistrationSession(sessionId, session);
         sendSuccess(res, 'NID validated and saved');
     } catch (err) {

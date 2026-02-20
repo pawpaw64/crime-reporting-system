@@ -87,9 +87,14 @@ exports.getUserData = async (req, res) => {
             return res.status(401).json({ success: false, message: "Not authenticated" });
         }
 
-        // Get basic user data
+        // Get basic user data including all personal info fields
         const [results] = await pool.query(
-            'SELECT fullName, email, phone, location, dob, division, district, police_station, union_name, village, place_details FROM users WHERE userid = ?',
+            `SELECT 
+                username, fullName, name_bn, email, phone, nid, dob, age,
+                father_name, mother_name, face_image,
+                location, division, district, police_station, union_name, village, place_details,
+                is_verified, is_nid_verified, is_face_verified, created_at
+            FROM users WHERE userid = ?`,
             [req.session.userId]
         );
 
